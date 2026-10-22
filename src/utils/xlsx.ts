@@ -16,36 +16,70 @@ function columnIndex(ref: string): number {
   return n - 1;
 }
 
+// Non-empty rows only: a self-closing <row/> must not swallow the next row's cells
+const ROW = /<(?:\w+:)?row\b[^>]*(?<!\/)>([\s\S]*?)<\/(?:\w+:)?row>/g;
+const CELL = /<(?:\w+:)?c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/(?:\w+:)?c>)/g;
+
+function parseRow(rowXml: string, shared: string[]): string[] {
+  const row: string[] = [];
+  for (const [, attrs, body = ''] of rowXml.matchAll(CELL)) {
+    const ref = attrs.match(/\br="([A-Z]+\d+)"/)?.[1];
+    const type = attrs.match(/\bt="([^"]*)"/)?.[1];
+    const raw = body.match(/<(?:\w+:)?v>([^<]*)<\/(?:\w+:)?v>/)?.[1];
+    const value =
+      type === 's' ? shared[Number(raw)] ?? '' : type === 'inlineStr' ? textOf(body) : raw === undefined ? '' : decodeXml(raw);
+    row[ref ? columnIndex(ref) : row.length] = value.trim();
+  }
+  return Array.from(row, (v) => v ?? '');
+}
+
 /**
- * Reads the first worksheet of an .xlsx file as rows of cell text.
+ * Calls `onRow` with the cell text of each row of an .xlsx file's first worksheet, in order.
  *
  * A small reader for generated workbooks, which ExcelJS can't open when their XML uses
  * namespace prefixes (<x:row>, <x:c>), as files written by the .NET OpenXML SDK do.
+ * The sheet is streamed, so memory stays flat however many rows it has.
  * Values come back as written in the file: no number formats or dates are applied.
  */
-export async function readFirstSheet(file: Buffer): Promise<string[][]> {
+export async function eachSheetRow(file: Buffer, onRow: (cells: string[]) => void): Promise<void> {
   const zip = await JSZip.loadAsync(file);
   const sheetPath = Object.keys(zip.files)
     .filter((name) => /^xl\/worksheets\/[^/]+\.xml$/.test(name))
     .sort()[0];
-  if (!sheetPath) return [];
+  if (!sheetPath) return;
 
   const sharedXml = (await zip.file('xl/sharedStrings.xml')?.async('string')) ?? '';
   const shared = [...sharedXml.matchAll(/<(?:\w+:)?si>([\s\S]*?)<\/(?:\w+:)?si>/g)].map((m) => textOf(m[1]));
 
-  const sheetXml = await zip.file(sheetPath)!.async('string');
-  const rows: string[][] = [];
-  for (const [, rowXml] of sheetXml.matchAll(/<(?:\w+:)?row\b[^>]*>([\s\S]*?)<\/(?:\w+:)?row>/g)) {
-    const row: string[] = [];
-    for (const [, attrs, body = ''] of rowXml.matchAll(/<(?:\w+:)?c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/(?:\w+:)?c>)/g)) {
-      const ref = attrs.match(/\br="([A-Z]+\d+)"/)?.[1];
-      const type = attrs.match(/\bt="([^"]*)"/)?.[1];
-      const raw = body.match(/<(?:\w+:)?v>([^<]*)<\/(?:\w+:)?v>/)?.[1];
-      const value =
-        type === 's' ? shared[Number(raw)] ?? '' : type === 'inlineStr' ? textOf(body) : raw === undefined ? '' : decodeXml(raw);
-      row[ref ? columnIndex(ref) : row.length] = value.trim();
-    }
-    rows.push(Array.from(row, (v) => v ?? ''));
-  }
-  return rows;
+  const decoder = new TextDecoder();
+  let pending = '';
+  const consume = (text: string) => {
+    pending += text;
+    let end = 0;
+    ROW.lastIndex = 0;
+    for (let m; (m = ROW.exec(pending)); end = ROW.lastIndex) onRow(parseRow(m[1], shared));
+    pending = pending.slice(end);
+  };
+
+  await new Promise<void>((resolve, reject) => {
+    zip
+      .file(sheetPath)!
+      .nodeStream('nodebuffer')
+      .on('data', (chunk: Buffer) => {
+        try {
+          consume(decoder.decode(chunk, { stream: true }));
+        } catch (err) {
+          reject(err);
+        }
+      })
+      .on('error', reject)
+      .on('end', () => {
+        try {
+          consume(decoder.decode());
+          resolve();
+        } catch (err) {
+          reject(err);
+        }
+      });
+  });
 }

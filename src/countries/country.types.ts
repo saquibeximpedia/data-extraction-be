@@ -5,6 +5,8 @@ export interface FetchQuery {
   hsCode: string; // already normalized by the country
   period: Period; // "YYYY-MM"
   tradeType: TradeFlow;
+  /** Every month this run asks of the country (ascending), so batch sources can fetch them together */
+  runPeriods: Period[];
 }
 
 /**
@@ -26,7 +28,7 @@ export interface Country {
   tradeTypes: TradeFlow[];
   /** Env vars that must be set; the country stays disabled until they are */
   requiredEnv?: string[];
-  /** Max requests per minute to the source (default 60) */
+  /** Max fetchRecords calls per minute (default 60; 0 = no limit, for sources that throttle themselves) */
   rateLimitPerMinute?: number;
 
   /** Returns the code as the source expects it, or null if the source can't use it */

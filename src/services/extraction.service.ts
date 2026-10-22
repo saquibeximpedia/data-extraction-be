@@ -175,10 +175,12 @@ class ExtractionService {
     const hsCodes = this.validCodes(country, plan.hsCodes ?? hsCodesService.getSaved(country.code), stats);
     const flows = plan.tradeTypes ?? country.tradeTypes;
 
-    // Every combination, minus what doesn't need doing
+    // Every combination, minus what doesn't need doing. Grouped by code (sorted, so related codes
+    // sit together) rather than by month, so sources that return many months or codes per request
+    // answer a whole group from one download while it is still cached.
     const tasks: TaskKey[] = [];
-    for (const period of plan.periods) {
-      for (const hsCode of hsCodes) {
+    for (const hsCode of [...hsCodes].sort()) {
+      for (const period of plan.periods) {
         for (const tradeType of flows) {
           const key: TaskKey = { countryCode: country.code, hsCode, period, tradeType };
           if (this.shouldSkip(run.trigger, key, force)) stats.skipped++;
@@ -206,7 +208,7 @@ class ExtractionService {
               stats.skipped++;
               return;
             }
-            const outcome = await this.runTask(country, key, run.id, signal);
+            const outcome = await this.runTask(country, key, plan.periods, run.id, signal);
             if (outcome === 'COMPLETED') stats.completed++;
             else if (outcome === 'NO_DATA') stats.noData++;
             else if (outcome === 'FAILED') stats.failed++;
@@ -240,7 +242,13 @@ class ExtractionService {
     ledgerService.saveRunStats(run.id, stats);
   }
 
-  private async runTask(country: Country, key: TaskKey, runId: string, signal: AbortSignal): Promise<'COMPLETED' | 'NO_DATA' | 'FAILED' | 'SKIPPED'> {
+  private async runTask(
+    country: Country,
+    key: TaskKey,
+    runPeriods: Period[],
+    runId: string,
+    signal: AbortSignal
+  ): Promise<'COMPLETED' | 'NO_DATA' | 'FAILED' | 'SKIPPED'> {
     if (signal.aborted) return 'SKIPPED';
     const id = taskId(key);
     if (this.inFlight.has(id)) return 'SKIPPED'; // another run claimed it while this one waited
@@ -255,7 +263,7 @@ class ExtractionService {
         async () => {
           if (signal.aborted) throw new Error('Aborted');
           await rateLimit.wait();
-          return country.fetchRecords({ hsCode: key.hsCode, period: key.period, tradeType: key.tradeType });
+          return country.fetchRecords({ hsCode: key.hsCode, period: key.period, tradeType: key.tradeType, runPeriods });
         },
         env.RETRY_MAX_ATTEMPTS,
         env.RETRY_DELAY_MS
