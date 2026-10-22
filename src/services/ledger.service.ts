@@ -15,15 +15,33 @@ import {
 } from '../types';
 import { env } from '../config/env';
 
-export interface LedgerSummary {
-  totalTasks: number;
-  byStatus: Record<TaskStatus, number>;
-  countriesCount: number;
-  latestRun?: { id: string; status: RunStatus; startedAt: string };
+export function emptyStats(): RunStats {
+  return { planned: 0, completed: 0, noData: 0, failed: 0, skipped: 0, flags: [], unpublishedPeriods: {}, invalidHsCodes: {}, files: [] };
 }
 
-export function emptyStats(): RunStats {
-  return { planned: 0, completed: 0, noData: 0, failed: 0, skipped: 0, unpublishedPeriods: {}, invalidHsCodes: {}, files: [] };
+/** Admin-edited details of a country: overrides for a built-in source, or a whole download-only country */
+export interface CountryConfig {
+  code: string;
+  kind: 'api' | 'manual';
+  name?: string;
+  sourceName?: string;
+  sourceUrl?: string;
+  endpoint?: string;
+  method?: string;
+  output?: string;
+  /** Instructions shown to users, e.g. where on the site the files are */
+  notes?: string;
+  lagMonths?: number;
+  publishDay?: number;
+  updatedAt?: string;
+  updatedBy?: string;
+}
+
+/** A month a user marked as completed for a country */
+export interface CompletedMonth {
+  period: Period;
+  markedBy: string;
+  markedAt: string;
 }
 
 const SCHEMA = `
@@ -67,15 +85,35 @@ CREATE TABLE IF NOT EXISTS trade_records (
 );
 CREATE INDEX IF NOT EXISTS idx_records_task ON trade_records (country_code, hs_code, period, trade_type);
 CREATE INDEX IF NOT EXISTS idx_records_country_period ON trade_records (country_code, period);
+
+-- Country details edited by admins (overrides for built-in sources, or download-only countries)
+CREATE TABLE IF NOT EXISTS country_config (
+  code TEXT PRIMARY KEY,
+  kind TEXT NOT NULL,
+  data TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  updated_by TEXT
+);
+
+-- Months users marked as completed; extraction results never mark a month on their own
+CREATE TABLE IF NOT EXISTS completed_months (
+  country_code TEXT NOT NULL,
+  period TEXT NOT NULL,
+  marked_by TEXT NOT NULL,
+  marked_at TEXT NOT NULL,
+  PRIMARY KEY (country_code, period)
+);
 `;
 
 /**
  * SQLite-backed ledger (node:sqlite, no extra dependency).
  *
  * - tasks:         one row per (country, HS code, month, flow) with its latest status
- * - runs:          one row per scheduler / API run with live stats
- * - trade_records: normalized rows, replaced whenever a task is re-extracted,
- *                  used to rebuild the per-country-month export files
+ * - runs:          one row per extraction run with live stats
+ * - trade_records:    source rows, replaced whenever a task is re-extracted,
+ *                     used to rebuild the per-country-month export files
+ * - country_config:   admin-edited country details
+ * - completed_months: months users marked as completed
  */
 export class LedgerService {
   private db: DatabaseSync;
@@ -85,6 +123,25 @@ export class LedgerService {
     this.db = new DatabaseSync(dbPath);
     this.db.exec('PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL; PRAGMA busy_timeout = 5000;');
     this.db.exec(SCHEMA);
+    this.migrate();
+  }
+
+  /** Carries settings over from the previous registry tables (lag overrides, hand-added months), then drops them */
+  private migrate(): void {
+    const has = (table: string) => Boolean(this.db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?").get(table));
+    if (has('months')) {
+      this.db.exec(`INSERT OR IGNORE INTO completed_months (country_code, period, marked_by, marked_at)
+        SELECT country_code, period, 'earlier version', added_at FROM months WHERE origin = 'manual'`);
+      this.db.exec('DROP TABLE months');
+    }
+    if (has('country_settings')) {
+      for (const row of this.db.prepare('SELECT country_code, lag_months FROM country_settings WHERE lag_months IS NOT NULL').all() as any[]) {
+        if (!this.getCountryConfig(row.country_code)) {
+          this.saveCountryConfig({ code: row.country_code, kind: 'api', lagMonths: Number(row.lag_months) }, 'earlier version');
+        }
+      }
+      this.db.exec('DROP TABLE country_settings');
+    }
   }
 
   private transaction<T>(fn: () => T): T {
@@ -119,11 +176,6 @@ export class LedgerService {
     const row = this.db
       .prepare('SELECT * FROM tasks WHERE country_code = ? AND hs_code = ? AND period = ? AND trade_type = ?')
       .get(key.countryCode, key.hsCode, key.period, key.tradeType);
-    return row ? toTask(row) : null;
-  }
-
-  public getTask(id: string): ExtractionTask | null {
-    const row = this.db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
     return row ? toTask(row) : null;
   }
 
@@ -177,23 +229,6 @@ export class LedgerService {
       .run(error, new Date().toISOString(), task.id);
   }
 
-  public listTasks(
-    filter: { countryCode?: string; status?: TaskStatus; period?: Period; hsCode?: string } = {},
-    limit = 500
-  ): ExtractionTask[] {
-    const clauses: string[] = [];
-    const params: string[] = [];
-    if (filter.countryCode) { clauses.push('country_code = ?'); params.push(filter.countryCode.toUpperCase()); }
-    if (filter.status) { clauses.push('status = ?'); params.push(filter.status); }
-    if (filter.period) { clauses.push('period = ?'); params.push(filter.period); }
-    if (filter.hsCode) { clauses.push('hs_code = ?'); params.push(filter.hsCode); }
-    const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
-    return this.db
-      .prepare(`SELECT * FROM tasks ${where} ORDER BY updated_at DESC LIMIT ?`)
-      .all(...params, limit)
-      .map(toTask);
-  }
-
   public countCompleted(countryCode: string, period: Period): number {
     const row = this.db
       .prepare(`SELECT COUNT(*) AS n FROM tasks WHERE country_code = ? AND period = ? AND status = 'COMPLETED'`)
@@ -201,43 +236,91 @@ export class LedgerService {
     return Number(row.n);
   }
 
-  /** COMPLETED task counts per month for exactly these codes and flows */
-  public countCompletedByPeriod(countryCode: string, periods: Period[], hsCodes: string[], tradeTypes: string[]): Record<Period, number> {
-    if (!periods.length || !hsCodes.length || !tradeTypes.length) return {};
-    const marks = (n: number) => Array(n).fill('?').join(',');
-    const rows = this.db
-      .prepare(
-        `SELECT period, COUNT(*) AS n FROM tasks
-         WHERE country_code = ? AND status = 'COMPLETED'
-           AND period IN (${marks(periods.length)})
-           AND hs_code IN (${marks(hsCodes.length)})
-           AND trade_type IN (${marks(tradeTypes.length)})
-         GROUP BY period`
-      )
-      .all(countryCode, ...periods, ...hsCodes, ...tradeTypes) as { period: string; n: number }[];
-    return Object.fromEntries(rows.map((r) => [r.period, Number(r.n)]));
+  public countRecords(countryCode: string, period: Period): number {
+    const row = this.db
+      .prepare('SELECT COUNT(*) AS n FROM trade_records WHERE country_code = ? AND period = ?')
+      .get(countryCode, period) as { n: number };
+    return Number(row.n);
   }
 
-  /** Task counts by status for every month a country has been extracted */
-  public periodSummary(countryCode: string): Record<Period, { completed: number; noData: number; failed: number }> {
+  /**
+   * Streams a country-month's rows, by flow then HS code. A row stored under two requested
+   * codes (e.g. a heading and one of its tariff lines) comes back once.
+   */
+  public *iterateRecords(countryCode: string, period: Period): Generator<TradeRecord> {
     const rows = this.db
-      .prepare(`SELECT period, status, COUNT(*) AS n FROM tasks WHERE country_code = ? GROUP BY period, status`)
-      .all(countryCode) as { period: string; status: TaskStatus; n: number }[];
-    const out: Record<Period, { completed: number; noData: number; failed: number }> = {};
-    for (const r of rows) {
-      const entry = (out[r.period] ??= { completed: 0, noData: 0, failed: 0 });
-      if (r.status === 'COMPLETED') entry.completed += Number(r.n);
-      else if (r.status === 'NO_DATA') entry.noData += Number(r.n);
-      else if (r.status === 'FAILED') entry.failed += Number(r.n);
+      .prepare(
+        `SELECT record FROM trade_records WHERE country_code = ? AND period = ?
+         GROUP BY record ORDER BY MIN(trade_type), MIN(hs_code), MIN(rowid)`
+      )
+      .iterate(countryCode, period) as Iterable<{ record: string }>;
+    for (const row of rows) yield JSON.parse(row.record);
+  }
+
+  // ----------------------------------------------------------------- countries & months
+
+  public getCountryConfig(code: string): CountryConfig | null {
+    const row = this.db.prepare('SELECT * FROM country_config WHERE code = ?').get(code) as any;
+    return row ? toConfig(row) : null;
+  }
+
+  public listCountryConfigs(): CountryConfig[] {
+    return (this.db.prepare('SELECT * FROM country_config ORDER BY code').all() as any[]).map(toConfig);
+  }
+
+  public saveCountryConfig(config: CountryConfig, updatedBy: string): void {
+    const { code, kind, updatedAt: _a, updatedBy: _b, ...data } = config;
+    this.db
+      .prepare(
+        `INSERT INTO country_config (code, kind, data, updated_at, updated_by) VALUES (?, ?, ?, ?, ?)
+         ON CONFLICT (code) DO UPDATE SET kind = excluded.kind, data = excluded.data, updated_at = excluded.updated_at, updated_by = excluded.updated_by`
+      )
+      .run(code, kind, JSON.stringify(data), new Date().toISOString(), updatedBy);
+  }
+
+  /** Deletes a country's config and its completed months (used for download-only countries) */
+  public deleteCountryConfig(code: string): void {
+    this.transaction(() => {
+      this.db.prepare('DELETE FROM country_config WHERE code = ?').run(code);
+      this.db.prepare('DELETE FROM completed_months WHERE country_code = ?').run(code);
+    });
+  }
+
+  /** Months marked completed, per country, oldest first */
+  public listCompletedMonths(): Map<string, CompletedMonth[]> {
+    const out = new Map<string, CompletedMonth[]>();
+    for (const row of this.db.prepare('SELECT * FROM completed_months ORDER BY period').all() as any[]) {
+      const list = out.get(row.country_code) ?? [];
+      list.push({ period: row.period, markedBy: row.marked_by, markedAt: row.marked_at });
+      out.set(row.country_code, list);
     }
     return out;
   }
 
-  public getRecords(countryCode: string, period: Period): TradeRecord[] {
-    return this.db
-      .prepare('SELECT record FROM trade_records WHERE country_code = ? AND period = ? ORDER BY trade_type, hs_code, rowid')
-      .all(countryCode, period)
-      .map((row: any) => JSON.parse(row.record));
+  /** Marks months completed; months already marked keep who marked them first. Returns how many were new. */
+  public markMonths(countryCode: string, periods: Period[], markedBy: string): number {
+    const insert = this.db.prepare(
+      'INSERT OR IGNORE INTO completed_months (country_code, period, marked_by, marked_at) VALUES (?, ?, ?, ?)'
+    );
+    const now = new Date().toISOString();
+    return this.transaction(() => periods.reduce((n, p) => n + Number(insert.run(countryCode, p, markedBy, now).changes), 0));
+  }
+
+  /** Unmarks months. Stored rows and files are not touched. Returns how many were removed. */
+  public unmarkMonths(countryCode: string, periods: Period[]): number {
+    const remove = this.db.prepare('DELETE FROM completed_months WHERE country_code = ? AND period = ?');
+    return this.transaction(() => periods.reduce((n, p) => n + Number(remove.run(countryCode, p).changes), 0));
+  }
+
+  /** When each country was last extracted (latest run that included it) */
+  public lastExtractionByCountry(): Map<string, string> {
+    const out = new Map<string, string>();
+    for (const row of this.db.prepare('SELECT params, started_at FROM runs ORDER BY started_at DESC LIMIT 500').all() as any[]) {
+      for (const plan of JSON.parse(row.params).plans ?? []) {
+        if (plan.countryCode && !out.has(plan.countryCode)) out.set(plan.countryCode, row.started_at);
+      }
+    }
+    return out;
   }
 
   // ----------------------------------------------------------------- runs
@@ -274,24 +357,6 @@ export class LedgerService {
 
   public listRuns(limit = 25): ExtractionRun[] {
     return this.db.prepare('SELECT * FROM runs ORDER BY started_at DESC LIMIT ?').all(limit).map(toRun);
-  }
-
-  public getSummary(): LedgerSummary {
-    const byStatus: Record<TaskStatus, number> = { IN_PROGRESS: 0, COMPLETED: 0, NO_DATA: 0, FAILED: 0 };
-    let totalTasks = 0;
-    for (const row of this.db.prepare('SELECT status, COUNT(*) AS n FROM tasks GROUP BY status').all() as any[]) {
-      byStatus[row.status as TaskStatus] = Number(row.n);
-      totalTasks += Number(row.n);
-    }
-    const countries = this.db.prepare('SELECT COUNT(DISTINCT country_code) AS n FROM tasks').get() as { n: number };
-    const latest = this.db.prepare('SELECT id, status, started_at FROM runs ORDER BY started_at DESC LIMIT 1').get() as any;
-
-    return {
-      totalTasks,
-      byStatus,
-      countriesCount: Number(countries.n),
-      latestRun: latest ? { id: latest.id, status: latest.status, startedAt: latest.started_at } : undefined,
-    };
   }
 
   public close(): void {
@@ -331,3 +396,7 @@ function toRun(row: any): ExtractionRun {
 }
 
 export const ledgerService = new LedgerService();
+
+function toConfig(row: any): CountryConfig {
+  return { ...JSON.parse(row.data), code: row.code, kind: row.kind, updatedAt: row.updated_at, updatedBy: row.updated_by ?? undefined };
+}

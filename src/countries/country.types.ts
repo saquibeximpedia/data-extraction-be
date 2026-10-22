@@ -16,16 +16,33 @@ export interface FetchQuery {
  * to the list in countries/index.ts. Retries, rate limiting, scheduling, storage
  * and exports are handled for you.
  */
+/** Where a country's data comes from, shown to users before they extract */
+export interface CountrySource {
+  /** e.g. "SARS Trade Statistics portal" */
+  name: string;
+  /** Page a person can open to see the source */
+  url: string;
+  /** What is requested, e.g. the endpoint or form */
+  endpoint: string;
+  /** How data is fetched and what one request returns */
+  method: string;
+  /** What the saved files contain */
+  output: string;
+}
+
 export interface Country {
   /** ISO 3166 alpha-3, e.g. "THA" */
   code: string;
   name: string;
-  /** Months between the end of a month and the source publishing it */
+  source: CountrySource;
+  /** Default months between the end of a month and the source publishing it (editable in Properties) */
   lagMonths: number;
   /** Day of the month the source usually publishes on (default 1) */
   publishDay?: number;
   /** Flows this source can return */
   tradeTypes: TradeFlow[];
+  /** One line on which HS codes the source accepts, shown under the code box */
+  hsCodeHint: string;
   /** Env vars that must be set; the country stays disabled until they are */
   requiredEnv?: string[];
   /** Max fetchRecords calls per minute (default 60; 0 = no limit, for sources that throttle themselves) */

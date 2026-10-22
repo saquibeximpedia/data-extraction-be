@@ -1,131 +1,104 @@
 import fs from 'fs';
-import path from 'path';
-import { Readable } from 'stream';
+import JSZip from 'jszip';
 import { env } from '../config/env';
+import { supabase } from '../config/supabase';
+import { badRequest, HttpError, notFound } from '../utils/errors';
 
 export interface FileMetadata {
   fileName: string;
   relativePath: string;
   sizeBytes: number;
-  modifiedAt: Date;
+  modifiedAt: string;
 }
 
-export interface IStorageService {
-  saveFile(relativePath: string, data: Buffer): Promise<string>;
-  fileExists(relativePath: string): Promise<boolean>;
-  getFileStream(relativePath: string): Promise<Readable>;
-  listFiles(countryCode?: string): Promise<FileMetadata[]>;
+const bucket = () => supabase.storage.from(env.SUPABASE_BUCKET);
+
+/** Paths are "{CC}/{YYYY}/{file}": no leading slash, no "..", no empty segments */
+function safePath(relativePath: string): string {
+  const p = relativePath.replace(/\\/g, '/').trim();
+  if (!p || p.startsWith('/') || p.split('/').some((seg) => !seg || seg === '.' || seg === '..')) {
+    throw badRequest(`Invalid file path: ${relativePath}`);
+  }
+  return p;
 }
 
-export class LocalStorageService implements IStorageService {
-  private baseDir: string;
+function fail(action: string, error: { message: string }): never {
+  if (/not.?found/i.test(error.message)) throw notFound(`${action}: file not found`);
+  throw new HttpError(502, `${action}: ${error.message}`);
+}
 
-  constructor(baseDir: string = env.resolvedStoragePath) {
-    this.baseDir = baseDir;
-    fs.mkdirSync(this.baseDir, { recursive: true });
-  }
+/**
+ * Export and uploaded files, kept in a private Supabase Storage bucket. The browser never
+ * gets bucket access: downloads go through short-lived signed URLs handed out by this API.
+ */
+export const storageService = {
+  /** Creates the private bucket on first start */
+  async ensureBucket(): Promise<void> {
+    const { data } = await supabase.storage.getBucket(env.SUPABASE_BUCKET);
+    if (data) return;
+    const { error } = await supabase.storage.createBucket(env.SUPABASE_BUCKET, { public: false });
+    if (error && !/already exists/i.test(error.message)) throw new Error(`Could not create bucket ${env.SUPABASE_BUCKET}: ${error.message}`);
+  },
 
-  /** Resolves a path under the storage root and refuses anything that escapes it */
-  private resolveSafe(relativePath: string): string {
-    const fullPath = path.resolve(this.baseDir, relativePath);
-    const rel = path.relative(this.baseDir, fullPath);
-    if (!rel || rel.startsWith('..') || path.isAbsolute(rel)) {
-      throw new Error(`File not found: ${relativePath}`);
-    }
-    return fullPath;
-  }
+  /** Uploads a local file, replacing any file at that path */
+  async uploadFile(relativePath: string, localPath: string, contentType: string): Promise<void> {
+    await this.upload(relativePath, await fs.promises.readFile(localPath), contentType);
+  },
 
-  public async saveFile(relativePath: string, data: Buffer): Promise<string> {
-    const fullPath = this.resolveSafe(relativePath);
-    await fs.promises.mkdir(path.dirname(fullPath), { recursive: true });
-    // Write then rename so a download never sees a half-written file
-    const tempPath = `${fullPath}.tmp-${process.pid}-${Date.now()}`;
-    await fs.promises.writeFile(tempPath, data);
-    await fs.promises.rename(tempPath, fullPath);
-    return fullPath;
-  }
+  async upload(relativePath: string, body: Buffer, contentType: string): Promise<void> {
+    const { error } = await bucket().upload(safePath(relativePath), body, { upsert: true, contentType });
+    if (error) fail('Upload', error);
+  },
 
-  public async fileExists(relativePath: string): Promise<boolean> {
-    return fs.existsSync(this.resolveSafe(relativePath));
-  }
-
-  public async getFileStream(relativePath: string): Promise<Readable> {
-    const fullPath = this.resolveSafe(relativePath);
-    if (!fs.existsSync(fullPath)) {
-      throw new Error(`File not found: ${relativePath}`);
-    }
-    return fs.createReadStream(fullPath);
-  }
-
-  public async deleteFile(relativePath: string): Promise<void> {
-    const fullPath = this.resolveSafe(relativePath);
-    if (!fs.existsSync(fullPath)) {
-      throw new Error(`File not found: ${relativePath}`);
-    }
-    await fs.promises.unlink(fullPath);
-  }
-
-  /**
-   * If a file already exists at relativePath, renames it with an overwrite timestamp
-   * so historical data is never lost.
-   */
-  public async archiveIfExisting(relativePath: string): Promise<string | null> {
-    const fullPath = this.resolveSafe(relativePath);
-    if (!fs.existsSync(fullPath)) {
-      return null;
-    }
-
-    const dir = path.dirname(fullPath);
-    const ext = path.extname(fullPath);
-    const baseName = path.basename(fullPath, ext);
-
-    const now = new Date();
-    const dateStr = now.toISOString().slice(0, 10);
-    const timeStr = `${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
-    let archivedName = `${baseName}_overwritten_${dateStr}_${timeStr}${ext}`;
-    let archivedPath = path.join(dir, archivedName);
-
-    // If somehow a collision occurs, add an extra counter
-    let counter = 1;
-    while (fs.existsSync(archivedPath)) {
-      archivedName = `${baseName}_overwritten_${dateStr}_${timeStr}_${counter}${ext}`;
-      archivedPath = path.join(dir, archivedName);
-      counter++;
-    }
-
-    await fs.promises.rename(fullPath, archivedPath);
-    return path.relative(this.baseDir, archivedPath).replace(/\\/g, '/');
-  }
-
-  public async listFiles(countryCode?: string): Promise<FileMetadata[]> {
-    const searchDir = countryCode ? this.resolveSafe(countryCode.toUpperCase()) : this.baseDir;
-    const results: FileMetadata[] = [];
-
-    if (!fs.existsSync(searchDir)) {
-      return results;
-    }
-
-    const traverse = async (currentDir: string) => {
-      const entries = await fs.promises.readdir(currentDir, { withFileTypes: true });
-      for (const entry of entries) {
-        const fullEntryPath = path.join(currentDir, entry.name);
-        if (entry.isDirectory()) {
-          await traverse(fullEntryPath);
-        } else if (entry.isFile() && (entry.name.endsWith('.xlsx') || entry.name.endsWith('.csv'))) {
-          const stats = await fs.promises.stat(fullEntryPath);
-          results.push({
-            fileName: entry.name,
-            relativePath: path.relative(this.baseDir, fullEntryPath).replace(/\\/g, '/'),
-            sizeBytes: stats.size,
-            modifiedAt: stats.mtime,
-          });
+  /** Every file, newest first (folders are walked: country → year → files) */
+  async listFiles(countryCode?: string): Promise<FileMetadata[]> {
+    const files: FileMetadata[] = [];
+    const walk = async (prefix: string, depth: number): Promise<void> => {
+      for (let offset = 0; ; offset += 1000) {
+        const { data, error } = await bucket().list(prefix, { limit: 1000, offset, sortBy: { column: 'name', order: 'asc' } });
+        if (error) fail('List', error);
+        for (const entry of data) {
+          const path = prefix ? `${prefix}/${entry.name}` : entry.name;
+          if (entry.id === null) {
+            if (depth < 3) await walk(path, depth + 1);
+          } else if (!entry.name.startsWith('.')) {
+            files.push({
+              fileName: entry.name,
+              relativePath: path,
+              sizeBytes: Number(entry.metadata?.size ?? 0),
+              modifiedAt: entry.updated_at ?? entry.created_at ?? '',
+            });
+          }
         }
+        if (data.length < 1000) return;
       }
     };
+    await walk(countryCode ? countryCode.toUpperCase() : '', countryCode ? 1 : 0);
+    return files.sort((a, b) => b.modifiedAt.localeCompare(a.modifiedAt));
+  },
 
-    await traverse(searchDir);
-    return results.sort((a, b) => b.modifiedAt.getTime() - a.modifiedAt.getTime());
-  }
-}
+  /** A link that downloads the file for the next five minutes */
+  async signedUrl(relativePath: string): Promise<string> {
+    const path = safePath(relativePath);
+    const { data, error } = await bucket().createSignedUrl(path, 300, { download: path.split('/').pop() });
+    if (error) fail('Download', error);
+    return data.signedUrl;
+  },
 
-export const storageService = new LocalStorageService();
+  async deleteFiles(relativePaths: string[]): Promise<string[]> {
+    const { data, error } = await bucket().remove(relativePaths.map(safePath));
+    if (error) fail('Delete', error);
+    return data.map((f) => f.name);
+  },
+
+  /** Streams a zip of the given files (kept under their folders) */
+  async zipStream(relativePaths: string[]): Promise<NodeJS.ReadableStream> {
+    const zip = new JSZip();
+    for (const relativePath of relativePaths) {
+      const { data, error } = await bucket().download(safePath(relativePath));
+      if (error) fail(`Download ${relativePath}`, error);
+      zip.file(relativePath, Buffer.from(await data.arrayBuffer()));
+    }
+    return zip.generateNodeStream({ type: 'nodebuffer', streamFiles: true, compression: 'DEFLATE', compressionOptions: { level: 6 } });
+  },
+};

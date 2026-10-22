@@ -5,7 +5,10 @@ import { badRequest } from '../utils/errors';
 /** Parses data with a zod schema, throwing a 400 with field details on failure */
 export function parse<T extends z.ZodType>(schema: T, data: unknown): z.infer<T> {
   const result = schema.safeParse(data);
-  if (!result.success) throw badRequest('Validation failed', { details: z.flattenError(result.error).fieldErrors });
+  if (!result.success) {
+    const { formErrors, fieldErrors } = z.flattenError(result.error);
+    throw badRequest(formErrors[0] ?? 'Validation failed', { details: fieldErrors });
+  }
   return result.data;
 }
 

@@ -26,8 +26,16 @@ const ENDPOINTS = {
 export const thailand: Country = {
   code: 'THA',
   name: 'Thailand',
+  source: {
+    name: 'Thailand Ministry of Commerce trade report',
+    url: 'https://tradereport.moc.go.th/',
+    endpoint: `${API_BASE}/importharmonizecountries · exportharmonizecountries`,
+    method: 'JSON API, one request per HS code, month and flow; returns one row per partner country.',
+    output: 'Every field of the response (values in USD and baht, quantities, year-to-date totals), plus the requested HS code and flow.',
+  },
   lagMonths: 2,
   tradeTypes: ['IMPORT', 'EXPORT'],
+  hsCodeHint: 'Thailand accepts 4 to 11 digits.',
 
   // The API aggregates shorter prefixes, so 4–11 digits all work
   normalizeHsCode: (raw) => {
@@ -43,38 +51,10 @@ export const thailand: Country = {
       headers: { 'User-Agent': BROWSER_UA, Referer: 'https://tradereport.moc.go.th/' },
     });
     const list = Array.isArray(rows) ? rows : rows.data ?? [];
-    const isExport = tradeType === 'EXPORT';
-
-    return list
-      // Unpublished months come back as one zero-valued row per partner country
-      .filter((r) => parseFloat(String(r.value_usd || 0)) > 0 || parseFloat(String(r.quantity || 0)) > 0)
-      .map((r) => {
-        const qty = parseFloat(String(r.quantity || 0));
-        const usd = parseFloat(String(r.value_usd || 0));
-        const baht = parseFloat(String(r.value_baht ?? ''));
-        const partner = r.country_name_en || '';
-        return {
-          date: `${r.year || year}-${String(r.month || month).padStart(2, '0')}-01`,
-          hsCode,
-          productDescription: r.description || '',
-          tradeType,
-          importer: '',
-          exporter: '',
-          originCountry: isExport ? 'Thailand' : partner,
-          destinationCountry: isExport ? partner : 'Thailand',
-          quantity: isNaN(qty) ? undefined : qty,
-          // The API reports quantities without their unit (it varies by HS code)
-          unit: '',
-          valueUsd: isNaN(usd) ? undefined : usd,
-          valueLocal: isNaN(baht) ? undefined : baht,
-          currency: 'THB',
-          port: '',
-          declarationNo: '',
-          accQuantity: r.acc_quantity,
-          accValueUsd: r.acc_value_usd,
-          countryIsoCode2: r.country_code,
-          rawRecord: r,
-        };
-      });
+    // An unpublished month comes back as one zero-valued row per partner country
+    const hasTrade = list.some((r) => parseFloat(String(r.value_usd || 0)) > 0 || parseFloat(String(r.quantity || 0)) > 0);
+    if (!hasTrade) return [];
+    // The response doesn't say which code and flow were asked for, so they lead each row
+    return list.map((r) => ({ request_hs_code: hsCode, trade_flow: tradeType, ...r }));
   },
 };

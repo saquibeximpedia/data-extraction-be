@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import os from 'os';
 import path from 'path';
 import { z } from 'zod';
 
@@ -10,28 +11,27 @@ const positiveInt = (fallback: string) =>
 const envSchema = z.object({
   PORT: positiveInt('3000'),
   NODE_ENV: z.enum(['dev', 'development', 'prod', 'production', 'test']).default('dev'),
-  LOCAL_STORAGE_PATH: z.string().default('./storage/exports'),
   DB_PATH: z.string().default('./storage/ledger.db'),
 
-  // Runs daily; each tick works out which months are due per country
-  SCHEDULER_CRON: z.string().default('0 3 * * *'),
-  SCHEDULER_TIMEZONE: z.string().optional(),
-  SCHEDULER_ENABLED: z.string().default('true').transform((val) => val === 'true'),
-  SCHEDULER_RUN_ON_START: z.string().default('false').transform((val) => val === 'true'),
-  // How many published months auto sync keeps re-checking (fills gaps after downtime)
-  AUTO_SYNC_LOOKBACK_MONTHS: positiveInt('3'),
-  // FAILED tasks stop being retried by auto sync after this many attempts
-  MAX_TASK_ATTEMPTS: positiveInt('5'),
+  // Supabase: users sign in with Supabase Auth; files live in a private Storage bucket.
+  // The service role key stays on this server only (it bypasses row-level security).
+  SUPABASE_URL: z.url('SUPABASE_URL must be the project URL, e.g. https://xyz.supabase.co'),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, 'SUPABASE_SERVICE_ROLE_KEY is required'),
+  SUPABASE_BUCKET: z.string().default('trade-exports'),
+  // Largest file a user can upload for a download-only country
+  UPLOAD_MAX_MB: positiveInt('200'),
+
+  // A run flags this many consecutive tasks returning 0 records (no data there, or the source
+  // may be restricting requests) and carries on
+  EMPTY_STREAK_FLAG_AT: positiveInt('300'),
 
   MAX_CONCURRENT_EXTRACTIONS: positiveInt('4'),
   MAX_CONCURRENT_PER_COUNTRY: positiveInt('2'),
   RETRY_MAX_ATTEMPTS: positiveInt('3'),
   RETRY_DELAY_MS: positiveInt('2000'),
 
-  API_PASSWORD: z.string().min(1, 'API_PASSWORD must not be empty'),
+  // Comma-separated; empty or * allows all
   ALLOWED_IPS: z.string().default(''),
-  JWT_SECRET: z.string().min(16, 'JWT_SECRET must be at least 16 characters'),
-  TOKEN_EXPIRY: z.string().default('24h'),
 
   // Country API credentials
   BPS_API_KEY: z.string().optional(),
@@ -51,6 +51,7 @@ const allowedIpList = parsed.data.ALLOWED_IPS
 export const env = {
   ...parsed.data,
   allowedIpList,
-  resolvedStoragePath: path.resolve(process.cwd(), parsed.data.LOCAL_STORAGE_PATH),
   resolvedDbPath: path.resolve(process.cwd(), parsed.data.DB_PATH),
+  /** Exports are written here first, then uploaded to Storage */
+  tempDir: path.join(os.tmpdir(), 'trade-data-exports'),
 };

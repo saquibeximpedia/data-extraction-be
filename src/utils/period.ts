@@ -42,12 +42,6 @@ export function periodRange(start: Period, end: Period): Period[] {
   return periods;
 }
 
-export function periodBounds(period: Period): { startDate: string; endDate: string } {
-  const { year, month } = splitPeriod(period);
-  const lastDay = new Date(year, month, 0).getDate();
-  return { startDate: `${period}-01`, endDate: `${period}-${String(lastDay).padStart(2, '0')}` };
-}
-
 /**
  * Most recent month a source should have published by `today`.
  * A country with a 1-month lag that publishes on the 15th has September data
@@ -58,13 +52,8 @@ export function latestPublishedPeriod(lagMonths: number, updateDayOfMonth: numbe
   return addMonths(periodOfDate(today), -(lagMonths + (released ? 0 : 1)));
 }
 
-/** The months auto sync keeps checking for a country, oldest first */
-export function autoSyncPeriods(
-  lagMonths: number,
-  updateDayOfMonth: number,
-  lookbackMonths: number,
-  today = new Date()
-): Period[] {
+/** The `count` most recent months a source should have published by `today`, oldest first */
+export function recentPublishedPeriods(lagMonths: number, updateDayOfMonth: number, count: number, today = new Date()): Period[] {
   const latest = latestPublishedPeriod(lagMonths, updateDayOfMonth, today);
-  return periodRange(addMonths(latest, -(lookbackMonths - 1)), latest);
+  return periodRange(addMonths(latest, -(count - 1)), latest);
 }

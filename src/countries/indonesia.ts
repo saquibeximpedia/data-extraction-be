@@ -21,9 +21,17 @@ const yearCache = new TtlCache<BpsRow[]>(15 * 60 * 1000);
 export const indonesia: Country = {
   code: 'IDN',
   name: 'Indonesia',
+  source: {
+    name: 'BPS (Statistics Indonesia) DataExim API',
+    url: 'https://webapi.bps.go.id/',
+    endpoint: 'https://webapi.bps.go.id/v1/api/dataexim',
+    method: 'JSON API, one request per HS code, flow and year (cached and split into months); returns one row per partner country and port.',
+    output: 'Every field of the response (HS code and description, port, partner, net weight in kg, value in USD), plus the requested HS code and flow.',
+  },
   lagMonths: 2,
   publishDay: 15,
   tradeTypes: ['IMPORT', 'EXPORT'],
+  hsCodeHint: 'Indonesia needs 8-digit codes.',
   requiredEnv: ['BPS_API_KEY'],
 
   // 8-digit Indonesian tariff lines (BTKI)
@@ -44,34 +52,10 @@ export const indonesia: Country = {
       return Array.isArray(json.data) ? json.data : [json.data];
     });
 
-    const isExport = tradeType === 'EXPORT';
+    // The yearly response is cut to the requested month; every field is kept as returned,
+    // with the flow added in front (the response doesn't carry it)
     return rows
-      .map((r) => ({
-        r,
-        code: String(r.kodehs || '').match(/\[?(\d{8})\]?\s*(.*)/),
-        rowMonth: String(r.bulan || '').match(/\[(\d{2})\]/)?.[1] ?? String(r.bulan || '').trim().padStart(2, '0'),
-      }))
-      .filter(({ rowMonth }) => rowMonth === mm)
-      .map(({ r, code, rowMonth }) => {
-        const kg = parseFloat(String(r.netweight || 0));
-        const usd = parseFloat(String(r.value || 0));
-        return {
-          date: `${r.tahun || year}-${rowMonth}-01`,
-          hsCode: code?.[1] ?? hsCode,
-          productDescription: code?.[2]?.trim() ?? '',
-          tradeType,
-          // BPS publishes no trader names
-          importer: '',
-          exporter: '',
-          originCountry: isExport ? 'Indonesia' : r.ctr || '',
-          destinationCountry: isExport ? r.ctr || '' : 'Indonesia',
-          quantity: isNaN(kg) ? undefined : kg,
-          unit: 'KG', // netweight is reported in kilograms
-          valueUsd: isNaN(usd) ? undefined : usd,
-          port: r.pod || '',
-          declarationNo: '',
-          rawRecord: r,
-        };
-      });
+      .filter((r) => (String(r.bulan || '').match(/\[(\d{2})\]/)?.[1] ?? String(r.bulan || '').trim().padStart(2, '0')) === mm)
+      .map((r) => ({ request_hs_code: hsCode, trade_flow: tradeType, ...r }));
   },
 };

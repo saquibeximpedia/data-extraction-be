@@ -1,12 +1,13 @@
 import { Country, findCountry, isEnabled, missingConfig } from '../countries';
 import { env } from '../config/env';
-import { ExtractionRun, Period, RunLog, RunStats, RunTrigger, TaskKey, TradeFlow } from '../types';
+import { ExtractionRun, Period, RunFlag, RunLog, RunStats, RunTrigger, TaskKey, TradeFlow } from '../types';
 import { RateLimiter, Semaphore } from '../utils/concurrency';
 import { badRequest, notFound } from '../utils/errors';
 import { splitHsInput } from '../utils/hs-codes';
 import { withRetry } from '../utils/http';
 import { periodRange, toPeriod } from '../utils/period';
 import { exportService } from './export.service';
+import { countryService } from './country.service';
 import { hsCodesService } from './hs-codes.service';
 import { ledgerService } from './ledger.service';
 
@@ -19,6 +20,8 @@ export interface CountryPlan {
   periods: Period[];
   hsCodes?: string[]; // defaults to the country's saved list
   tradeTypes?: TradeFlow[]; // defaults to every flow the country supports
+  /** Where the HS codes came from, for the run's description */
+  hsCodeSource?: 'complete' | 'test' | 'custom';
 }
 
 export interface ManualRequest {
@@ -85,9 +88,14 @@ class ExtractionService {
   // ------------------------------------------------------------------ manual requests
 
   /** Validates a manual request and turns it into a plan. Throws HttpError on bad input. */
-  public planManual(req: ManualRequest): { country: Country; plan: Required<CountryPlan> } {
+  public planManual(req: ManualRequest): { country: Country; plan: CountryPlan & { hsCodes: string[]; tradeTypes: TradeFlow[] } } {
     const country = findCountry(req.countryCode);
-    if (!country) throw notFound(`Unknown country ${req.countryCode.toUpperCase()}`);
+    if (!country) {
+      // Admin-added countries publish files that users download themselves
+      const known = countryService.list().some((c) => c.code === req.countryCode.toUpperCase());
+      if (known) throw badRequest(`${req.countryCode.toUpperCase()} is download-only: get its files from the source website and upload them.`);
+      throw notFound(`Unknown country ${req.countryCode.toUpperCase()}`);
+    }
     if (!isEnabled(country)) throw badRequest(`${country.code} is disabled: set ${missingConfig(country).join(', ')} in .env`);
     if (req.tradeType !== 'ALL' && !country.tradeTypes.includes(req.tradeType)) {
       throw badRequest(`${country.code} supports ${country.tradeTypes.join('/')} only`);
@@ -103,6 +111,7 @@ class ExtractionService {
 
     const requested = splitHsInput(req.hsCodes);
     let hsCodes: string[];
+    let source: CountryPlan['hsCodeSource'];
     if (requested.length) {
       if (requested.length > MAX_HS_CODES) throw badRequest(`Too many HS codes (${requested.length}); the limit is ${MAX_HS_CODES}.`);
       const invalid = requested.filter((c) => !country.normalizeHsCode(c));
@@ -111,41 +120,49 @@ class ExtractionService {
         throw badRequest(`${invalid.length} HS code${invalid.length === 1 ? ' is' : 's are'} not valid for ${country.code}: ${shown}`, { invalidHsCodes: invalid });
       }
       hsCodes = [...new Set(requested.map((c) => country.normalizeHsCode(c)!))];
+      source = 'custom';
     } else {
       const isProd = env.NODE_ENV === 'prod' || env.NODE_ENV === 'production';
       const mode = isProd ? 'complete' : (req.mode === 'test' ? 'test' : 'complete');
       hsCodes = hsCodesService.getSaved(country.code, mode);
+      source = mode;
       if (!hsCodes.length) throw notFound(`No saved ${mode === 'test' ? 'test ' : ''}HS codes for ${country.code}. Enter codes, or add them to the server's HS code file.`);
     }
 
     const tradeTypes = req.tradeType === 'ALL' ? country.tradeTypes : [req.tradeType];
-    return { country, plan: { countryCode: country.code, periods, hsCodes, tradeTypes } };
+    return { country, plan: { countryCode: country.code, periods, hsCodes, tradeTypes, hsCodeSource: source } };
   }
 
   // ------------------------------------------------------------------ runs
 
   /**
-   * Creates the run record and starts it in the background.
-   * `force` re-extracts tasks that are COMPLETED or out of retries.
+   * Creates the run record and starts it in the background. Every planned task is extracted,
+   * also ones extracted before (a task already running in another run is skipped).
    */
-  public startRun(trigger: RunTrigger, plans: CountryPlan[], force = false): { run: ExtractionRun; done: Promise<ExtractionRun> } {
-    const run = ledgerService.createRun(trigger, { plans, force });
+  public startRun(trigger: RunTrigger, plans: CountryPlan[], startedBy: string): { run: ExtractionRun; done: Promise<ExtractionRun> } {
+    // The run record describes the plan; full code lists (often thousands) are not repeated in it
+    const described = plans.map(({ hsCodes, ...p }) => ({
+      ...p,
+      hsCodeCount: hsCodes?.length,
+      hsCodes: hsCodes && hsCodes.length <= 20 ? hsCodes : undefined,
+    }));
+    const run = ledgerService.createRun(trigger, { plans: described, startedBy });
     const controller = new AbortController();
     this.abortControllers.set(run.id, controller);
     this.runLogs.set(run.id, []);
     this.log(run.id, 'info', `Run started (${trigger}): ${plans.map((p) => `${p.countryCode} [${p.periods.join(', ')}]`).join('; ')}`);
-    const done = this.execute(run, plans, force, controller.signal).finally(() => {
+    const done = this.execute(run, plans, controller.signal).finally(() => {
       this.abortControllers.delete(run.id);
     });
     return { run, done };
   }
 
-  private async execute(run: ExtractionRun, plans: CountryPlan[], force: boolean, signal: AbortSignal): Promise<ExtractionRun> {
+  private async execute(run: ExtractionRun, plans: CountryPlan[], signal: AbortSignal): Promise<ExtractionRun> {
     const tag = `[Run ${run.id.slice(0, 8)}]`;
     try {
       for (const plan of plans) {
         if (signal.aborted) break;
-        await this.runCountry(run, plan, force, signal);
+        await this.runCountry(run, plan, signal);
       }
       if (signal.aborted) {
         const runRec = ledgerService.getRun(run.id);
@@ -156,7 +173,7 @@ class ExtractionService {
       } else {
         ledgerService.finishRun(run.id, 'COMPLETED', run.stats);
         const s = run.stats;
-        this.log(run.id, 'success', `Extraction completed. Completed ${s.completed}, no data ${s.noData}, failed ${s.failed}, skipped ${s.skipped}`);
+        this.log(run.id, 'success', `Extraction completed. With data ${s.completed}, 0 records ${s.noData}, failed ${s.failed}, skipped ${s.skipped}, flags ${s.flags.length}`);
       }
     } catch (err: any) {
       console.error(`❌ ${tag} Aborted: ${err.message}`);
@@ -166,7 +183,7 @@ class ExtractionService {
     return ledgerService.getRun(run.id)!;
   }
 
-  private async runCountry(run: ExtractionRun, plan: CountryPlan, force: boolean, signal: AbortSignal): Promise<void> {
+  private async runCountry(run: ExtractionRun, plan: CountryPlan, signal: AbortSignal): Promise<void> {
     const country = findCountry(plan.countryCode);
     if (!country) throw new Error(`Unknown country ${plan.countryCode}`);
     if (!isEnabled(country)) throw new Error(`${country.code} is disabled: missing ${missingConfig(country).join(', ')}`);
@@ -183,7 +200,7 @@ class ExtractionService {
       for (const period of plan.periods) {
         for (const tradeType of flows) {
           const key: TaskKey = { countryCode: country.code, hsCode, period, tradeType };
-          if (this.shouldSkip(run.trigger, key, force)) stats.skipped++;
+          if (this.inFlight.has(taskId(key))) stats.skipped++;
           else tasks.push(key);
         }
       }
@@ -193,8 +210,8 @@ class ExtractionService {
     this.log(run.id, 'info', `Processing ${country.name} (${country.code}): ${tasks.length} task(s) to fetch`);
 
     const touched = new Set<Period>();
-    const emptyMonths = new Set<Period>();
     const limit = this.limitFor(country.code);
+    const streak = new EmptyStreak(country.code, env.EMPTY_STREAK_FLAG_AT, stats, (msg) => this.log(run.id, 'warn', msg));
 
     await Promise.all(
       tasks.map(async (key) => {
@@ -214,31 +231,32 @@ class ExtractionService {
             else if (outcome === 'FAILED') stats.failed++;
             else stats.skipped++;
 
-            if (outcome === 'COMPLETED' || outcome === 'NO_DATA') touched.add(key.period);
-            if (outcome === 'NO_DATA') emptyMonths.add(key.period);
+            if (outcome === 'COMPLETED' || outcome === 'NO_DATA') {
+              touched.add(key.period);
+              streak.record(key, outcome === 'NO_DATA');
+            }
             ledgerService.saveRunStats(run.id, stats);
           })
         );
       })
     );
+    streak.end();
 
-    if (signal.aborted) {
-      ledgerService.saveRunStats(run.id, stats);
-      return;
-    }
-
+    // Files are written for every month this run touched, also when it was stopped part-way
     for (const period of [...touched].sort()) {
-      const records = ledgerService.getRecords(country.code, period);
-      if (records.length) {
-        const file = await exportService.writeCountryPeriod(country.code, period, records);
-        stats.files.push(file);
-        this.log(run.id, 'success', `Saved CSV file: ${file} (${records.length} records)`);
-      }
+      if (ledgerService.countRecords(country.code, period) === 0) continue;
+      const file = await exportService.writeCountryPeriod(country.code, period, () => ledgerService.iterateRecords(country.code, period));
+      stats.files.push(file.path);
+      this.log(run.id, 'success', `Saved CSV file: ${file.path} (${file.rows} rows)`);
     }
 
-    // A month where nothing has ever come back is most likely not published yet
-    const unpublished = [...emptyMonths].filter((p) => ledgerService.countCompleted(country.code, p) === 0).sort();
-    if (unpublished.length) stats.unpublishedPeriods[country.code] = unpublished;
+    // A month where nothing has ever come back: not published yet, or the source returned nothing
+    for (const period of [...touched].sort()) {
+      if (ledgerService.countCompleted(country.code, period) > 0) continue;
+      const message = `${country.code} ${period}: every HS code returned 0 records. Not published yet, or the source returned nothing; check the source.`;
+      stats.flags.push({ countryCode: country.code, kind: 'EMPTY_MONTH', message, at: new Date().toISOString() });
+      this.log(run.id, 'warn', message);
+    }
     ledgerService.saveRunStats(run.id, stats);
   }
 
@@ -273,7 +291,7 @@ class ExtractionService {
       if (status === 'COMPLETED') {
         this.log(runId, 'success', `[${key.countryCode}] ${key.period} HS ${key.hsCode} ${key.tradeType}: ${records.length} rows`);
       } else {
-        this.log(runId, 'info', `[${key.countryCode}] ${key.period} HS ${key.hsCode} ${key.tradeType}: no data`);
+        this.log(runId, 'info', `[${key.countryCode}] ${key.period} HS ${key.hsCode} ${key.tradeType}: 0 records`);
       }
       return status === 'COMPLETED' ? 'COMPLETED' : 'NO_DATA';
     } catch (err: any) {
@@ -303,16 +321,6 @@ class ExtractionService {
     return [...valid];
   }
 
-  private shouldSkip(trigger: RunTrigger, key: TaskKey, force: boolean): boolean {
-    if (this.inFlight.has(taskId(key))) return true;
-    if (force) return false;
-    const existing = ledgerService.findTask(key);
-    if (!existing) return false;
-    if (existing.status === 'COMPLETED') return true;
-    // Scheduled runs give up after repeated errors; manual runs always retry
-    return existing.status === 'FAILED' && trigger !== 'MANUAL_EXTRACT' && existing.attempts >= env.MAX_TASK_ATTEMPTS;
-  }
-
   private limitFor(code: string): Semaphore {
     if (!this.countryLimits.has(code)) this.countryLimits.set(code, new Semaphore(env.MAX_CONCURRENT_PER_COUNTRY));
     return this.countryLimits.get(code)!;
@@ -325,3 +333,52 @@ class ExtractionService {
 }
 
 export const extractionService = new ExtractionService();
+
+/**
+ * Watches for a long unbroken stretch of tasks returning 0 records. Some empties are normal
+ * (no trade for a code that month), but a long stretch usually means the source has no data
+ * there or is quietly refusing requests. The run is flagged once per stretch and carries on.
+ */
+class EmptyStreak {
+  private count = 0;
+  private first: TaskKey | null = null;
+  private last: TaskKey | null = null;
+  private flag: RunFlag | null = null;
+
+  constructor(
+    private readonly countryCode: string,
+    private readonly threshold: number,
+    private readonly stats: RunStats,
+    private readonly warn: (message: string) => void
+  ) {}
+
+  public record(key: TaskKey, empty: boolean): void {
+    if (!empty) return this.end();
+    this.count++;
+    this.first ??= key;
+    this.last = key;
+    if (this.count === this.threshold) {
+      this.flag = { countryCode: this.countryCode, kind: 'EMPTY_STREAK', message: this.describe(), at: new Date().toISOString() };
+      this.stats.flags.push(this.flag);
+      this.warn(this.flag.message);
+    } else if (this.flag) {
+      this.flag.message = this.describe();
+    }
+  }
+
+  /** Closes the current stretch, settling its flag's final size */
+  public end(): void {
+    if (this.flag) this.flag.message = this.describe(true);
+    this.count = 0;
+    this.first = this.last = null;
+    this.flag = null;
+  }
+
+  private describe(ended = false): string {
+    const at = (k: TaskKey | null) => (k ? `HS ${k.hsCode} ${k.period}` : '');
+    return (
+      `${this.countryCode}: ${this.count}${ended ? '' : '+'} tasks in a row returned 0 records (${at(this.first)} → ${at(this.last)}). ` +
+      'There may be no data here, or the source may be restricting requests; check it. The run moved on.'
+    );
+  }
+}

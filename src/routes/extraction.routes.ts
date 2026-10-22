@@ -6,4 +6,3 @@ import { extractionSchema } from '../schemas';
 export const extractionRoutes = Router();
 
 extractionRoutes.post('/', validateBody(extractionSchema), extractions.start);
-extractionRoutes.post('/daily-check', extractions.dailyCheck);

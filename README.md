@@ -1,182 +1,160 @@
-# Global Trade Data Extraction & Scheduler Engine (Node.js Backend)
+# Global Trade Data Extraction (Node.js Backend)
 
-One Node.js / Express / TypeScript service that pulls customs trade data from several countries' public APIs on a schedule, tracks every extraction in a SQLite ledger, and writes one CSV per country-month.
+One Node.js / Express / TypeScript service that pulls customs trade data from government sources on request, keeps the rows in a SQLite ledger, and stores one file per country-month in a private Supabase Storage bucket. Users sign in with Supabase Auth; the web UI lives in `../frontend`.
 
-Each country is one small file in src/countries/; the scheduler, retries, rate limiting, ledger, exports and auth are shared. The web UI lives in its own repo (`data-extraction-web`).
+Each source country is one file in src/countries/. Admins can also add **download-only** countries in the UI: sources that publish files (e.g. Excel) which users download from the website and upload here.
 
 ---
 
-## How the scheduler works
+## Setup
 
-The scheduler ticks **daily** (`SCHEDULER_CRON`, default `0 3 * * *`). On each tick, for every enabled country it:
+Requires Node.js 22.13+ (uses the built-in `node:sqlite`) and a Supabase project.
 
-1. Works out the latest month the source should have published, from the country's `lagMonths` and `publishDay`.
-   e.g. on 17 Oct 2026, Indonesia (2-month lag) → 2026-08, Thailand (2-month lag) → 2026-08.
-2. Re-checks that month plus the previous `AUTO_SYNC_LOOKBACK_MONTHS - 1` months.
-3. Breaks the work into **tasks**: one per (country, HS code, month, trade flow).
-4. Skips tasks that are `COMPLETED`, runs the rest:
-   - rows returned → `COMPLETED`
-   - nothing returned → `NO_DATA` (not published yet, or no trade); retried on the next tick
-   - error → `FAILED`; retried on the next tick until `MAX_TASK_ATTEMPTS` consecutive failures
-5. Rebuilds `storage/exports/{CC}/{CC}_{YYYY-MM}.csv` for every month it touched.
+1. In Supabase, open **Project Settings → API** and copy the project URL and the **service_role** key.
+2. Configure and start the API:
 
-Because every tick re-checks a window of months, late publications and days the server was down fill in on their own. A month where every task came back empty is reported in the run's `unpublishedPeriods`.
+   ```bash
+   cp .env.example .env     # set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (and BPS_API_KEY for Indonesia)
+   npm install
+   npm run dev              # or: npm run build && npm run start:prod
+   ```
 
-**Concurrency:** countries run in parallel. Each country is capped at `MAX_CONCURRENT_PER_COUNTRY` tasks and its `rateLimitPerMinute`, and the whole process at `MAX_CONCURRENT_EXTRACTIONS`. A task that is already running (e.g. the cron and a manual call overlap) is skipped, not duplicated. Only one daily check runs at a time.
+   On first start the private bucket `SUPABASE_BUCKET` (default `trade-exports`) is created.
+3. Create the first admin (later accounts are created in the UI's Admin page):
 
-**Restarts:** on boot, runs left `RUNNING` are marked `INTERRUPTED` and their in-flight tasks `FAILED`, so the next tick picks them up.
+   ```bash
+   npm run create-admin -- --email you@company.com --password 'a-long-password'
+   ```
+
+   Run it again for an existing user to make them an admin (and optionally reset their password).
+4. Set up the frontend (`../frontend/README.md`) with the project URL and the **anon** key.
+
+The service_role key bypasses all Supabase security, so it stays in this server's `.env` only. Turn off public sign-ups in Supabase (**Authentication → Sign In / Providers → Allow new users to sign up**) so only admins create accounts.
+
+---
+
+## Users and roles
+
+- Users sign in in the browser with email and password (Supabase Auth). Every API call sends the Supabase access token; the API verifies it with Supabase (cached for a minute) and also checks `ALLOWED_IPS`.
+- The role is `app_metadata.role` (`admin` or `user`), which only the service role can set, so users cannot promote themselves.
+- Everyone can run extractions, mark/unmark completed months, upload, download and delete files.
+- Admins also manage accounts (`/api/admin/users`) and country details (name, source links, notes, lag), and add or remove download-only countries.
+
+---
+
+## Completed months
+
+A month counts as completed only when a user marks it (one month, a range, or a selection) on the dashboard. Extraction results never mark months on their own. Unmarking a month doesn't touch its stored rows or files.
+
+---
+
+## How an extraction runs
+
+1. The request names a country, one month or a range, a flow (or all) and the dataset (saved complete/test HS code list, or typed-in codes).
+2. The work is split into **tasks**: one per (country, HS code, month, flow), run code by code (sorted) so sources that return a whole chapter or year per request answer many tasks from one download. Every task is extracted, also ones extracted before; a task already running in another run is skipped.
+3. Each task ends as `COMPLETED` (rows), `NO_DATA` (0 records) or `FAILED` (error, retried with backoff first).
+4. Every month the run touched is written to `{CC}/{YYYY}/{CC}_{YYYY-MM}.csv` in the bucket, replacing the previous file (no history is kept). Files are also written when a run is stopped part-way.
+
+**Flags.** After `EMPTY_STREAK_FLAG_AT` consecutive 0-record tasks (default 300) the run gets an `EMPTY_STREAK` flag naming the range (no data there, or the source may be restricting requests) and carries on. A month where every task came back empty gets an `EMPTY_MONTH` flag.
+
+**Logs** are kept in memory per run (last 500 lines) and shown when an extraction is opened in the UI; they don't survive a restart. On boot, runs left `RUNNING` are marked `INTERRUPTED`.
+
+---
+
+## What the files contain
+
+Files hold the source's own data, untouched; filtering happens downstream.
+
+| Code | Columns |
+|------|---------|
+| `ZAF` | The SARS file exactly as delivered: its 21 columns with the cell text unchanged (SARS serves `.xlsx`; it is written as CSV without changing any value). |
+| `THA` | Every field of the MOC response, with `request_hs_code` and `trade_flow` in front (the response doesn't say which code and flow were asked for). |
+| `IDN` | Every field of the BPS response, with `request_hs_code` and `trade_flow` in front. |
+| download-only | The uploaded files as they are: `{CC}/{YYYY}/{CC}_{YYYY-MM}__{original name}` (`.xlsx`, `.xls`, `.csv`, `.zip`, up to `UPLOAD_MAX_MB`). |
+
+Supabase limits the size of one stored file (50 MB on the free plan; raise it under **Storage → Settings** on paid plans). A full month of South Africa's complete HS list can exceed that.
 
 ---
 
 ## Countries
 
-| Code | Source | Lag | Flows | HS codes accepted | Needs |
+| Code | Source | Default lag | Flows | HS codes accepted | Needs |
 |------|--------|-----|-------|-------------------|-------|
 | `IDN` | BPS DataExim API | 2 months | IMPORT, EXPORT | 8-digit tariff lines | `BPS_API_KEY` |
 | `THA` | Thailand MOC trade report API | 2 months | IMPORT, EXPORT | 4–11 digits | — |
 | `ZAF` | SARS Trade Statistics portal | 2 months | IMPORT, EXPORT | 8-digit tariff lines (4–6 digits return every line under them) | — |
 
-A country whose required env vars are missing is listed as disabled and skipped by the scheduler.
+Admins can change what users see for these (name, source name and link, endpoint, method, output, notes, lag, publish day); the changes are stored in the ledger (`country_config`). The lag only decides which months count as published for the month presets.
 
-**South Africa** has no API: `south-africa.ts` fills in the portal's download form over plain HTTP (ASP.NET postbacks, no browser) and reads the workbook it returns. The portal exports a whole chapter for any months of one year, so each (flow, year, chapter) is downloaded once per run with every month the run covers (15–60s), and every HS code and month in that chapter is answered from it. Runs go code by code in sorted order (not month by month) so a chapter is finished while its download is still cached. At most two portal sessions run at once, and South Africa has no per-lookup rate limit (`rateLimitPerMinute: 0`). Rows are per tariff line × partner country × port × transport mode. Values are customs values in rand (`Value (Local)`, currency `ZAR`); SARS publishes no USD figure and no trader names. Extra fields such as `transportMode`, `portCode` and `worldRegion` are kept in the ledger.
+**South Africa** has no API: `south-africa.ts` fills in the portal's download form over plain HTTP (ASP.NET postbacks, no browser) and reads the workbook it returns. Each (flow, year, chapter) is downloaded once per run with every month the run covers, and every HS code in that chapter is answered from it. At most two portal sessions run at once.
 
-### Adding a country
+### Adding an extracted country
 
-1. Create `src/countries/<name>.ts` exporting a `Country` object (see `src/countries/country.types.ts`):
-
-   ```ts
-   import { Country } from './country.types';
-   import { getJson } from '../utils/http';
-   import { splitPeriod } from '../utils/period';
-
-   export const vietnam: Country = {
-     code: 'VNM',
-     name: 'Vietnam',
-     lagMonths: 2,
-     tradeTypes: ['IMPORT', 'EXPORT'],
-     requiredEnv: ['VNM_API_KEY'],          // optional: stays disabled until set
-     normalizeHsCode: (raw) => (/^\d{8}$/.test(raw) ? raw : null),
-
-     async fetchRecords({ hsCode, period, tradeType }) {
-       const { year, month } = splitPeriod(period);
-       const rows = await getJson<any[]>(`https://example.gov.vn/api?hs=${hsCode}&y=${year}&m=${month}`);
-       return rows.map((r) => ({ date: `${period}-01`, hsCode, tradeType, productDescription: '', valueUsd: r.value }));
-     },
-   };
-   ```
-
+1. Create `src/countries/<name>.ts` exporting a `Country` object (see `src/countries/country.types.ts`, and `thailand.ts` for a short example): code, name, `source` (shown to users), `lagMonths`, `tradeTypes`, `hsCodeHint`, `normalizeHsCode` and `fetchRecords`, which returns the response rows as they are (`[]` when there are none).
 2. Add it to the list in `src/countries/index.ts`.
-3. Put its HS codes in `storage/hs_codes/VNM.csv` (first column is read; headers are ignored).
+3. Put its HS codes in `storage/hs_codes/{CC}.csv` and a short `{CC}_TEST.csv` (first column is read; headers are ignored).
 
-That's all. Return `[]` when a month isn't published yet. `getJson` throws a `RetryableError` for 429/5xx/network failures, which the extraction service retries with backoff; rate limiting (`rateLimitPerMinute`), scheduling, the ledger and CSV exports are shared. For sources that return a whole year per call, wrap the request in a `TtlCache` (see `indonesia.ts`).
+`getJson` throws a `RetryableError` for 429/5xx/network failures, which the extraction service retries with backoff. For sources that return a whole year or chapter per call, cache the request in a `TtlCache`; `runPeriods` in the query lists every month of the run so one request can cover them all.
 
 ---
 
 ## Project structure
 
-A standard layered Express app: **routes → middlewares → controllers → services**, with country sources and shared helpers kept separate.
-
 ```
 src/
-├── server.ts            # Start-up: recover interrupted runs, listen, start the cron
+├── server.ts            # Start-up: recover interrupted runs, create the bucket, listen
 ├── app.ts               # Express app: JSON, logging, /api routes, error handler
-├── config/env.ts        # Validated environment variables
-├── countries/           # One file per data source + index.ts (the list)
-│   ├── country.types.ts #   The Country interface every source implements
-│   ├── indonesia.ts
-│   ├── thailand.ts
-│   └── south-africa.ts  #   SARS portal (form postbacks + workbook download)
+├── config/              # env.ts (validated environment), supabase.ts (service-role client, roles)
+├── countries/           # One file per extracted source + index.ts (the list)
 ├── routes/              # URL → middleware → controller, one file per resource
-├── middlewares/
-│   ├── auth.middleware.ts      # IP allow-list, session token
-│   ├── validate.middleware.ts  # zod body/query validation
-│   └── error.middleware.ts     # HttpError → JSON response, 404s
+├── middlewares/         # auth (Supabase token, role, IP allow-list), validate (zod), error
 ├── schemas/index.ts     # Request shapes (zod)
 ├── controllers/         # Thin: read the request, call a service, send the response
 ├── services/
-│   ├── extraction.service.ts   # Plan/preview manual runs; run tasks with limits + retries
-│   ├── scheduler.service.ts    # Daily due-check (cron)
-│   ├── ledger.service.ts       # SQLite: runs, tasks, trade records
-│   ├── export.service.ts       # One CSV per country-month
-│   ├── storage.service.ts      # Files on disk (path-safe)
-│   ├── hs-codes.service.ts     # storage/hs_codes/{CC}.csv (server-side only)
-│   └── auth.service.ts         # Password check, session tokens
-├── utils/               # http (getJson, withRetry), errors, period, concurrency, cache, hs-codes, client-ip, xlsx
-└── types/index.ts       # Shared types: TradeRecord, Task, Run, ...
+│   ├── extraction.service.ts   # Plan runs; run tasks with limits, retries and flags
+│   ├── country.service.ts      # Built-in sources + admin edits + download-only countries
+│   ├── ledger.service.ts       # SQLite: runs, tasks, rows, country config, completed months
+│   ├── export.service.ts       # One CSV per country-month (raw columns) → Storage
+│   ├── storage.service.ts      # Supabase Storage: upload, list, signed links, zip, delete
+│   └── hs-codes.service.ts     # storage/hs_codes/{CC}.csv (server-side only)
+├── scripts/create-admin.ts     # First admin account
+├── utils/               # http, errors, period, concurrency, cache, hs-codes, client-ip, xlsx
+└── types/index.ts       # Shared types
 ```
-
-**Request flow, e.g. `POST /api/extractions`:** `routes/index.ts` checks the IP and token → `extraction.routes.ts` validates the body with `extractionSchema` → `extraction.controller.start` → `extractionService.planManual` (country, months, HS codes) → `extractionService.startRun` runs tasks in the background → each task calls the country's `fetchRecords` → results go to the ledger and the country-month CSV.
-
-Errors: throw an `HttpError` (`badRequest`, `notFound`, … in `utils/errors.ts`) anywhere; `error.middleware.ts` turns it into `{ error, ...details }` with the right status. Express 5 forwards errors from async handlers automatically.
-
----
-
-## Getting started
-
-Requires Node.js 22.13+ (uses the built-in `node:sqlite`).
-
-```bash
-cp .env.example .env   # then set API_PASSWORD, JWT_SECRET and any country keys
-npm install
-npm run dev            # or: npm run build && npm run start:prod
-```
-
-The API runs on `http://localhost:3000` (JSON only; there is no UI on the backend).
-
-### Web UI
-
-The UI is a separate Next.js app in its own repo (`data-extraction-web`, port 3001); see its README for setup. The browser calls this API directly (Express already allows cross-origin requests), so the API sees each browser's real IP for its `ALLOWED_IPS` check.
-
-The API only trusts `X-Forwarded-For` from loopback, so a client cannot fake its IP with that header.
 
 Key settings (see `.env.example` for all):
 
 | Variable | Default | Meaning |
 |----------|---------|---------|
-| `SCHEDULER_CRON` | `0 3 * * *` | When the daily due-check runs |
-| `SCHEDULER_TIMEZONE` | server local | e.g. `Asia/Jakarta` |
-| `SCHEDULER_RUN_ON_START` | `false` | Also run a due-check at boot |
-| `AUTO_SYNC_LOOKBACK_MONTHS` | `3` | Months re-checked per tick |
-| `MAX_TASK_ATTEMPTS` | `5` | Consecutive failures before auto sync gives up on a task |
-| `MAX_CONCURRENT_EXTRACTIONS` | `4` | Tasks running at once, all countries |
-| `MAX_CONCURRENT_PER_COUNTRY` | `2` | Tasks running at once, per country |
+| `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | — | Supabase project (required) |
+| `SUPABASE_BUCKET` | `trade-exports` | Private bucket for files |
+| `UPLOAD_MAX_MB` | `200` | Largest upload for download-only countries |
+| `ALLOWED_IPS` | empty (all) | Comma-separated IPs allowed to call the API |
+| `EMPTY_STREAK_FLAG_AT` | `300` | Consecutive 0-record tasks before a run is flagged |
+| `MAX_CONCURRENT_EXTRACTIONS` / `MAX_CONCURRENT_PER_COUNTRY` | `4` / `2` | Tasks running at once |
 | `DB_PATH` | `./storage/ledger.db` | SQLite ledger |
 
 ---
 
 ## REST API
 
-All `/api` routes check the caller's IP against `ALLOWED_IPS`. Everything except `/api/auth/login` also needs a session token: `Authorization: Bearer <token>`, or `?token=` on download links. Errors are always `{ "error": "...", ...details }`.
+Every `/api` route checks `ALLOWED_IPS` and needs `Authorization: Bearer <Supabase access token>`. Errors are `{ "error": "...", ...details }`.
 
-| Method & path | Purpose |
-|---------------|---------|
-| `POST /api/auth/login` | `{ "password": "..." }` → `{ token, expiresIn }` |
-| `GET /api/auth/session` | 200 while the token is valid |
-| `GET /api/health` | Scheduler state and task totals by status |
-| `GET /api/countries` | Countries, enabled state, missing config, flows, months the daily check covers, saved-code counts |
-| `GET /api/countries/:code/coverage` | Task counts per month (completed / no data / failed) |
-| `POST /api/extractions` | Start a manual extraction in the background → `202 { runId }` |
-| `POST /api/extractions/preview` | Same body; validates it and reports how many tasks per month are already done. Runs nothing. |
-| `POST /api/extractions/daily-check` | Run the scheduler's daily check now → `202 { runId }` (409 if one is running) |
-| `GET /api/runs?limit=25` / `GET /api/runs/:id` | Runs with live stats |
-| `GET /api/tasks?countryCode=&status=&period=&hsCode=&limit=` | Per-task state (debugging) |
-| `GET /api/files?country=` | Export files |
-| `GET /api/files/download?path=THA/THA_2026-08.csv` | Download a file |
-
-### Manual extraction body
-
-```jsonc
-{
-  "countryCode": "THA",
-  "startDate": "2026-06",
-  "endDate": "2026-08",
-  "hsCodes": "847130, 851713",  // optional: one code, or many separated by commas/new lines;
-                                //   omit to use the saved list in storage/hs_codes/THA.csv
-  "tradeType": "ALL",           // ALL | IMPORT | EXPORT (must be supported by the country)
-  "force": true                 // default: re-extract months already done (the UI warns first via /preview)
-}
-```
-
-Ranges are limited to 60 months and 1000 HS codes; codes the country rejects return a 400 listing them in `invalidHsCodes`.
-
-The saved HS code lists are edited on the server only. The API never returns them; `/api/countries` only reports how many there are.
+| Method & path | Who | Purpose |
+|---------------|-----|---------|
+| `GET /api/auth/me` | all | The signed-in user and role |
+| `GET /api/health` | all | Environment |
+| `GET /api/countries` | all | Countries with source, settings, completed months, latest completed, last extraction |
+| `POST /api/countries/:code/months` | all | `{ start, end? }` or `{ periods: [...] }` → mark completed |
+| `POST /api/countries/:code/months/remove` | all | `{ periods: [...] }` → unmark |
+| `POST /api/countries` | admin | Add a download-only country `{ code, name, sourceUrl, sourceName?, notes?, lagMonths? }` |
+| `PATCH /api/countries/:code` | admin | Edit name, source links and text, notes, lag, publish day |
+| `DELETE /api/countries/:code` | admin | Remove a download-only country |
+| `POST /api/extractions` | all | `{ countryCode, startDate, endDate, tradeType, mode, hsCodes? }` → `202 { runId }` |
+| `GET /api/runs?limit=` · `GET /api/runs/:id` | all | Runs with live stats and flags |
+| `GET /api/runs/:id/logs` · `POST /api/runs/:id/stop` | all | Logs; stop a run |
+| `GET /api/files?country=` | all | Stored files with `countryCode`, `period`, `origin` (`extracted`/`uploaded`) |
+| `GET /api/files/url?path=` | all | `{ url }`: signed download link, valid 5 minutes |
+| `POST /api/files/zip` · `POST /api/files/delete` | all | `{ paths: [...] }` → one zip / delete |
+| `PUT /api/files/upload?country=&period=&name=` | all | Raw file body → stored for that country and month |
+| `GET/POST /api/admin/users` · `PATCH/DELETE /api/admin/users/:id` | admin | List, create (`{ email, password, role }`), change role/password, delete accounts |

@@ -172,60 +172,35 @@ async function downloadChapter(tradeType: TradeFlow, periods: Period[], chapter:
     [`${FIELD}chkAll`]: 'on',
     ...session.all('chkColumns'),
   });
-  return file ? parseWorkbook(file, tradeType, new Set(periods)) : new Map();
+  return file ? parseWorkbook(file, new Set(periods)) : new Map();
 }
 
-const COLUMNS = [
-  'Tariff', 'TariffAndDescription', 'YearMonth', 'StatisticalQuantity', 'StatisticalUnit', 'CustomsValue',
-  'CountryOfOrigin', 'CountryOfOriginName', 'CountryOfDestination', 'CountryOfDestinationName',
-  'DistrictOfficeCode', 'DistrictOfficeName', 'TransportCodeDescription', 'WorldRegion',
-] as const;
-
-const toNumber = (text: string) => {
-  const n = parseFloat(text.replace(/,/g, ''));
-  return isNaN(n) ? undefined : n;
-};
-
-async function parseWorkbook(file: Buffer, tradeType: TradeFlow, periods: Set<Period>): Promise<ChapterRows> {
+/**
+ * Rows exactly as SARS delivers them: every column, under its own header, with the cell text
+ * untouched. Only the tariff and month are read, to file each row under its HS code and month.
+ */
+async function parseWorkbook(file: Buffer, periods: Set<Period>): Promise<ChapterRows> {
   const rows: ChapterRows = new Map();
-  let at: Map<string, number> | undefined;
+  let header: string[] | undefined;
+  let tariffAt = -1;
+  let monthAt = -1;
 
   await eachSheetRow(file, (cells) => {
-    if (!at) {
-      at = new Map(cells.map((name, i) => [name, i]));
-      const missing = COLUMNS.filter((c) => !at!.has(c));
-      if (missing.length) throw new Error(`SARS workbook is missing column(s): ${missing.join(', ')}`);
+    if (!header) {
+      header = cells;
+      tariffAt = header.indexOf('Tariff');
+      monthAt = header.indexOf('YearMonth');
+      if (tariffAt < 0 || monthAt < 0) throw new Error('SARS workbook has no Tariff or YearMonth column');
       return;
     }
-    const get = (c: (typeof COLUMNS)[number]) => cells[at!.get(c)!] ?? '';
-    const yearMonth = get('YearMonth');
+    const yearMonth = cells[monthAt] ?? '';
     const period = `${yearMonth.slice(0, 4)}-${yearMonth.slice(4, 6)}`;
     if (!periods.has(period)) return;
-    const tariff = get('Tariff').replace(/\D/g, '').padStart(8, '0');
+    const tariff = (cells[tariffAt] ?? '').replace(/D/g, '').padStart(8, '0');
 
-    const record: TradeRecord = {
-      date: `${period}-01`,
-      hsCode: tariff,
-      productDescription: get('TariffAndDescription').replace(/^\d+\s*-\s*/, ''),
-      tradeType,
-      // SARS publishes no trader names
-      importer: '',
-      exporter: '',
-      originCountry: get('CountryOfOriginName'),
-      destinationCountry: get('CountryOfDestinationName'),
-      quantity: toNumber(get('StatisticalQuantity')),
-      unit: get('StatisticalUnit'),
-      // Customs value in rand; SARS publishes no USD figure
-      valueLocal: toNumber(get('CustomsValue')),
-      currency: 'ZAR',
-      port: get('DistrictOfficeName'),
-      declarationNo: '',
-      portCode: get('DistrictOfficeCode'),
-      originCountryCode: get('CountryOfOrigin'),
-      destinationCountryCode: get('CountryOfDestination'),
-      transportMode: get('TransportCodeDescription'),
-      worldRegion: get('WorldRegion'),
-    };
+    const record: TradeRecord = {};
+    header.forEach((name, i) => (record[name] = cells[i] ?? ''));
+
     let month = rows.get(period);
     if (!month) rows.set(period, (month = new Map()));
     const list = month.get(tariff);
@@ -239,10 +214,18 @@ async function parseWorkbook(file: Buffer, tradeType: TradeFlow, periods: Set<Pe
 export const southAfrica: Country = {
   code: 'ZAF',
   name: 'South Africa',
+  source: {
+    name: 'SARS Trade Statistics portal',
+    url: PORTAL_URL,
+    endpoint: `${PORTAL_URL} (Tariffs focus area) → Download.aspx`,
+    method: 'Fills in the portal download form over HTTP (no browser). One download per flow, chapter and year covers every month of the run; all HS codes in that chapter are answered from it.',
+    output: 'The SARS file exactly as delivered: all 21 columns (office, origin, destination, tariff, unit, transport, quantity, customs value in rand, region…), unchanged.',
+  },
   // A month is released at the end of the following month
   lagMonths: 2,
   publishDay: 1,
   tradeTypes: ['IMPORT', 'EXPORT'],
+  hsCodeHint: 'South Africa uses 8-digit tariff lines; 4 or 6 digits return every line under that heading.',
   // No per-lookup limit: nearly every lookup is answered from a downloaded chapter, and
   // real portal traffic is already capped by portalSlots
   rateLimitPerMinute: 0,
