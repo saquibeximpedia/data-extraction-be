@@ -18,6 +18,8 @@ export interface TradeRecord {
   valueLocal?: number;
   currency?: string;
   port?: string;
+  transportMode?: string;
+  worldRegion?: string;
   declarationNo?: string;
   [customField: string]: any;
 }

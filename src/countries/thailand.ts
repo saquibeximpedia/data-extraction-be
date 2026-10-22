@@ -51,19 +51,23 @@ export const thailand: Country = {
       .map((r) => {
         const qty = parseFloat(String(r.quantity || 0));
         const usd = parseFloat(String(r.value_usd || 0));
+        const baht = parseFloat(String(r.value_baht ?? ''));
         const partner = r.country_name_en || '';
         return {
           date: `${r.year || year}-${String(r.month || month).padStart(2, '0')}-01`,
           hsCode,
           productDescription: r.description || '',
           tradeType,
-          importer: isExport ? '' : 'Thailand Importer',
-          exporter: isExport ? 'Thailand Exporter' : '',
+          importer: '',
+          exporter: '',
           originCountry: isExport ? 'Thailand' : partner,
           destinationCountry: isExport ? partner : 'Thailand',
           quantity: isNaN(qty) ? undefined : qty,
-          unit: 'KG',
+          // The API reports quantities without their unit (it varies by HS code)
+          unit: '',
           valueUsd: isNaN(usd) ? undefined : usd,
+          valueLocal: isNaN(baht) ? undefined : baht,
+          currency: 'THB',
           port: '',
           declarationNo: '',
           accQuantity: r.acc_quantity,

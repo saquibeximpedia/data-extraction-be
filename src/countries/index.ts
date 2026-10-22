@@ -1,11 +1,12 @@
 import { Country } from './country.types';
 import { indonesia } from './indonesia';
+import { southAfrica } from './south-africa';
 import { thailand } from './thailand';
 
 export type { Country, FetchQuery } from './country.types';
 
 /** Every supported country. To add one: create its file in this folder and list it here. */
-const ALL_COUNTRIES: Country[] = [indonesia, thailand];
+const ALL_COUNTRIES: Country[] = [indonesia, thailand, southAfrica];
 
 const byCode = new Map(ALL_COUNTRIES.map((c) => [c.code, c]));
 

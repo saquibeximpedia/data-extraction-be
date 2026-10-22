@@ -34,8 +34,11 @@ Because every tick re-checks a window of months, late publications and days the 
 |------|--------|-----|-------|-------------------|-------|
 | `IDN` | BPS DataExim API | 2 months | IMPORT, EXPORT | 8-digit tariff lines | `BPS_API_KEY` |
 | `THA` | Thailand MOC trade report API | 2 months | IMPORT, EXPORT | 4–11 digits | — |
+| `ZAF` | SARS Trade Statistics portal | 2 months | IMPORT, EXPORT | 8-digit tariff lines (4–6 digits return every line under them) | — |
 
 A country whose required env vars are missing is listed as disabled and skipped by the scheduler.
+
+**South Africa** has no API: `south-africa.ts` fills in the portal's download form over plain HTTP (ASP.NET postbacks, no browser) and reads the workbook it returns. The portal only exports whole chapters, so each (flow, month, chapter) is downloaded once (~15s) and every HS code in that chapter is answered from it. At most two portal sessions run at once. Rows are per tariff line × partner country × port × transport mode. Values are customs values in rand (`Value (Local)`, currency `ZAR`); SARS publishes no USD figure and no trader names. Extra fields such as `transportMode`, `portCode` and `worldRegion` are kept in the ledger.
 
 ### Adding a country
 
@@ -81,7 +84,8 @@ src/
 ├── countries/           # One file per data source + index.ts (the list)
 │   ├── country.types.ts #   The Country interface every source implements
 │   ├── indonesia.ts
-│   └── thailand.ts
+│   ├── thailand.ts
+│   └── south-africa.ts  #   SARS portal (form postbacks + workbook download)
 ├── routes/              # URL → middleware → controller, one file per resource
 ├── middlewares/
 │   ├── auth.middleware.ts      # IP allow-list, session token
@@ -97,7 +101,7 @@ src/
 │   ├── storage.service.ts      # Files on disk (path-safe)
 │   ├── hs-codes.service.ts     # storage/hs_codes/{CC}.csv (server-side only)
 │   └── auth.service.ts         # Password check, session tokens
-├── utils/               # http (getJson, withRetry), errors, period, concurrency, cache, hs-codes, client-ip
+├── utils/               # http (getJson, withRetry), errors, period, concurrency, cache, hs-codes, client-ip, xlsx
 └── types/index.ts       # Shared types: TradeRecord, Task, Run, ...
 ```
 

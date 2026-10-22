@@ -60,12 +60,13 @@ export const indonesia: Country = {
           hsCode: code?.[1] ?? hsCode,
           productDescription: code?.[2]?.trim() ?? '',
           tradeType,
-          importer: isExport ? r.ctr || '' : 'PT Indonesia Importer',
-          exporter: isExport ? 'PT Indonesia Exporter' : r.ctr || '',
+          // BPS publishes no trader names
+          importer: '',
+          exporter: '',
           originCountry: isExport ? 'Indonesia' : r.ctr || '',
           destinationCountry: isExport ? r.ctr || '' : 'Indonesia',
           quantity: isNaN(kg) ? undefined : kg,
-          unit: 'KG',
+          unit: 'KG', // netweight is reported in kilograms
           valueUsd: isNaN(usd) ? undefined : usd,
           port: r.pod || '',
           declarationNo: '',

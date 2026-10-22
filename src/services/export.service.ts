@@ -1,22 +1,21 @@
 import { Period, TradeRecord } from '../types';
 import { storageService } from './storage.service';
 
+// Same columns for every country; a cell stays empty when the source doesn't report that field
 const COLUMNS: [header: string, value: (r: TradeRecord) => unknown][] = [
-  ['Date', (r) => r.date],
-  ['HS Code', (r) => r.hsCode],
-  ['Product Description', (r) => r.productDescription],
-  ['Trade Type', (r) => r.tradeType],
-  ['Importer', (r) => r.importer],
-  ['Exporter', (r) => r.exporter],
-  ['Origin Country', (r) => r.originCountry],
+  ['Year', (r) => r.date.slice(0, 4)],
+  ['Month', (r) => r.date.slice(5, 7)],
+  ['Port Name', (r) => r.port],
+  ['Mode of Transport', (r) => r.transportMode],
   ['Destination Country', (r) => r.destinationCountry],
+  ['Origin Country', (r) => r.originCountry],
+  ['HS Code', (r) => r.hsCode],
+  ['HS Description', (r) => r.productDescription],
   ['Quantity', (r) => r.quantity],
-  ['Unit', (r) => r.unit],
-  ['Value (USD)', (r) => r.valueUsd],
+  ['Quantity Unit', (r) => r.unit],
   ['Value (Local)', (r) => r.valueLocal],
-  ['Currency', (r) => r.currency],
-  ['Port', (r) => r.port],
-  ['Declaration No', (r) => r.declarationNo],
+  ['Value (USD)', (r) => r.valueUsd],
+  ['World Region', (r) => r.worldRegion],
 ];
 
 function escapeCell(value: unknown): string {
