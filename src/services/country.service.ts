@@ -3,7 +3,7 @@ import { TradeFlow } from '../types';
 import { badRequest, conflict, notFound } from '../utils/errors';
 import { recentPublishedPeriods } from '../utils/period';
 import { hsCodesService } from './hs-codes.service';
-import { CountryConfig, ledgerService } from './ledger.service';
+import { CountryConfig, db, MonthMark } from './db.service';
 
 /**
  * A country as users see it.
@@ -30,8 +30,12 @@ export interface CountryView {
   recentPeriods: string[];
   /** Months users marked as completed, oldest first */
   completedMonths: string[];
+  /** Months an extraction was started for that are not marked completed yet, oldest first */
+  extractingMonths: string[];
   latestCompleted: string | null;
   lastExtractedAt: string | null;
+  /** Latest month change or extraction, whichever is newer */
+  lastUpdatedAt: string | null;
   updatedAt: string | null;
   updatedBy: string | null;
 }
@@ -45,9 +49,11 @@ const MANUAL_OUTPUT = 'The files exactly as downloaded from the source.';
 function build(
   base: Country | null,
   config: CountryConfig | null,
-  completed: string[],
+  months: MonthMark[],
   lastExtractedAt: string | undefined
 ): CountryView {
+  const completed = months.filter((m) => m.status === 'completed').map((m) => m.period);
+  const lastUpdatedAt = [lastExtractedAt, ...months.map((m) => m.markedAt)].filter(Boolean).sort().pop() ?? null;
   const code = base?.code ?? config!.code;
   const lagMonths = config?.lagMonths ?? base?.lagMonths ?? 1;
   const publishDay = config?.publishDay ?? base?.publishDay ?? 1;
@@ -75,19 +81,20 @@ function build(
     testHsCodeCount: base && hsCodesService.hasTestFile(code) ? hsCodesService.getSaved(code, 'test').length : 0,
     recentPeriods: recentPublishedPeriods(lagMonths, publishDay, 12),
     completedMonths: completed,
+    extractingMonths: months.filter((m) => m.status === 'extracting').map((m) => m.period),
     latestCompleted: completed[completed.length - 1] ?? null,
     lastExtractedAt: lastExtractedAt ?? null,
+    lastUpdatedAt,
     updatedAt: config?.updatedAt ?? null,
     updatedBy: config?.updatedBy ?? null,
   };
 }
 
 export const countryService = {
-  list(): CountryView[] {
-    const configs = new Map(ledgerService.listCountryConfigs().map((c) => [c.code, c]));
-    const completed = ledgerService.listCompletedMonths();
-    const lastRuns = ledgerService.lastExtractionByCountry();
-    const months = (code: string) => (completed.get(code) ?? []).map((m) => m.period);
+  async list(): Promise<CountryView[]> {
+    const [configList, marked, lastRuns] = await Promise.all([db.listCountryConfigs(), db.listMonths(), db.lastExtractionByCountry()]);
+    const configs = new Map(configList.map((c) => [c.code, c]));
+    const months = (code: string) => marked.get(code) ?? [];
 
     const builtIn = listCountries().map((c) => build(c, configs.get(c.code) ?? null, months(c.code), lastRuns.get(c.code)));
     const manual = [...configs.values()]
@@ -96,32 +103,32 @@ export const countryService = {
     return [...builtIn, ...manual].sort((a, b) => a.name.localeCompare(b.name));
   },
 
-  get(code: string): CountryView {
-    const view = this.list().find((c) => c.code === code.toUpperCase());
+  async get(code: string): Promise<CountryView> {
+    const view = (await this.list()).find((c) => c.code === code.toUpperCase());
     if (!view) throw notFound(`Unknown country ${code.toUpperCase()}`);
     return view;
   },
 
   /** Admin: edits a country's details (a built-in source's are stored as overrides) */
-  update(code: string, patch: CountryPatch, by: string): CountryView {
-    const current = this.get(code);
-    const existing = ledgerService.getCountryConfig(current.code);
-    ledgerService.saveCountryConfig({ ...(existing ?? {}), ...patch, code: current.code, kind: current.kind }, by);
+  async update(code: string, patch: CountryPatch, by: string): Promise<CountryView> {
+    const current = await this.get(code);
+    const existing = await db.getCountryConfig(current.code);
+    await db.saveCountryConfig({ ...(existing ?? {}), ...patch, code: current.code, kind: current.kind }, by);
     return this.get(current.code);
   },
 
   /** Admin: adds a download-only country */
-  createManual(input: CountryPatch & { code: string; name: string; sourceUrl: string }, by: string): CountryView {
+  async createManual(input: CountryPatch & { code: string; name: string; sourceUrl: string }, by: string): Promise<CountryView> {
     const code = input.code.toUpperCase();
-    if (findCountry(code) || ledgerService.getCountryConfig(code)) throw conflict(`${code} already exists`);
-    ledgerService.saveCountryConfig({ ...input, code, kind: 'manual' }, by);
+    if (findCountry(code) || (await db.getCountryConfig(code))) throw conflict(`${code} already exists`);
+    await db.saveCountryConfig({ ...input, code, kind: 'manual' }, by);
     return this.get(code);
   },
 
   /** Admin: removes a download-only country (its uploaded files stay until deleted from Files) */
-  removeManual(code: string): void {
-    const view = this.get(code);
+  async removeManual(code: string): Promise<void> {
+    const view = await this.get(code);
     if (view.kind !== 'manual') throw badRequest(`${view.code} is built in and cannot be deleted`);
-    ledgerService.deleteCountryConfig(view.code);
+    await db.deleteCountryConfig(view.code);
   },
 };

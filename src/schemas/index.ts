@@ -15,12 +15,13 @@ export const extractionSchema = z.object({
   mode: z.enum(['complete', 'test']).default('complete'),
 });
 
-/** POST /api/countries/:code/months: a range (start, optional end) or a list of months */
+/** POST /api/countries/:code/months: a range (start, optional end) or a list of months, and their status */
 export const markMonthsSchema = z
   .object({
     start: month.optional(),
     end: month.optional(),
     periods: z.array(month).max(1000).optional(),
+    status: z.enum(['completed', 'extracting']).default('completed'),
   })
   .refine((b) => b.start || b.periods?.length, 'Give a start month or a list of months');
 

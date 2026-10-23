@@ -51,7 +51,7 @@ export async function remove(req: Request, res: Response): Promise<void> {
  */
 export async function upload(req: Request, res: Response): Promise<void> {
   const query = parse(uploadQuerySchema, req.query);
-  const country = countryService.get(query.country);
+  const country = await countryService.get(query.country);
   const ext = query.name.split('.').pop()?.toLowerCase() ?? '';
   if (!UPLOAD_TYPES[ext]) throw badRequest(`Upload .xlsx, .xls, .csv or .zip files (got .${ext || '?'})`);
   if (!Buffer.isBuffer(req.body) || req.body.length === 0) throw badRequest('The file is empty');

@@ -1,14 +1,8 @@
 import { app } from './app';
 import { env } from './config/env';
 import { listCountries, missingConfig } from './countries';
-import { ledgerService } from './services/ledger.service';
+import { db } from './services/db.service';
 import { storageService } from './services/storage.service';
-
-// Anything still marked running was cut off by a restart; the next run of those months retries it
-const recovered = ledgerService.recoverInterrupted();
-if (recovered.runs || recovered.tasks) {
-  console.warn(`♻️  Marked ${recovered.runs} run(s) INTERRUPTED and ${recovered.tasks} task(s) FAILED after an unclean shutdown.`);
-}
 
 for (const country of listCountries()) {
   const missing = missingConfig(country);
@@ -17,6 +11,10 @@ for (const country of listCountries()) {
 
 const server = app.listen(env.PORT, () => {
   console.log(`API running on http://localhost:${env.PORT}`);
+  db.check()
+    .then(() => db.recoverInterrupted())
+    .then((n) => n && console.warn(`♻️  Marked ${n} run(s) INTERRUPTED after an unclean shutdown.`))
+    .catch((err) => console.error(`❌ ${err.message}. Run supabase/schema.sql in the Supabase SQL editor.`));
   storageService
     .ensureBucket()
     .then(() => console.log(`🗄️  Files are stored in Supabase bucket "${env.SUPABASE_BUCKET}"`))
@@ -25,10 +23,7 @@ const server = app.listen(env.PORT, () => {
 
 function shutdown(signal: string) {
   console.log(`${signal} received: stopping...`);
-  server.close(() => {
-    ledgerService.close();
-    process.exit(0);
-  });
+  server.close(() => process.exit(0));
 }
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));

@@ -3,7 +3,7 @@ import { indonesia } from './indonesia';
 import { southAfrica } from './south-africa';
 import { thailand } from './thailand';
 
-export type { Country, CountrySource, FetchQuery } from './country.types';
+export type { Country, CountrySource, FetchQuery, MonthRows } from './country.types';
 
 /** Every supported country. To add one: create its file in this folder and list it here. */
 const ALL_COUNTRIES: Country[] = [indonesia, thailand, southAfrica];
@@ -27,6 +27,3 @@ export function isEnabled(country: Country): boolean {
   return missingConfig(country).length === 0;
 }
 
-export function enabledCountries(): Country[] {
-  return ALL_COUNTRIES.filter(isEnabled);
-}

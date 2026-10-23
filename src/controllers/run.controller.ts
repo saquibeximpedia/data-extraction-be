@@ -1,41 +1,32 @@
 import { Request, Response } from 'express';
 import { parse } from '../middlewares/validate.middleware';
 import { runsQuerySchema } from '../schemas';
+import { db } from '../services/db.service';
 import { extractionService } from '../services/extraction.service';
-import { ledgerService } from '../services/ledger.service';
 import { badRequest, notFound } from '../utils/errors';
 
-/** GET /api/runs?limit= → newest runs with live stats */
-export function list(req: Request, res: Response): void {
+/** GET /api/runs?limit= */
+export async function list(req: Request, res: Response): Promise<void> {
   const { limit } = parse(runsQuerySchema, req.query);
-  const runs = ledgerService.listRuns(limit).map((r) => ({
-    ...r,
-    logs: extractionService.getLogs(r.id),
-  }));
+  const runs = (await db.listRuns(limit)).map((r) => extractionService.withLiveStats(r));
   res.json({ count: runs.length, runs });
 }
 
 /** GET /api/runs/:id */
-export function getOne(req: Request, res: Response): void {
-  const run = ledgerService.getRun(String(req.params.id));
+export async function getOne(req: Request, res: Response): Promise<void> {
+  const run = await db.getRun(String(req.params.id));
   if (!run) throw notFound('Run not found');
-  res.json({
-    ...run,
-    logs: extractionService.getLogs(run.id),
-  });
+  res.json(extractionService.withLiveStats(run));
 }
 
-/** POST /api/runs/:id/stop → aborts a running extraction */
+/** POST /api/runs/:id/stop */
 export function stop(req: Request, res: Response): void {
   const runId = String(req.params.id);
-  const stopped = extractionService.stopRun(runId);
-  if (!stopped) {
-    throw badRequest('Run is not currently running or cannot be stopped');
-  }
-  res.json({ success: true, message: 'Run stopped successfully', runId });
+  if (!extractionService.stopRun(runId)) throw badRequest('This extraction is not running.');
+  res.json({ success: true, runId });
 }
 
-/** GET /api/runs/:id/logs → returns log history for this run */
+/** GET /api/runs/:id/logs: only while the run is live */
 export function logs(req: Request, res: Response): void {
   const runId = String(req.params.id);
   const logList = extractionService.getLogs(runId);

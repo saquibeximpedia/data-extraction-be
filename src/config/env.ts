@@ -11,18 +11,14 @@ const positiveInt = (fallback: string) =>
 const envSchema = z.object({
   PORT: positiveInt('3000'),
   NODE_ENV: z.enum(['dev', 'development', 'prod', 'production', 'test']).default('dev'),
-  DB_PATH: z.string().default('./storage/ledger.db'),
 
-  // Supabase: users sign in with Supabase Auth; files live in a private Storage bucket.
-  // The service role key stays on this server only (it bypasses row-level security).
+  // Auth, tables and file storage. The service role key bypasses row level security: server only.
   SUPABASE_URL: z.url('SUPABASE_URL must be the project URL, e.g. https://xyz.supabase.co'),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, 'SUPABASE_SERVICE_ROLE_KEY is required'),
   SUPABASE_BUCKET: z.string().default('trade-exports'),
-  // Largest file a user can upload for a download-only country
   UPLOAD_MAX_MB: positiveInt('200'),
 
-  // A run flags this many consecutive tasks returning 0 records (no data there, or the source
-  // may be restricting requests) and carries on
+  // A run flags this many requests in a row returning 0 records, then carries on
   EMPTY_STREAK_FLAG_AT: positiveInt('300'),
 
   MAX_CONCURRENT_EXTRACTIONS: positiveInt('4'),
@@ -33,7 +29,6 @@ const envSchema = z.object({
   // Comma-separated; empty or * allows all
   ALLOWED_IPS: z.string().default(''),
 
-  // Country API credentials
   BPS_API_KEY: z.string().optional(),
 });
 
@@ -51,7 +46,6 @@ const allowedIpList = parsed.data.ALLOWED_IPS
 export const env = {
   ...parsed.data,
   allowedIpList,
-  resolvedDbPath: path.resolve(process.cwd(), parsed.data.DB_PATH),
-  /** Exports are written here first, then uploaded to Storage */
+  /** Run rows are collected here before each month is uploaded to Storage */
   tempDir: path.join(os.tmpdir(), 'trade-data-exports'),
 };

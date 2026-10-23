@@ -35,11 +35,8 @@ function parseRow(rowXml: string, shared: string[]): string[] {
 
 /**
  * Calls `onRow` with the cell text of each row of an .xlsx file's first worksheet, in order.
- *
- * A small reader for generated workbooks, which ExcelJS can't open when their XML uses
- * namespace prefixes (<x:row>, <x:c>), as files written by the .NET OpenXML SDK do.
- * The sheet is streamed, so memory stays flat however many rows it has.
- * Values come back as written in the file: no number formats or dates are applied.
+ * Handles namespace-prefixed XML (<x:row>, <x:c>) as the .NET OpenXML SDK writes it, which
+ * common libraries can't open. The sheet is streamed; values come back exactly as written.
  */
 export async function eachSheetRow(file: Buffer, onRow: (cells: string[]) => void): Promise<void> {
   const zip = await JSZip.loadAsync(file);

@@ -1,60 +1,59 @@
 import { Period, TradeFlow, TradeRecord } from '../types';
 
-/** One unit of work handed to a country: a single HS code, month and trade flow */
+/** One request to a source: some HS codes (normalized) and months for one flow */
 export interface FetchQuery {
-  hsCode: string; // already normalized by the country
-  period: Period; // "YYYY-MM"
+  hsCodes: string[];
+  periods: Period[];
   tradeType: TradeFlow;
-  /** Every month this run asks of the country (ascending), so batch sources can fetch them together */
-  runPeriods: Period[];
 }
 
-/**
- * Everything the app needs to know about one country's data source.
- *
- * To add a country, create a file in this folder exporting one of these and add it
- * to the list in countries/index.ts. Retries, rate limiting, scheduling, storage
- * and exports are handled for you.
- */
+/** Rows per month; months without rows can be left out */
+export type MonthRows = Map<Period, TradeRecord[]>;
+
 /** Where a country's data comes from, shown to users before they extract */
 export interface CountrySource {
-  /** e.g. "SARS Trade Statistics portal" */
   name: string;
-  /** Page a person can open to see the source */
   url: string;
   /** What is requested, e.g. the endpoint or form */
   endpoint: string;
-  /** How data is fetched and what one request returns */
+  /** How data is fetched */
   method: string;
   /** What the saved files contain */
   output: string;
 }
 
+/**
+ * One country's data source. To add one, create a file in this folder exporting one of these
+ * and list it in countries/index.ts; retries, concurrency, logs and files are handled by the engine.
+ */
 export interface Country {
   /** ISO 3166 alpha-3, e.g. "THA" */
   code: string;
   name: string;
   source: CountrySource;
-  /** Default months between the end of a month and the source publishing it (editable in Properties) */
+  /** Default months between the end of a month and its publication (admins can change it) */
   lagMonths: number;
   /** Day of the month the source usually publishes on (default 1) */
   publishDay?: number;
-  /** Flows this source can return */
   tradeTypes: TradeFlow[];
-  /** One line on which HS codes the source accepts, shown under the code box */
+  /** Which HS codes the source accepts, shown under the code box */
   hsCodeHint: string;
   /** Env vars that must be set; the country stays disabled until they are */
   requiredEnv?: string[];
-  /** Max fetchRecords calls per minute (default 60; 0 = no limit, for sources that throttle themselves) */
+  /** Max requests per minute (default 60; 0 = no limit) */
   rateLimitPerMinute?: number;
+  /** Max requests in flight at once (default MAX_CONCURRENT_PER_COUNTRY) */
+  concurrency?: number;
 
-  /** Returns the code as the source expects it, or null if the source can't use it */
+  /** The code as the source expects it, or null if the source can't use it */
   normalizeHsCode(raw: string): string | null;
 
+  /** Splits a run into requests (default: one per HS code and month) */
+  splitQueries?(hsCodes: string[], periods: Period[], tradeType: TradeFlow): FetchQuery[];
+
   /**
-   * Fetches one HS code / month / flow and returns normalized records.
-   * Return [] when the month isn't published yet or there was no trade.
+   * Fetches one request. Unpublished months and months without trade come back empty.
    * Throw RetryableError (or use getJson) for temporary failures so they are retried.
    */
-  fetchRecords(query: FetchQuery): Promise<TradeRecord[]>;
+  fetchRecords(query: FetchQuery): Promise<MonthRows>;
 }

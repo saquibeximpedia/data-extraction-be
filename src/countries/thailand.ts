@@ -2,25 +2,8 @@ import { Country } from './country.types';
 import { BROWSER_UA, getJson } from '../utils/http';
 import { splitPeriod } from '../utils/period';
 
-interface MocRow {
-  year?: string | number;
-  month?: string | number;
-  country_code?: string; // partner country (destination for exports, origin for imports)
-  country_name_en?: string;
-  quantity?: string | number;
-  acc_quantity?: string | number;
-  value_usd?: string | number;
-  acc_value_usd?: string | number;
-  [key: string]: any;
-}
-
 const API_BASE = process.env.THA_API_BASE || 'https://tradereport.moc.go.th/api';
-
-// Same response shape for both flows; only the endpoint differs
-const ENDPOINTS = {
-  EXPORT: 'exportharmonizecountries',
-  IMPORT: 'importharmonizecountries',
-} as const;
+const ENDPOINTS = { EXPORT: 'exportharmonizecountries', IMPORT: 'importharmonizecountries' } as const;
 
 /** Thailand Ministry of Commerce trade report, by partner country */
 export const thailand: Country = {
@@ -43,18 +26,16 @@ export const thailand: Country = {
     return /^\d{4,11}$/.test(digits) ? digits : null;
   },
 
-  async fetchRecords({ hsCode, period, tradeType }) {
+  async fetchRecords({ hsCodes: [hsCode], periods: [period], tradeType }) {
     const { year, month } = splitPeriod(period);
     const url = `${API_BASE}/${ENDPOINTS[tradeType]}?year=${year}&month=${month}&hs_code=${hsCode}&limit=100000`;
-    const rows = await getJson<MocRow[] | { data?: MocRow[] }>(url, {
+    const res = await getJson<any[] | { data?: any[] }>(url, {
       source: 'Thai MOC',
       headers: { 'User-Agent': BROWSER_UA, Referer: 'https://tradereport.moc.go.th/' },
     });
-    const list = Array.isArray(rows) ? rows : rows.data ?? [];
+    const list = Array.isArray(res) ? res : res.data ?? [];
     // An unpublished month comes back as one zero-valued row per partner country
     const hasTrade = list.some((r) => parseFloat(String(r.value_usd || 0)) > 0 || parseFloat(String(r.quantity || 0)) > 0);
-    if (!hasTrade) return [];
-    // The response doesn't say which code and flow were asked for, so they lead each row
-    return list.map((r) => ({ request_hs_code: hsCode, trade_flow: tradeType, ...r }));
+    return new Map(hasTrade ? [[period, list.map((r) => ({ request_hs_code: hsCode, trade_flow: tradeType, ...r }))]] : []);
   },
 };

@@ -19,18 +19,10 @@ export const hsCodesService = {
     return path.join(HS_DIR, filename);
   },
 
-  /** The country's saved codes, or [] if it has no file */
+  /** The country's saved codes (the test list falls back to the complete one), or [] */
   getSaved(countryCode: string, mode: HsMode = 'complete'): string[] {
-    const file = this.filePath(countryCode, mode);
-    if (fs.existsSync(file)) {
-      return parseHsCsv(fs.readFileSync(file, 'utf-8'));
-    }
-    // If test mode is requested but no test file exists, fall back to complete
-    if (mode === 'test') {
-      const fallback = this.filePath(countryCode, 'complete');
-      return fs.existsSync(fallback) ? parseHsCsv(fs.readFileSync(fallback, 'utf-8')) : [];
-    }
-    return [];
+    const file = [this.filePath(countryCode, mode), this.filePath(countryCode)].find((f) => fs.existsSync(f));
+    return file ? parseHsCsv(fs.readFileSync(file, 'utf-8')) : [];
   },
 
   hasTestFile(countryCode: string): boolean {

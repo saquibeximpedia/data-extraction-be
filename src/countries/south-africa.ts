@@ -1,36 +1,22 @@
 import { Country } from './country.types';
 import { Period, TradeFlow, TradeRecord } from '../types';
-import { TtlCache } from '../utils/cache';
-import { Semaphore } from '../utils/concurrency';
 import { BROWSER_UA, RetryableError } from '../utils/http';
 import { splitPeriod } from '../utils/period';
 import { eachSheetRow } from '../utils/xlsx';
 
 const PORTAL_URL = process.env.ZAF_PORTAL_URL || 'https://tools.sars.gov.za/tradestatsportal/data_download.aspx';
-const FIELD = 'ctl00$ContentPlaceHolder1$'; // form field names
-const ELEMENT = 'ctl00_ContentPlaceHolder1_'; // element ids
+const FIELD = 'ctl00$ContentPlaceHolder1$';
+const ELEMENT = 'ctl00_ContentPlaceHolder1_';
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const PAGE_TIMEOUT_MS = 120_000;
-const DOWNLOAD_TIMEOUT_MS = 300_000;
-
-/** One chapter's rows for one flow: month → 8-digit tariff → rows */
-type ChapterRows = Map<Period, Map<string, TradeRecord[]>>;
-
-// The portal exports a whole chapter for any set of months of one year, so each
-// (flow, year, chapter) is downloaded once per run with every month the run needs, and all
-// of that chapter's codes and months are answered from it. Runs go code by code, so only
-// the current chapter (per flow and year) is in use at a time; the cap bounds memory.
-const chapterCache = new TtlCache<ChapterRows>(2 * 60 * 60 * 1000, 8);
-// Each download holds a server-side session for 15–60s; keep the load on SARS modest
-const portalSlots = new Semaphore(2);
+const DOWNLOAD_TIMEOUT_MS = 600_000;
 
 const decodeHtml = (s: string) =>
   s.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
 
 /**
- * One visitor session on the ASP.NET WebForms download page. Every choice is a full-page
- * postback carrying the page's __VIEWSTATE plus everything selected so far, exactly like
- * the browser form; the file itself is served from Download.aspx once the query is accepted.
+ * One visitor session on the ASP.NET WebForms download page. Every choice is a postback
+ * carrying the page's __VIEWSTATE plus everything selected so far, like the browser form.
  */
 class PortalSession {
   private cookies = new Map<string, string>();
@@ -38,11 +24,11 @@ class PortalSession {
   private selections: Record<string, string> = {};
   private html = '';
 
-  public async open(): Promise<void> {
-    await this.load();
+  public open(): Promise<void> {
+    return this.load();
   }
 
-  /** Ticks `selections` and posts back as `target` (a radio button or dropdown) */
+  /** Ticks `selections` and posts back as `target` */
   public async postback(target: string, selections: Record<string, string>): Promise<void> {
     Object.assign(this.selections, selections);
     await this.load({ __EVENTTARGET: target });
@@ -54,9 +40,9 @@ class PortalSession {
     return [...this.html.matchAll(re)].map((m) => ({ index: Number(m[1]), label: decodeHtml(m[2]).trim() }));
   }
 
-  /** Form fields ticking every option of a list */
-  public all(list: string): Record<string, string> {
-    return Object.fromEntries(this.options(list).map((o) => [`${FIELD}${list}$${o.index}`, 'on']));
+  /** Form fields ticking the options of a list whose label passes `pick` (all by default) */
+  public tick(list: string, pick: (label: string) => boolean = () => true): Record<string, string> {
+    return Object.fromEntries(this.options(list).filter((o) => pick(o.label)).map((o) => [`${FIELD}${list}$${o.index}`, 'on']));
   }
 
   /** Submits the query; resolves to the workbook, or null when SARS has no rows for it */
@@ -66,7 +52,6 @@ class PortalSession {
 
     const link = this.html.match(/window\.open\('([^']*Download\.aspx[^']*)'/)?.[1];
     if (!link) {
-      // Server-side messages come as alert('...'); the page's own script only uses double quotes
       const alert = this.html.match(/alert\('([^']*)'\)/)?.[1];
       if (alert && /no data found/i.test(alert)) return null;
       if (alert) throw new Error(`SARS portal rejected the query: ${alert}`);
@@ -75,7 +60,7 @@ class PortalSession {
 
     const res = await this.send(new URL(link, PORTAL_URL).toString(), undefined, DOWNLOAD_TIMEOUT_MS);
     const file = Buffer.from(await this.read(() => res.arrayBuffer()));
-    // Served as Report.xls, but the content is an .xlsx (zip) workbook
+    // Served as Report.xls, but it is an .xlsx (zip) workbook
     if (file.subarray(0, 2).toString() !== 'PK') throw new RetryableError('SARS portal: the download was not a workbook');
     return file;
   }
@@ -104,7 +89,8 @@ class PortalSession {
           ...(form && { 'Content-Type': 'application/x-www-form-urlencoded' }),
         },
         body: form && new URLSearchParams(form),
-        redirect: 'manual', // a redirect means the session was lost; its cookies must not be dropped either
+        // A redirect means the session was lost
+        redirect: 'manual',
         signal: AbortSignal.timeout(timeoutMs),
       });
     } catch (err: any) {
@@ -132,80 +118,56 @@ class PortalSession {
 }
 
 /**
- * Downloads one chapter for one flow and the given months of a single year (the portal's
- * months apply to every selected year): every tariff line, partner country and port.
+ * Downloads one month of the given chapters for one flow (every tariff line, partner and port)
+ * and keeps the rows whose tariff passes `wanted`, exactly as SARS delivers them.
  */
-async function downloadChapter(tradeType: TradeFlow, periods: Period[], chapter: string): Promise<ChapterRows> {
-  const { year } = splitPeriod(periods[0]);
+async function download(tradeType: TradeFlow, period: Period, chapters: string[], wanted: (tariff: string) => boolean): Promise<TradeRecord[]> {
+  const { year, month } = splitPeriod(period);
   const session = new PortalSession();
   await session.open();
 
   const flow = tradeType === 'EXPORT' ? 'rdbExports' : 'rdbImports';
   await session.postback(`${FIELD}${flow}`, { [`${FIELD}tradeType`]: flow });
   await session.postback(`${FIELD}rdbTariffs`, { [`${FIELD}focusArea`]: 'rdbTariffs' });
+  // The year comes first: its postback fills the month list
+  const yearFields = session.tick('ddlYears', (label) => label === String(year));
+  if (!Object.keys(yearFields).length) return [];
+  await session.postback(`${FIELD}ddlYears`, yearFields);
 
-  // Year must come before months: its postback is what fills the month list
-  const yearOption = session.options('ddlYears').find((o) => o.label === String(year));
-  if (!yearOption) return new Map();
-  await session.postback(`${FIELD}ddlYears`, { [`${FIELD}ddlYears$${yearOption.index}`]: 'on' });
+  // The month list runs ahead of publication; unpublished months come back empty
+  const monthFields = session.tick('ddlMonths', (label) => label === MONTHS[month - 1]);
+  const chapterFields = session.tick('ddlChapters', (label) => chapters.includes(label.slice(0, 2)));
+  if (!Object.keys(monthFields).length || !Object.keys(chapterFields).length) return [];
+  await session.postback(`${FIELD}ddlChapters`, chapterFields);
 
-  // The month list runs ahead of publication; unpublished months simply come back empty
-  const wanted = new Set(periods.map((p) => MONTHS[splitPeriod(p).month - 1]));
-  const monthFields = Object.fromEntries(
-    session
-      .options('ddlMonths')
-      .filter((o) => wanted.has(o.label))
-      .map((o) => [`${FIELD}ddlMonths$${o.index}`, 'on'])
-  );
-  const chapterOption = session.options('ddlChapters').find((o) => o.label.startsWith(`${chapter} `));
-  if (!Object.keys(monthFields).length || !chapterOption) return new Map();
-  // The tariff list only loads when exactly one chapter is ticked
-  await session.postback(`${FIELD}ddlChapters`, { [`${FIELD}ddlChapters$${chapterOption.index}`]: 'on' });
-
-  const tariffs = session.all('ddlTariffs');
-  if (!Object.keys(tariffs).length) return new Map();
-
+  // With one chapter the portal wants its tariffs ticked; with several it takes them all
+  const tariffFields = Object.keys(chapterFields).length === 1 ? session.tick('ddlTariffs') : {};
   const file = await session.download({
     ...monthFields,
-    ...session.all('ddlCountries'),
-    ...tariffs,
+    ...session.tick('ddlCountries'),
+    ...tariffFields,
     [`${FIELD}chkAll`]: 'on',
-    ...session.all('chkColumns'),
+    ...session.tick('chkColumns'),
   });
-  return file ? parseWorkbook(file, new Set(periods)) : new Map();
+  return file ? parseWorkbook(file, wanted) : [];
 }
 
-/**
- * Rows exactly as SARS delivers them: every column, under its own header, with the cell text
- * untouched. Only the tariff and month are read, to file each row under its HS code and month.
- */
-async function parseWorkbook(file: Buffer, periods: Set<Period>): Promise<ChapterRows> {
-  const rows: ChapterRows = new Map();
+async function parseWorkbook(file: Buffer, wanted: (tariff: string) => boolean): Promise<TradeRecord[]> {
+  const rows: TradeRecord[] = [];
   let header: string[] | undefined;
   let tariffAt = -1;
-  let monthAt = -1;
 
   await eachSheetRow(file, (cells) => {
     if (!header) {
       header = cells;
       tariffAt = header.indexOf('Tariff');
-      monthAt = header.indexOf('YearMonth');
-      if (tariffAt < 0 || monthAt < 0) throw new Error('SARS workbook has no Tariff or YearMonth column');
+      if (tariffAt < 0) throw new Error('SARS workbook has no Tariff column');
       return;
     }
-    const yearMonth = cells[monthAt] ?? '';
-    const period = `${yearMonth.slice(0, 4)}-${yearMonth.slice(4, 6)}`;
-    if (!periods.has(period)) return;
-    const tariff = (cells[tariffAt] ?? '').replace(/D/g, '').padStart(8, '0');
-
+    if (!wanted((cells[tariffAt] ?? '').replace(/D/g, '').padStart(8, '0'))) return;
     const record: TradeRecord = {};
     header.forEach((name, i) => (record[name] = cells[i] ?? ''));
-
-    let month = rows.get(period);
-    if (!month) rows.set(period, (month = new Map()));
-    const list = month.get(tariff);
-    if (list) list.push(record);
-    else month.set(tariff, [record]);
+    rows.push(record);
   });
   return rows;
 }
@@ -218,7 +180,7 @@ export const southAfrica: Country = {
     name: 'SARS Trade Statistics portal',
     url: PORTAL_URL,
     endpoint: `${PORTAL_URL} (Tariffs focus area) → Download.aspx`,
-    method: 'Fills in the portal download form over HTTP (no browser). One download per flow, chapter and year covers every month of the run; all HS codes in that chapter are answered from it.',
+    method: 'Fills in the portal download form over HTTP (no browser). One download per flow and month covers every chapter the HS codes are in.',
     output: 'The SARS file exactly as delivered: all 21 columns (office, origin, destination, tariff, unit, transport, quantity, customs value in rand, region…), unchanged.',
   },
   // A month is released at the end of the following month
@@ -226,27 +188,23 @@ export const southAfrica: Country = {
   publishDay: 1,
   tradeTypes: ['IMPORT', 'EXPORT'],
   hsCodeHint: 'South Africa uses 8-digit tariff lines; 4 or 6 digits return every line under that heading.',
-  // No per-lookup limit: nearly every lookup is answered from a downloaded chapter, and
-  // real portal traffic is already capped by portalSlots
   rateLimitPerMinute: 0,
+  // A whole month of every chapter takes about 40s; several months at once can stall the portal
+  concurrency: 2,
 
-  // 8-digit tariff lines; shorter headings (4–6 digits) return every line under them
   normalizeHsCode: (raw) => {
     const digits = raw.replace(/\D/g, '');
     return /^\d{4,8}$/.test(digits) ? digits : null;
   },
 
-  async fetchRecords({ hsCode, period, tradeType, runPeriods }) {
-    const chapter = hsCode.slice(0, 2);
-    // Every month of this run in the same year, so one download serves all of them
-    const year = period.slice(0, 4);
-    const months = [...new Set([...runPeriods, period])].filter((p) => p.startsWith(year)).sort();
-    const chapterRows = await chapterCache.get(`${tradeType}|${chapter}|${months.join(',')}`, () =>
-      portalSlots.run(() => downloadChapter(tradeType, months, chapter))
-    );
-    const rows = chapterRows.get(period);
-    if (!rows) return [];
-    if (hsCode.length === 8) return rows.get(hsCode) ?? [];
-    return [...rows].filter(([tariff]) => tariff.startsWith(hsCode)).flatMap(([, list]) => list);
+  splitQueries: (hsCodes, periods, tradeType) => periods.map((period) => ({ hsCodes, periods: [period], tradeType })),
+
+  async fetchRecords({ hsCodes, periods: [period], tradeType }) {
+    const chapters = [...new Set(hsCodes.map((c) => c.slice(0, 2)))];
+    // 8-digit codes match a tariff exactly; shorter ones match every tariff under them
+    const exact = new Set(hsCodes.filter((c) => c.length === 8));
+    const prefixes = hsCodes.filter((c) => c.length < 8);
+    const rows = await download(tradeType, period, chapters, (t) => exact.has(t) || prefixes.some((p) => t.startsWith(p)));
+    return new Map(rows.length ? [[period, rows]] : []);
   },
 };
