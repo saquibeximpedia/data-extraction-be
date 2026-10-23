@@ -1,6 +1,6 @@
 -- Run once in the Supabase SQL editor (safe to run again).
--- Only the API's service role reads and writes these tables: row level security is on with no
--- policies, so the browser's anon key cannot touch them.
+-- Only the service role reads and writes these tables (the extraction service, and the web app's
+-- server routes): row level security is on with no policies, so the browser's anon key cannot touch them.
 
 create table if not exists runs (
   id uuid primary key,
@@ -14,7 +14,10 @@ create table if not exists runs (
 );
 create index if not exists runs_started_at_idx on runs (started_at desc);
 
--- Admin-edited country details: overrides for a built-in source, or a whole download-only country
+-- One row per country.
+-- kind 'api':    the extraction service has an extractor for it; `extractor` is what the service
+--                publishes about it on start-up, `data` holds admins' overrides (name, links, lag...)
+-- kind 'manual': a download-only country added by an admin; `data` holds all of it
 create table if not exists country_config (
   code text primary key,
   kind text not null check (kind in ('api', 'manual')),
@@ -22,6 +25,8 @@ create table if not exists country_config (
   updated_at timestamptz not null default now(),
   updated_by text
 );
+alter table country_config add column if not exists extractor jsonb;
+alter table country_config add column if not exists extractor_synced_at timestamptz;
 
 -- 'extracting' once an extraction starts for the month, 'completed' when a user marks it
 create table if not exists month_status (

@@ -2,6 +2,7 @@ import { app } from './app';
 import { env } from './config/env';
 import { listCountries, missingConfig } from './countries';
 import { db } from './services/db.service';
+import { registryService } from './services/registry.service';
 import { storageService } from './services/storage.service';
 
 for (const country of listCountries()) {
@@ -14,6 +15,8 @@ const server = app.listen(env.PORT, () => {
   db.check()
     .then(() => db.recoverInterrupted())
     .then((n) => n && console.warn(`♻️  Marked ${n} run(s) INTERRUPTED after an unclean shutdown.`))
+    .then(() => registryService.sync())
+    .then(() => console.log('📇 Extractor list published to the database'))
     .catch((err) => console.error(`❌ ${err.message}. Run supabase/schema.sql in the Supabase SQL editor.`));
   storageService
     .ensureBucket()

@@ -6,7 +6,6 @@ import { badRequest, conflict, notFound } from '../utils/errors';
 import { splitHsInput } from '../utils/hs-codes';
 import { withRetry } from '../utils/http';
 import { periodRange, toPeriod } from '../utils/period';
-import { countryService } from './country.service';
 import { db } from './db.service';
 import { MonthFiles } from './export.service';
 import { hsCodesService } from './hs-codes.service';
@@ -81,6 +80,11 @@ class ExtractionService {
     return live ? { ...run, stats: live.run.stats } : run;
   }
 
+  /** Runs in progress on this service, newest first */
+  public liveRuns(): ExtractionRun[] {
+    return [...this.live.values()].map((l) => l.run).sort((a, b) => b.startedAt.localeCompare(a.startedAt));
+  }
+
   public stopRun(runId: string): boolean {
     const live = this.live.get(runId);
     if (!live) return false;
@@ -93,11 +97,7 @@ class ExtractionService {
   public async planManual(req: ManualRequest): Promise<CountryPlan> {
     const code = req.countryCode.toUpperCase();
     const country = findCountry(code);
-    if (!country) {
-      const known = (await countryService.list()).some((c) => c.code === code);
-      if (known) throw badRequest(`${code} is download-only: get its files from the source website and upload them.`);
-      throw notFound(`Unknown country ${code}`);
-    }
+    if (!country) throw notFound(`This extraction service has no extractor for ${code}. Download-only countries get their files uploaded in the web app.`);
     if (!isEnabled(country)) throw badRequest(`${country.code} is disabled: set ${missingConfig(country).join(', ')} in .env`);
     if (req.tradeType !== 'ALL' && !country.tradeTypes.includes(req.tradeType)) {
       throw badRequest(`${country.code} supports ${country.tradeTypes.join('/')} only`);

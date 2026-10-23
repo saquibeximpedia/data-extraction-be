@@ -2,34 +2,7 @@ import crypto from 'crypto';
 import { supabase } from '../config/supabase';
 import { ExtractionRun, Period, RunStats, RunStatus, RunTrigger } from '../types';
 import { HttpError } from '../utils/errors';
-
-/** Admin-edited details of a country: overrides for a built-in source, or a whole download-only country */
-export interface CountryConfig {
-  code: string;
-  kind: 'api' | 'manual';
-  name?: string;
-  sourceName?: string;
-  sourceUrl?: string;
-  endpoint?: string;
-  method?: string;
-  output?: string;
-  /** Instructions shown to users, e.g. where on the site the files are */
-  notes?: string;
-  lagMonths?: number;
-  publishDay?: number;
-  updatedAt?: string;
-  updatedBy?: string;
-}
-
-/** 'extracting' once an extraction starts for the month; users mark it 'completed' */
-export type MonthStatus = 'extracting' | 'completed';
-
-export interface MonthMark {
-  period: Period;
-  status: MonthStatus;
-  markedBy: string;
-  markedAt: string;
-}
+import type { ExtractorInfo } from './registry.service';
 
 export const emptyStats = (): RunStats => ({ planned: 0, completed: 0, noData: 0, failed: 0, skipped: 0, records: 0, flags: [], invalidHsCodes: {}, files: [] });
 
@@ -52,16 +25,17 @@ const toRun = (row: any): ExtractionRun => ({
   finishedAt: row.finished_at ?? undefined,
 });
 
-const toConfig = (row: any): CountryConfig => ({ ...row.data, code: row.code, kind: row.kind, updatedAt: row.updated_at, updatedBy: row.updated_by ?? undefined });
-
-/** Runs, country details and month status, in Supabase Postgres (see supabase/schema.sql) */
+/**
+ * What the extraction service writes to Supabase Postgres (see supabase/schema.sql): its runs,
+ * the months it starts extracting, and its extractor list. Reading them back for people is the
+ * web app's job.
+ */
 export const db = {
-  /** Fails with a clear message when the tables are missing */
+  /** Fails with a clear message when the tables or columns are missing */
   async check(): Promise<void> {
-    for (const table of ['runs', 'country_config', 'month_status']) {
-      // Not a head request: those report a missing table as success
-      await result(supabase.from(table).select('*').limit(1), `table ${table}`);
-    }
+    await result(supabase.from('runs').select('id').limit(1), 'table runs');
+    await result(supabase.from('month_status').select('period').limit(1), 'table month_status');
+    await result(supabase.from('country_config').select('code, extractor').limit(1), 'table country_config');
   },
 
   // ---------------------------------------------------------------- runs
@@ -83,82 +57,35 @@ export const db = {
     return data ? toRun(data) : null;
   },
 
-  async listRuns(limit: number): Promise<ExtractionRun[]> {
-    const { data } = await result(supabase.from('runs').select('*').order('started_at', { ascending: false }).limit(limit), 'list runs');
-    return data.map(toRun);
-  },
-
   /** At boot: runs still marked running were cut off by a restart */
   async recoverInterrupted(): Promise<number> {
     const query = supabase
       .from('runs')
-      .update({ status: 'INTERRUPTED', error: 'Server restarted mid-run', finished_at: new Date().toISOString() }, { count: 'exact' })
+      .update({ status: 'INTERRUPTED', error: 'Extraction service restarted mid-run', finished_at: new Date().toISOString() }, { count: 'exact' })
       .eq('status', 'RUNNING');
     return (await result(query, 'recover runs')).count;
   },
 
-  /** When each country was last extracted */
-  async lastExtractionByCountry(): Promise<Map<string, string>> {
-    const { data } = await result(supabase.from('runs').select('params, started_at').order('started_at', { ascending: false }).limit(500), 'last runs');
-    const out = new Map<string, string>();
-    for (const row of data) {
-      for (const plan of row.params?.plans ?? []) if (plan.countryCode && !out.has(plan.countryCode)) out.set(plan.countryCode, row.started_at);
-    }
-    return out;
-  },
-
-  // ---------------------------------------------------------------- countries
-
-  async listCountryConfigs(): Promise<CountryConfig[]> {
-    return (await result(supabase.from('country_config').select('*'), 'list countries')).data.map(toConfig);
-  },
-
-  async getCountryConfig(code: string): Promise<CountryConfig | null> {
-    const { data } = await result(supabase.from('country_config').select('*').eq('code', code).maybeSingle(), 'get country');
-    return data ? toConfig(data) : null;
-  },
-
-  async saveCountryConfig(config: CountryConfig, updatedBy: string): Promise<void> {
-    const { code, kind, updatedAt: _a, updatedBy: _b, ...data } = config;
-    const row = { code, kind, data, updated_at: new Date().toISOString(), updated_by: updatedBy };
-    await result(supabase.from('country_config').upsert(row), 'save country');
-  },
-
-  /** Deletes a country's details and month status (download-only countries) */
-  async deleteCountryConfig(code: string): Promise<void> {
-    await result(supabase.from('month_status').delete().eq('country_code', code), 'delete months');
-    await result(supabase.from('country_config').delete().eq('code', code), 'delete country');
-  },
-
   // ---------------------------------------------------------------- months
 
-  /** Every marked month, per country, oldest first */
-  async listMonths(): Promise<Map<string, MonthMark[]>> {
-    const { data } = await result(supabase.from('month_status').select('*').order('period'), 'list months');
-    const out = new Map<string, MonthMark[]>();
-    for (const row of data) {
-      const list = out.get(row.country_code) ?? [];
-      list.push({ period: row.period, status: row.status, markedBy: row.marked_by, markedAt: row.marked_at });
-      out.set(row.country_code, list);
-    }
-    return out;
-  },
-
-  /** Sets the months' status; months already in it keep who marked them. Returns how many changed. */
-  async markMonths(countryCode: string, periods: Period[], markedBy: string, status: MonthStatus = 'completed'): Promise<number> {
+  /** Marks months as extracting when a run starts; completed months are left to people. Returns how many changed. */
+  async markExtracting(countryCode: string, periods: Period[], markedBy: string): Promise<number> {
     const { data } = await result(supabase.from('month_status').select('period, status').eq('country_code', countryCode).in('period', periods), 'read months');
     const current = new Map(data.map((r) => [r.period, r.status]));
-    const changed = periods.filter((p) => current.get(p) !== status);
+    const changed = periods.filter((p) => current.get(p) !== 'extracting');
     if (!changed.length) return 0;
     const markedAt = new Date().toISOString();
-    const rows = changed.map((period) => ({ country_code: countryCode, period, status, marked_by: markedBy, marked_at: markedAt }));
+    const rows = changed.map((period) => ({ country_code: countryCode, period, status: 'extracting', marked_by: markedBy, marked_at: markedAt }));
     await result(supabase.from('month_status').upsert(rows), 'mark months');
     return changed.length;
   },
 
-  /** Clears the months' status (files are kept). Returns how many were removed. */
-  async unmarkMonths(countryCode: string, periods: Period[]): Promise<number> {
-    const query = supabase.from('month_status').delete({ count: 'exact' }).eq('country_code', countryCode).in('period', periods);
-    return (await result(query, 'remove months')).count;
+  // ---------------------------------------------------------------- extractors
+
+  /** Upserts only the extractor columns, so admins' edits in `data` are kept */
+  async syncExtractors(list: ExtractorInfo[]): Promise<void> {
+    const syncedAt = new Date().toISOString();
+    const rows = list.map((info) => ({ code: info.code, kind: 'api', extractor: info, extractor_synced_at: syncedAt }));
+    await result(supabase.from('country_config').upsert(rows, { onConflict: 'code' }), 'sync extractors');
   },
 };

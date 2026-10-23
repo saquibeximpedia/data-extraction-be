@@ -18,36 +18,12 @@ async function* jsonLines(file: string): AsyncGenerator<TradeRecord> {
   }
 }
 
-/** What a stored file is, read from its path */
-export interface ExportFileInfo {
-  countryCode: string | null;
-  period: Period | null;
-  /** 'extracted' files are written by runs; 'uploaded' ones were added by users */
-  origin: 'extracted' | 'uploaded';
-}
-
-// {CC}_{YYYY-MM}.csv (extracted) or {CC}_{YYYY-MM}__{original name} (uploaded)
-const FILE_RE = /^([A-Z]{2,3})_(\d{4}-\d{2})(__.+)?\.[a-z0-9]+$/i;
-
 /**
- * Files in Storage, one folder per country and year:
- *   {CC}/{YYYY}/{CC}_{YYYY-MM}.csv            written by extractions (replaced on each run)
- *   {CC}/{YYYY}/{CC}_{YYYY-MM}__{name}.xlsx   uploaded by users for download-only countries
+ * Extracted files in Storage, one folder per country and year: {CC}/{YYYY}/{CC}_{YYYY-MM}.csv,
+ * replaced on each run. (Files users upload sit next to them; the web app handles those.)
  */
 export const exportService = {
   pathFor: (countryCode: string, period: Period) => `${countryCode}/${period.slice(0, 4)}/${countryCode}_${period}.csv`,
-
-  /** Where an uploaded file is stored; the original name is kept, made path-safe */
-  uploadPathFor(countryCode: string, period: Period, originalName: string): string {
-    const clean = originalName.replace(/[^\w.\- ]+/g, '_').replace(/\s+/g, '_').slice(-120) || 'file';
-    return `${countryCode}/${period.slice(0, 4)}/${countryCode}_${period}__${clean}`;
-  },
-
-  describe(relativePath: string): ExportFileInfo {
-    const m = (relativePath.split('/').pop() ?? '').match(FILE_RE);
-    if (!m) return { countryCode: null, period: null, origin: 'uploaded' };
-    return { countryCode: m[1].toUpperCase(), period: m[2], origin: m[3] ? 'uploaded' : 'extracted' };
-  },
 };
 
 /**

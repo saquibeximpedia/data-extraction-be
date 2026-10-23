@@ -8,8 +8,7 @@
     "start": "tsx --disable-warning=ExperimentalWarning src/server.ts",
     "start:prod": "node --disable-warning=ExperimentalWarning dist/server.js",
     "dev": "tsx watch --include .env --disable-warning=ExperimentalWarning src/server.ts",
-    "typecheck": "tsc --noEmit",
-    "create-admin": "tsx --disable-warning=ExperimentalWarning src/scripts/create-admin.ts"
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [],
   "author": "",

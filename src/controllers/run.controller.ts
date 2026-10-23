@@ -1,18 +1,15 @@
 import { Request, Response } from 'express';
-import { parse } from '../middlewares/validate.middleware';
-import { runsQuerySchema } from '../schemas';
 import { db } from '../services/db.service';
 import { extractionService } from '../services/extraction.service';
 import { badRequest, notFound } from '../utils/errors';
 
-/** GET /api/runs?limit= */
-export async function list(req: Request, res: Response): Promise<void> {
-  const { limit } = parse(runsQuerySchema, req.query);
-  const runs = (await db.listRuns(limit)).map((r) => extractionService.withLiveStats(r));
+/** GET /api/runs → extractions running on this service (history is read from the database by the web app) */
+export function list(_req: Request, res: Response): void {
+  const runs = extractionService.liveRuns();
   res.json({ count: runs.length, runs });
 }
 
-/** GET /api/runs/:id */
+/** GET /api/runs/:id → live stats while running, otherwise the stored run */
 export async function getOne(req: Request, res: Response): Promise<void> {
   const run = await db.getRun(String(req.params.id));
   if (!run) throw notFound('Run not found');
