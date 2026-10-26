@@ -34,6 +34,13 @@ export const storageService = {
     if (error) throw new HttpError(502, `Upload: ${error.message}`);
   },
 
+  /** Names of the files directly in a folder */
+  async list(folder: string): Promise<string[]> {
+    const { data, error } = await bucket().list(safePath(folder), { limit: 1000 });
+    if (error) throw new HttpError(502, `List: ${error.message}`);
+    return data.filter((entry) => entry.id !== null).map((entry) => entry.name);
+  },
+
   /** Removes files if they exist (e.g. a month's CSV once it is stored zipped instead) */
   async removeFiles(relativePaths: string[]): Promise<void> {
     const { error } = await bucket().remove(relativePaths.map(safePath));

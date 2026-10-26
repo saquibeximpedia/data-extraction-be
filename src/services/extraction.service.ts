@@ -232,8 +232,8 @@ class ExtractionService {
       for (const period of files.periods) {
         try {
           const file = await files.save(period);
-          stats.files.push(file.path);
-          this.log(run.id, 'success', `Saved ${file.path} (${file.rows} rows${file.zipped ? `, zipped: the CSV is over ${env.MAX_UPLOAD_MB} MB` : ''})`);
+          stats.files.push(...file.paths);
+          this.log(run.id, 'success', `Saved ${file.paths.length > 1 ? `${file.paths.length} parts (each under ${env.MAX_UPLOAD_MB} MB): ${file.paths.join(', ')}` : file.paths[0]} (${file.rows} rows)`);
         } catch (err: any) {
           unsaved.push({ period, reason: err.message });
           this.log(run.id, 'error', `${country.code} ${period}: could not save the file: ${err.message}`);

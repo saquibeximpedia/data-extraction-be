@@ -2,7 +2,6 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
-import JSZip from 'jszip';
 import { env } from '../config/env';
 import { Period, TradeRecord } from '../types';
 import { storageService } from './storage.service';
@@ -20,27 +19,18 @@ async function* jsonLines(file: string): AsyncGenerator<TradeRecord> {
 }
 
 /**
- * Extracted files in Storage, one folder per country and year: {CC}/{YYYY}/{CC}_{YYYY-MM}.csv,
- * or .zip (holding that CSV) when the CSV is over MAX_UPLOAD_MB. Replaced on each run. (Files
- * users upload sit next to them; the web app handles those.)
+ * Extracted files in Storage, one folder per country and year: {CC}/{YYYY}/{CC}_{YYYY-MM}.csv.
+ * A month bigger than MAX_UPLOAD_MB is split into {CC}_{YYYY-MM}_part1.csv, _part2.csv… (each with
+ * the header row), since Supabase rejects large uploads. Replaced on each run. (Files users upload
+ * for download-only countries sit next to them; the web app handles those.)
  */
 export const exportService = {
-  pathFor: (countryCode: string, period: Period, ext: 'csv' | 'zip' = 'csv') => `${countryCode}/${period.slice(0, 4)}/${countryCode}_${period}.${ext}`,
+  folderFor: (countryCode: string, period: Period) => `${countryCode}/${period.slice(0, 4)}`,
+  /** part 0 = the whole month in one file */
+  nameFor: (countryCode: string, period: Period, part = 0) => `${countryCode}_${period}${part ? `_part${part}` : ''}.csv`,
+  /** Whether a stored file is one of the extracted files of that month (any part, or an older .zip) */
+  isMonthFile: (name: string, countryCode: string, period: Period) => new RegExp(`^${countryCode}_${period}(_part\\d+)?\\.(csv|zip)$`).test(name),
 };
-
-/** Zips one file, streaming it from disk; returns the zip's path */
-async function zipFile(file: string, nameInZip: string): Promise<string> {
-  const zipPath = `${file}.zip`;
-  const zip = new JSZip().file(nameInZip, fs.createReadStream(file));
-  await new Promise<void>((resolve, reject) =>
-    zip
-      .generateNodeStream({ type: 'nodebuffer', streamFiles: true, compression: 'DEFLATE', compressionOptions: { level: 6 } })
-      .pipe(fs.createWriteStream(zipPath))
-      .on('finish', resolve)
-      .on('error', reject)
-  );
-  return zipPath;
-}
 
 /**
  * A run's rows for one country, kept per month in local JSON-lines files while the run goes,
@@ -70,37 +60,47 @@ export class MonthFiles {
     return this.writing;
   }
 
-  /** Uploads the month's CSV (zipped when too big) over the previous file; returns its path and row count */
-  async save(period: Period): Promise<{ path: string; rows: number; zipped: boolean }> {
+  /** Uploads the month as one CSV, or in parts when it is too big, over the previous files; returns their paths and the row count */
+  async save(period: Period): Promise<{ paths: string[]; rows: number }> {
     await this.writing;
     const columns = new Set<string>();
     for await (const record of jsonLines(this.file(period))) for (const key of Object.keys(record)) columns.add(key);
-    const header = [...columns];
+    const header = '﻿' + [...columns].map(escapeCell).join(',');
+    const keys = [...columns];
+    const limit = env.MAX_UPLOAD_MB * 1024 * 1024;
 
-    const csv = `${this.file(period)}.csv`;
-    const out = fs.createWriteStream(csv);
-    out.write('﻿' + header.map(escapeCell).join(','));
+    // Rows go to part files, starting a new one (with the header again) before a part passes the limit
+    const parts: string[] = [];
+    let out: fs.WriteStream | null = null;
+    let size = 0;
+    const close = () => new Promise<void>((resolve, reject) => (out ? out.end((err?: Error | null) => (err ? reject(err) : resolve())) : resolve()));
+    const open = async () => {
+      await close();
+      const file = `${this.file(period)}.${parts.length + 1}.csv`;
+      parts.push(file);
+      out = fs.createWriteStream(file);
+      out.write(header);
+      size = Buffer.byteLength(header);
+    };
+    await open();
     for await (const record of jsonLines(this.file(period))) {
-      if (!out.write('\r\n' + header.map((c) => escapeCell(record[c])).join(','))) await new Promise((r) => out.once('drain', r));
+      const line = '\n' + keys.map((c) => escapeCell(record[c])).join(',');
+      const bytes = Buffer.byteLength(line);
+      if (size + bytes > limit && size > Buffer.byteLength(header)) await open();
+      size += bytes;
+      if (!out!.write(line)) await new Promise((r) => out!.once('drain', r));
     }
-    await new Promise<void>((resolve, reject) => out.end((err?: Error | null) => (err ? reject(err) : resolve())));
+    await close();
 
-    // Too big for one upload: store it zipped, and drop the other format so the month has one file
-    const csvPath = exportService.pathFor(this.countryCode, period, 'csv');
-    const zipPath = exportService.pathFor(this.countryCode, period, 'zip');
-    const tooBig = (await fs.promises.stat(csv)).size > env.MAX_UPLOAD_MB * 1024 * 1024;
-    if (tooBig) {
-      const zipped = await zipFile(csv, csvPath.split('/').pop()!);
-      const size = (await fs.promises.stat(zipped)).size;
-      if (size > env.MAX_UPLOAD_MB * 1024 * 1024) {
-        throw new Error(`${this.countryCode} ${period} is ${Math.round(size / 1048576)} MB even zipped, over MAX_UPLOAD_MB (${env.MAX_UPLOAD_MB}). Raise the upload limit in Supabase (Storage settings) and MAX_UPLOAD_MB.`);
-      }
-      await storageService.uploadFile(zipPath, zipped, 'application/zip');
-    } else {
-      await storageService.uploadFile(csvPath, csv, 'text/csv; charset=utf-8');
-    }
-    await storageService.removeFiles([tooBig ? csvPath : zipPath]).catch(() => {});
-    return { path: tooBig ? zipPath : csvPath, rows: this.counts.get(period) ?? 0, zipped: tooBig };
+    const folder = exportService.folderFor(this.countryCode, period);
+    const names = parts.length === 1 ? [exportService.nameFor(this.countryCode, period)] : parts.map((_, i) => exportService.nameFor(this.countryCode, period, i + 1));
+    for (const [i, file] of parts.entries()) await storageService.uploadFile(`${folder}/${names[i]}`, file, 'text/csv; charset=utf-8');
+
+    // Drop what an earlier run left for this month (more parts, the single file, or an old .zip)
+    const stale = (await storageService.list(folder).catch(() => [])).filter((n) => exportService.isMonthFile(n, this.countryCode, period) && !names.includes(n));
+    if (stale.length) await storageService.removeFiles(stale.map((n) => `${folder}/${n}`)).catch(() => {});
+
+    return { paths: names.map((n) => `${folder}/${n}`), rows: this.counts.get(period) ?? 0 };
   }
 
   async cleanup(): Promise<void> {
