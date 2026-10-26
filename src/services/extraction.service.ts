@@ -227,10 +227,17 @@ class ExtractionService {
       );
       streak.end();
 
+      // Each month is saved on its own: one that can't be stored doesn't lose the others
+      const unsaved: { period: string; reason: string }[] = [];
       for (const period of files.periods) {
-        const file = await files.save(period);
-        stats.files.push(file.path);
-        this.log(run.id, 'success', `Saved ${file.path} (${file.rows} rows)`);
+        try {
+          const file = await files.save(period);
+          stats.files.push(file.path);
+          this.log(run.id, 'success', `Saved ${file.path} (${file.rows} rows${file.zipped ? `, zipped: the CSV is over ${env.MAX_UPLOAD_MB} MB` : ''})`);
+        } catch (err: any) {
+          unsaved.push({ period, reason: err.message });
+          this.log(run.id, 'error', `${country.code} ${period}: could not save the file: ${err.message}`);
+        }
       }
       if (!signal.aborted) {
         for (const period of plan.periods.filter((p) => !files.periods.includes(p))) {
@@ -239,6 +246,8 @@ class ExtractionService {
           this.log(run.id, 'warn', message);
         }
       }
+      // The run's error is kept after it ends (its logs are not), so it carries the reason
+      if (unsaved.length) throw new Error(`${country.code} ${unsaved.map((u) => u.period).join(', ')} could not be saved: ${unsaved[0].reason}${files.periods.length > unsaved.length ? ' (the other months were saved)' : ''}`);
     } finally {
       await files.cleanup();
     }

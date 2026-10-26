@@ -33,4 +33,10 @@ export const storageService = {
     const { error } = await bucket().upload(safePath(relativePath), body, { upsert: true, contentType });
     if (error) throw new HttpError(502, `Upload: ${error.message}`);
   },
+
+  /** Removes files if they exist (e.g. a month's CSV once it is stored zipped instead) */
+  async removeFiles(relativePaths: string[]): Promise<void> {
+    const { error } = await bucket().remove(relativePaths.map(safePath));
+    if (error) throw new HttpError(502, `Delete: ${error.message}`);
+  },
 };

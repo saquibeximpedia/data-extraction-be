@@ -16,6 +16,8 @@ const envSchema = z.object({
   SUPABASE_URL: z.url('SUPABASE_URL must be the project URL, e.g. https://xyz.supabase.co'),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, 'SUPABASE_SERVICE_ROLE_KEY is required'),
   SUPABASE_BUCKET: z.string().default('trade-exports'),
+  // A month's CSV larger than this is uploaded zipped (Supabase's free plan rejects files over 50 MB)
+  MAX_UPLOAD_MB: positiveInt('45'),
 
   // A run flags this many requests in a row returning 0 records, then carries on
   EMPTY_STREAK_FLAG_AT: positiveInt('300'),
