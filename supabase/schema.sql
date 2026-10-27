@@ -38,9 +38,25 @@ create table if not exists month_status (
   primary key (country_code, period)
 );
 
+-- Links anyone can open to download chosen files (/s/<id> in the web app), optionally behind a password.
+-- id is the random token in the link; files is a snapshot [{ path, name, size }] taken when the link is made.
+create table if not exists file_shares (
+  id text primary key,
+  title text,
+  files jsonb not null,
+  password_hash text,
+  expires_at timestamptz,
+  download_count integer not null default 0,
+  last_download_at timestamptz,
+  created_by text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists file_shares_created_at_idx on file_shares (created_at desc);
+
 alter table runs enable row level security;
 alter table country_config enable row level security;
 alter table month_status enable row level security;
+alter table file_shares enable row level security;
 
 -- Make the API see the new tables straight away
 notify pgrst, 'reload schema';
