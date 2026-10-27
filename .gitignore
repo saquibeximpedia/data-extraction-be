@@ -4,5 +4,4 @@ dist
 storage/exports/*
 !storage/exports/.gitkeep
 *.log
-storage/ledger.db*
-storage/ledger.json
+settings.json

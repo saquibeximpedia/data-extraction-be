@@ -4,6 +4,7 @@ import path from 'path';
 import readline from 'readline';
 import { env } from '../config/env';
 import { Period, TradeRecord } from '../types';
+import { settingsService } from './settings.service';
 import { storageService } from './storage.service';
 
 function escapeCell(value: unknown): string {
@@ -67,7 +68,7 @@ export class MonthFiles {
     for await (const record of jsonLines(this.file(period))) for (const key of Object.keys(record)) columns.add(key);
     const header = '﻿' + [...columns].map(escapeCell).join(',');
     const keys = [...columns];
-    const limit = env.MAX_UPLOAD_MB * 1024 * 1024;
+    const limit = settingsService.get().maxUploadMb * 1024 * 1024;
 
     // Rows go to part files, starting a new one (with the header again) before a part passes the limit
     const parts: string[] = [];

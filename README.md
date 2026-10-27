@@ -147,3 +147,5 @@ Key settings (see `.env.example` for all):
 | `ALLOWED_IPS` | empty (all) | Comma-separated IPs allowed to call the service |
 | `EMPTY_STREAK_FLAG_AT` | `300` | Requests in a row with 0 records before a run is flagged |
 | `MAX_CONCURRENT_EXTRACTIONS` / `MAX_CONCURRENT_PER_COUNTRY` | `4` / `2` | Requests at once, overall / per country (a country can set its own) |
+
+The extraction settings (concurrency, retries, the empty-streak flag and `MAX_UPLOAD_MB`) start from `.env`, and admins can change them from the web app's Settings page (`GET` / `PUT /api/settings`). Changes take effect without a restart and are kept in `settings.json` next to `.env`. Each extraction can also override its concurrency, rate limit and retries (`options` on `POST /api/extractions`).

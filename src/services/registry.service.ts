@@ -21,6 +21,9 @@ export interface ExtractorInfo {
   hsCodeHint: string;
   hsCodeCount: number;
   testHsCodeCount: number;
+  /** The source's own limits (null: the service's setting applies) */
+  concurrency: number | null;
+  rateLimitPerMinute: number;
 }
 
 function describe(country: Country): ExtractorInfo {
@@ -37,6 +40,8 @@ function describe(country: Country): ExtractorInfo {
     hsCodeHint: country.hsCodeHint,
     hsCodeCount: hsCodesService.getSaved(country.code, 'complete').length,
     testHsCodeCount: hsCodesService.hasTestFile(country.code) ? hsCodesService.getSaved(country.code, 'test').length : 0,
+    concurrency: country.concurrency ?? null,
+    rateLimitPerMinute: country.rateLimitPerMinute ?? 60,
   };
 }
 

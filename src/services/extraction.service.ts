@@ -5,10 +5,11 @@ import { RateLimiter, Semaphore } from '../utils/concurrency';
 import { badRequest, conflict, notFound } from '../utils/errors';
 import { splitHsInput } from '../utils/hs-codes';
 import { withRetry } from '../utils/http';
-import { periodRange, toPeriod } from '../utils/period';
+import { periodOfDate, periodRange, toPeriod } from '../utils/period';
 import { db } from './db.service';
 import { MonthFiles } from './export.service';
 import { hsCodesService } from './hs-codes.service';
+import { settingsService } from './settings.service';
 
 const MAX_MANUAL_MONTHS = 60;
 const MAX_HS_CODES = 1000;
@@ -24,6 +25,14 @@ export interface CountryPlan {
   hsCodeSource: 'complete' | 'test' | 'custom';
 }
 
+/** Per-run tuning from the web app's extract form; anything left out uses the settings or the country's own limits */
+export interface RunOptions {
+  concurrency?: number;
+  rateLimitPerMinute?: number;
+  retryMaxAttempts?: number;
+  retryDelayMs?: number;
+}
+
 export interface ManualRequest {
   countryCode: string;
   startDate: string;
@@ -31,6 +40,7 @@ export interface ManualRequest {
   hsCodes?: string | string[];
   tradeType: 'ALL' | TradeFlow;
   mode?: 'complete' | 'test';
+  options?: RunOptions;
 }
 
 interface LiveRun {
@@ -54,10 +64,12 @@ const describeQuery = (q: FetchQuery) =>
  * returned rows gets its CSV written to Storage when the country finishes (also when stopped).
  */
 class ExtractionService {
-  private globalLimit = new Semaphore(env.MAX_CONCURRENT_EXTRACTIONS);
-  private countryLimits = new Map<string, Semaphore>();
-  private rateLimits = new Map<string, RateLimiter>();
+  private globalLimit = new Semaphore(settingsService.get().maxConcurrentExtractions);
   private live = new Map<string, LiveRun>();
+
+  constructor() {
+    settingsService.onChange((s) => this.globalLimit.setMax(s.maxConcurrentExtractions));
+  }
 
   public log(runId: string, level: RunLog['level'], message: string): void {
     const logs = this.live.get(runId)?.logs;
@@ -110,6 +122,8 @@ class ExtractionService {
       throw badRequest(err.message);
     }
     if (periods.length > MAX_MANUAL_MONTHS) throw badRequest(`Range covers ${periods.length} months; the limit is ${MAX_MANUAL_MONTHS}.`);
+    // A month that hasn't started can't have data, and would show as extracting on the web app
+    if (periods[periods.length - 1] > periodOfDate(new Date())) throw badRequest(`${periods[periods.length - 1]} is in the future; pick months up to this one.`);
     const startPeriod = (await db.startPeriodOverride(country.code)) ?? country.startPeriod;
     if (startPeriod && periods[0] < startPeriod) throw badRequest(`${country.name} has data from ${startPeriod} onwards; pick months from then.`);
 
@@ -134,7 +148,7 @@ class ExtractionService {
   }
 
   /** Records the run and starts it in the background. One run per country at a time. */
-  public async startRun(trigger: RunTrigger, plans: CountryPlan[], startedBy: string): Promise<{ run: ExtractionRun; done: Promise<void> }> {
+  public async startRun(trigger: RunTrigger, plans: CountryPlan[], startedBy: string, options: RunOptions = {}): Promise<{ run: ExtractionRun; done: Promise<void> }> {
     for (const { run } of this.live.values()) {
       const busy = plans.find((p) => run.params.plans?.some((q: CountryPlan) => q.countryCode === p.countryCode));
       if (busy) throw conflict(`${busy.countryCode} is already being extracted. Wait for that extraction or stop it first.`);
@@ -142,13 +156,14 @@ class ExtractionService {
 
     // The stored plan carries a code count; full lists (often thousands) are not repeated
     const described = plans.map(({ hsCodes, ...p }) => ({ ...p, hsCodeCount: hsCodes.length, hsCodes: hsCodes.length <= 20 ? hsCodes : undefined }));
-    const run = await db.createRun(trigger, { plans: described, startedBy });
+    const hasOptions = Object.values(options).some((v) => v !== undefined);
+    const run = await db.createRun(trigger, { plans: described, startedBy, ...(hasOptions ? { options } : {}) });
     this.live.set(run.id, { run, controller: new AbortController(), logs: [] });
     this.log(run.id, 'info', `Run started: ${plans.map((p) => `${p.countryCode} [${p.periods.join(', ')}]`).join('; ')}`);
-    return { run, done: this.execute(run.id, plans) };
+    return { run, done: this.execute(run.id, plans, options) };
   }
 
-  private async execute(runId: string, plans: CountryPlan[]): Promise<void> {
+  private async execute(runId: string, plans: CountryPlan[], options: RunOptions): Promise<void> {
     const { run, controller } = this.live.get(runId)!;
     const saver = setInterval(() => db.saveRun(runId, { stats: run.stats }).catch(() => {}), SAVE_STATS_MS);
     let status: ExtractionRun['status'] = 'COMPLETED';
@@ -156,7 +171,7 @@ class ExtractionService {
     try {
       for (const plan of plans) {
         if (controller.signal.aborted) break;
-        await this.runCountry(run, plan, controller.signal);
+        await this.runCountry(run, plan, controller.signal, options);
       }
       const s = run.stats;
       if (controller.signal.aborted) {
@@ -177,7 +192,7 @@ class ExtractionService {
     }
   }
 
-  private async runCountry(run: ExtractionRun, plan: CountryPlan, signal: AbortSignal): Promise<void> {
+  private async runCountry(run: ExtractionRun, plan: CountryPlan, signal: AbortSignal, options: RunOptions): Promise<void> {
     const country = findCountry(plan.countryCode);
     if (!country) throw new Error(`Unknown country ${plan.countryCode}`);
     if (!isEnabled(country)) throw new Error(`${country.code} is disabled: missing ${missingConfig(country).join(', ')}`);
@@ -189,10 +204,18 @@ class ExtractionService {
     stats.planned += queries.length;
     this.log(run.id, 'info', `${country.name} (${country.code}): ${queries.length} request(s) for ${hsCodes.length} HS code(s)`);
 
+    // One run per country at a time, so the limits belong to this run
+    const settings = settingsService.get();
+    const concurrency = options.concurrency ?? country.concurrency ?? settings.maxConcurrentPerCountry;
+    const perMinute = options.rateLimitPerMinute ?? country.rateLimitPerMinute ?? 60;
+    const retries = options.retryMaxAttempts ?? settings.retryMaxAttempts;
+    const retryDelay = options.retryDelayMs ?? settings.retryDelayMs;
+    this.log(run.id, 'info', `${country.code}: ${concurrency} at a time, up to ${perMinute}/min, ${retries} retries from ${retryDelay / 1000}s`);
+
     const files = new MonthFiles(country.code);
-    const limit = this.limitFor(country);
-    const rateLimit = this.rateLimitFor(country);
-    const streak = new EmptyStreak(country.code, env.EMPTY_STREAK_FLAG_AT, stats, (msg) => this.log(run.id, 'warn', msg));
+    const limit = new Semaphore(concurrency);
+    const rateLimit = new RateLimiter(perMinute);
+    const streak = new EmptyStreak(country.code, settings.emptyStreakFlagAt, stats, (msg) => this.log(run.id, 'warn', msg));
     try {
       await Promise.all(
         queries.map((query) =>
@@ -209,8 +232,8 @@ class ExtractionService {
                     await rateLimit.wait();
                     return country.fetchRecords(query);
                   },
-                  env.RETRY_MAX_ATTEMPTS,
-                  env.RETRY_DELAY_MS
+                  retries,
+                  retryDelay
                 );
                 const rows = [...byMonth.values()].reduce((n, list) => n + list.length, 0);
                 for (const [period, list] of byMonth) await files.add(period, list);
@@ -235,7 +258,7 @@ class ExtractionService {
         try {
           const file = await files.save(period);
           stats.files.push(...file.paths);
-          this.log(run.id, 'success', `Saved ${file.paths.length > 1 ? `${file.paths.length} parts (each under ${env.MAX_UPLOAD_MB} MB): ${file.paths.join(', ')}` : file.paths[0]} (${file.rows} rows)`);
+          this.log(run.id, 'success', `Saved ${file.paths.length > 1 ? `${file.paths.length} parts (each under ${settingsService.get().maxUploadMb} MB): ${file.paths.join(', ')}` : file.paths[0]} (${file.rows} rows)`);
         } catch (err: any) {
           unsaved.push({ period, reason: err.message });
           this.log(run.id, 'error', `${country.code} ${period}: could not save the file: ${err.message}`);
@@ -267,15 +290,6 @@ class ExtractionService {
     return [...valid];
   }
 
-  private limitFor(country: Country): Semaphore {
-    if (!this.countryLimits.has(country.code)) this.countryLimits.set(country.code, new Semaphore(country.concurrency ?? env.MAX_CONCURRENT_PER_COUNTRY));
-    return this.countryLimits.get(country.code)!;
-  }
-
-  private rateLimitFor(country: Country): RateLimiter {
-    if (!this.rateLimits.has(country.code)) this.rateLimits.set(country.code, new RateLimiter(country.rateLimitPerMinute ?? 60));
-    return this.rateLimits.get(country.code)!;
-  }
 }
 
 export const extractionService = new ExtractionService();

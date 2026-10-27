@@ -53,7 +53,16 @@ create table if not exists file_shares (
 );
 create index if not exists file_shares_created_at_idx on file_shares (created_at desc);
 
+-- Who uploaded each stored file (Storage itself doesn't keep it), keyed by its bucket path
+create table if not exists file_meta (
+  path text primary key,
+  uploaded_by text,
+  updated_at timestamptz not null default now()
+);
+alter table file_meta drop column if exists classification;
+
 alter table runs enable row level security;
+alter table file_meta enable row level security;
 alter table country_config enable row level security;
 alter table month_status enable row level security;
 alter table file_shares enable row level security;

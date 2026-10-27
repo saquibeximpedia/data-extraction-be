@@ -3,7 +3,16 @@ export class Semaphore {
   private active = 0;
   private waiting: (() => void)[] = [];
 
-  constructor(private readonly max: number) {}
+  constructor(private max: number) {}
+
+  /** Changes the cap; a larger one lets waiting jobs start straight away */
+  public setMax(max: number): void {
+    this.max = max;
+    while (this.active < this.max && this.waiting.length) {
+      this.active++;
+      this.waiting.shift()!();
+    }
+  }
 
   public async run<T>(fn: () => Promise<T>): Promise<T> {
     if (this.active >= this.max) {
@@ -14,9 +23,9 @@ export class Semaphore {
     try {
       return await fn();
     } finally {
-      const next = this.waiting.shift();
-      if (next) {
-        next(); // hand the slot straight to the next waiter
+      // Hand the slot straight to the next waiter, unless the cap was lowered meanwhile
+      if (this.waiting.length && this.active <= this.max) {
+        this.waiting.shift()!();
       } else {
         this.active--;
       }

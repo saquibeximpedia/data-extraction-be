@@ -10,7 +10,9 @@ import { forbidden, unauthorized } from '../utils/errors';
  */
 export interface Caller {
   id: string;
-  email: string;
+  /** What people sign in with (the web app's rule): app_metadata.username, else the email before the @ */
+  username: string;
+  isAdmin: boolean;
 }
 
 // Supabase verifies each token; the result is reused briefly so polling doesn't hit Auth every time
@@ -23,7 +25,9 @@ async function verify(token: string): Promise<Caller> {
 
   const { data, error } = await supabase.auth.getUser(token);
   if (error || !data.user) throw unauthorized('Your session has expired. Sign in again.');
-  const caller: Caller = { id: data.user.id, email: data.user.email ?? '' };
+  const given = data.user.app_metadata?.username;
+  const username = typeof given === 'string' && given ? given : (data.user.email ?? '').split('@')[0].toLowerCase();
+  const caller: Caller = { id: data.user.id, username, isAdmin: data.user.app_metadata?.role === 'admin' };
 
   if (verified.size > 500) verified.clear();
   verified.set(token, { caller, at: Date.now() });
@@ -49,3 +53,9 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
 }
 
 export const currentCaller = (res: Response): Caller => res.locals.caller as Caller;
+
+/** Only admins (app_metadata.role = 'admin', set in the web app) */
+export function requireAdmin(_req: Request, res: Response, next: NextFunction): void {
+  if (!currentCaller(res).isAdmin) throw forbidden('Only admins can change this.');
+  next();
+}
