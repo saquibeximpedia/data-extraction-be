@@ -35,6 +35,8 @@ export interface Country {
   lagMonths: number;
   /** Day of the month the source usually publishes on (default 1) */
   publishDay?: number;
+  /** Earliest month ("YYYY-MM") the source has data for; earlier months are refused (admins can change it) */
+  startPeriod?: Period;
   tradeTypes: TradeFlow[];
   /** Which HS codes the source accepts, shown under the code box */
   hsCodeHint: string;

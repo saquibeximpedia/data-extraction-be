@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import { supabase } from '../config/supabase';
 import { ExtractionRun, Period, RunStats, RunStatus, RunTrigger } from '../types';
 import { HttpError } from '../utils/errors';
+import { isPeriod } from '../utils/period';
 import type { ExtractorInfo } from './registry.service';
 
 export const emptyStats = (): RunStats => ({ planned: 0, completed: 0, noData: 0, failed: 0, skipped: 0, records: 0, flags: [], invalidHsCodes: {}, files: [] });
@@ -81,6 +82,13 @@ export const db = {
   },
 
   // ---------------------------------------------------------------- extractors
+
+  /** The earliest month an admin set for a country in the web app, if any */
+  async startPeriodOverride(countryCode: string): Promise<Period | undefined> {
+    const { data } = await result(supabase.from('country_config').select('data').eq('code', countryCode).maybeSingle(), 'read country');
+    const value = (data as { data?: { startPeriod?: unknown } } | null)?.data?.startPeriod;
+    return typeof value === 'string' && isPeriod(value) ? value : undefined;
+  },
 
   /** Upserts only the extractor columns, so admins' edits in `data` are kept */
   async syncExtractors(list: ExtractorInfo[]): Promise<void> {

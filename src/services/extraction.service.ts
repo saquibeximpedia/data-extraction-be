@@ -110,6 +110,8 @@ class ExtractionService {
       throw badRequest(err.message);
     }
     if (periods.length > MAX_MANUAL_MONTHS) throw badRequest(`Range covers ${periods.length} months; the limit is ${MAX_MANUAL_MONTHS}.`);
+    const startPeriod = (await db.startPeriodOverride(country.code)) ?? country.startPeriod;
+    if (startPeriod && periods[0] < startPeriod) throw badRequest(`${country.name} has data from ${startPeriod} onwards; pick months from then.`);
 
     const requested = splitHsInput(req.hsCodes);
     const tradeTypes = req.tradeType === 'ALL' ? country.tradeTypes : [req.tradeType];

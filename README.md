@@ -63,6 +63,7 @@ Errors are `{ "error": "...", ...details }`. Every route checks `ALLOWED_IPS`. E
 2. The country splits the work into **requests** (`splitQueries`), shaped by what its source returns in one call:
    - **South Africa**: one download per flow and month covering every chapter the codes are in.
    - **Indonesia**: one request per HS code, flow and year.
+   - **Japan**: one request per flow, year and batch of up to 20 HS codes (codes of one heading stay together).
    - **Thailand** (the default): one request per HS code, month and flow.
 3. Requests run in parallel within the country's concurrency and rate limits, and temporary errors are retried with backoff. Each request ends with rows, with 0 records, or failed.
 4. The run's rows are collected in temporary local files. Each month that returned rows is then written to `{CC}/{YYYY}/{CC}_{YYYY-MM}.csv`, replacing the previous file. Files are also written when a run is stopped part-way.
@@ -84,6 +85,7 @@ Files hold the source's own data, untouched; filtering happens downstream.
 | `ZAF` | The SARS file exactly as delivered: its 21 columns with the cell text unchanged (written as CSV). |
 | `THA` | Every field of the MOC response, with `request_hs_code` and `trade_flow` in front. |
 | `IDN` | Every field of the BPS response, with `request_hs_code` and `trade_flow` in front. |
+| `JPN` | One row per 9-digit commodity code, partner country and month: `trade_flow`, `hs_code`, `country_code`, `country_name`, `year`, `month`, `unit1`, `quantity1`, `unit2`, `quantity2`, `value_1000_yen`. Rows without trade are left out. |
 
 Supabase limits the size of one stored file (50 MB on the free plan; raise it under **Storage → Settings** on paid plans).
 
@@ -94,10 +96,15 @@ Supabase limits the size of one stored file (50 MB on the free plan; raise it un
 | Code | Source | Default lag | HS codes accepted | Needs |
 |------|--------|-----|-------------------|-------|
 | `IDN` | BPS DataExim API | 2 months | 8-digit tariff lines | `BPS_API_KEY` |
+| `JPN` | e-Stat API (Ministry of Finance trade statistics) | 2 months | 9-digit statistical codes (4–6 digits return every code under them) | `ESTAT_APP_ID` |
 | `THA` | Thailand MOC trade report API | 2 months | 4–11 digits | — |
 | `ZAF` | SARS Trade Statistics portal | 2 months | 8-digit tariff lines (4–6 digits return every line under them) | — |
 
 **South Africa** has no API. `south-africa.ts` fills in the portal's download form over plain HTTP (ASP.NET postbacks) and reads the workbook. The portal accepts many chapters in one query, so each download is one month of every needed chapter (about 40 s for all chapters), two at a time. Several months of heavy chapters in one query can stall the portal, so months are not combined.
+
+**Japan** reads the e-Stat tables "Commodity by Country Import / Export". e-Stat re-issues a year's table under a new ID every month, so `japan.ts` looks up the current table for each flow and year (cached for 30 minutes) instead of hard-coding IDs. Import and export use different 9-digit codes: a 9-digit code a flow lacks returns that flow's codes under its 6-digit subheading.
+
+**Start month.** A country can set `startPeriod`, the earliest month it has data for (Japan: 2026-01). Admins can change it in the web app; the service refuses extractions that start earlier.
 
 ### Adding an extracted country
 

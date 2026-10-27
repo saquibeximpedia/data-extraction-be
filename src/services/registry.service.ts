@@ -15,6 +15,8 @@ export interface ExtractorInfo {
   source: CountrySource;
   lagMonths: number;
   publishDay: number;
+  /** Earliest month with data, or null when the source has no limit */
+  startPeriod: string | null;
   tradeTypes: TradeFlow[];
   hsCodeHint: string;
   hsCodeCount: number;
@@ -30,6 +32,7 @@ function describe(country: Country): ExtractorInfo {
     source: country.source,
     lagMonths: country.lagMonths,
     publishDay: country.publishDay ?? 1,
+    startPeriod: country.startPeriod ?? null,
     tradeTypes: country.tradeTypes,
     hsCodeHint: country.hsCodeHint,
     hsCodeCount: hsCodesService.getSaved(country.code, 'complete').length,
