@@ -62,11 +62,12 @@ Errors are `{ "error": "...", ...details }`. Every route checks `ALLOWED_IPS`. E
 1. A request names a country, a month or range, a flow (or both) and the HS codes (the saved complete or test list, or typed-in codes). Only one extraction per country runs at a time.
 2. The country splits the work into **requests** (`splitQueries`), shaped by what its source returns in one call:
    - **South Africa**: one download per flow and month covering every chapter the codes are in.
+   - **EU**: one request per flow, month and batch of up to 150 codes (every member state and partner).
    - **Indonesia**: one request per HS code, flow and year.
    - **Japan**: one request per flow, year and batch of up to 20 HS codes (codes of one heading stay together).
    - **Thailand** (the default): one request per HS code, month and flow.
 3. Requests run in parallel within the country's concurrency and rate limits, and temporary errors are retried with backoff. Each request ends with rows, with 0 records, or failed.
-4. The run's rows are collected in temporary local files. Each month that returned rows is then written to `{CC}/{YYYY}/{CC}_{YYYY-MM}.csv`, replacing the previous file. Files are also written when a run is stopped part-way.
+4. The run's rows are collected in temporary local files. Each month that returned rows is then written to `{CC}/{YYYY}/{CC}_{YYYY-MM}.csv`, replacing the previous file. A month whose CSV is bigger than `ZIP_OVER_MB` (default 5 MB) is zipped on the service first and stored as `{CC}_{YYYY-MM}.zip` (about 15 times smaller), or as `_part1.zip`, `_part2.zip`… when one zip would pass `MAX_UPLOAD_MB`; each zip holds one CSV with the header row. No CSV holds more than 1,000,000 rows (Excel shows at most 1,048,576), so a bigger month is always split into parts. Runs on the test HS codes write to `_test/{CC}/{YYYY}/…` instead, so they never replace real data. Files are also written when a run is stopped part-way, and after a crash the rows fetched so far are saved at the next start.
 
 Starting an extraction marks its months **extracting**. A month becomes **completed** only when a user marks it in the web app.
 
@@ -82,6 +83,7 @@ Files hold the source's own data, untouched; filtering happens downstream.
 
 | Code | Columns |
 |------|---------|
+| `EU` | One row per product, EU reporter and partner, codes, names and values exactly as Eurostat sends them: `time_period`, `flow_code`, `flow`, `reporter_code`, `reporter_name`, `partner_code`, `partner_name`, `product_code`, `product_name`, `VALUE_IN_EUROS`, `QUANTITY_IN_100KG`, `SUPPLEMENTARY_QUANTITY`. Eurostat totals (EU27, euro area, world, extra/intra-EU) are left out. |
 | `ZAF` | The SARS file exactly as delivered: its 21 columns with the cell text unchanged (written as CSV). |
 | `THA` | Every field of the MOC response, with `request_hs_code` and `trade_flow` in front. |
 | `IDN` | Every field of the BPS response, with `request_hs_code` and `trade_flow` in front. |
@@ -95,12 +97,17 @@ Supabase limits the size of one stored file (50 MB on the free plan; raise it un
 
 | Code | Source | Default lag | HS codes accepted | Needs |
 |------|--------|-----|-------------------|-------|
+| `EU` | Eurostat Comext API (DS-045409) | 2 months | 8-digit CN codes only | — |
 | `IDN` | BPS DataExim API | 2 months | 8-digit tariff lines | `BPS_API_KEY` |
 | `JPN` | e-Stat API (Ministry of Finance trade statistics) | 2 months | 9-digit statistical codes (4–6 digits return every code under them) | `ESTAT_APP_ID` |
 | `THA` | Thailand MOC trade report API | 2 months | 4–11 digits | — |
 | `ZAF` | SARS Trade Statistics portal | 2 months | 8-digit tariff lines (4–6 digits return every line under them) | — |
 
 **South Africa** has no API. `south-africa.ts` fills in the portal's download form over plain HTTP (ASP.NET postbacks) and reads the workbook. The portal accepts many chapters in one query, so each download is one month of every needed chapter (about 40 s for all chapters), two at a time. Several months of heavy chapters in one query can stall the portal, so months are not combined.
+
+**EU** reads Eurostat Comext dataset DS-045409 over its SDMX 3.0 API. Eurostat refuses extractions estimated above 5 million rows, so codes go in batches of 150 per flow and month (a batch still too big is halved), and large requests are queued as jobs that `eu.ts` polls until ready (about a minute per batch). Codes Eurostat doesn't know are dropped from the batch. Only 8-digit CN codes are accepted: Eurostat's HS2/4/6 totals also hold trade it can't attribute to a CN code (confidential lines), so they don't match the CN8 rows. An HS subheading the CN doesn't split is its code plus `00` (293341 → 29334100). The saved lists were moved to CN8 in Oct 2026; the codes taken out (HS codes with no 2026 trade, mostly retired before 2022) are in `storage/hs_codes/archive/`.
+
+**EU bulk files** are not extracted. `eu.ts` describes Eurostat's monthly Comext files (`bulkDownload`: a link pattern `…/files/?downfile=comext/COMEXT_DATA/PRODUCTS/full_v2_{YYYYMM}.7z` and the folder listing), and the web app's extract page offers **Bulk file links**: a popup with each chosen month's direct link, opened in the browser. The service downloads nothing for them. Each file is a 7z of 25–45 MB holding about 5 million rows (both flows, every product, confidential `XX` rows, 18 columns).
 
 **Japan** reads the e-Stat tables "Commodity by Country Import / Export". e-Stat re-issues a year's table under a new ID every month, so `japan.ts` looks up the current table for each flow and year (cached for 30 minutes) instead of hard-coding IDs. Import and export use different 9-digit codes: a 9-digit code a flow lacks returns that flow's codes under its 6-digit subheading.
 
@@ -148,4 +155,4 @@ Key settings (see `.env.example` for all):
 | `EMPTY_STREAK_FLAG_AT` | `300` | Requests in a row with 0 records before a run is flagged |
 | `MAX_CONCURRENT_EXTRACTIONS` / `MAX_CONCURRENT_PER_COUNTRY` | `4` / `2` | Requests at once, overall / per country (a country can set its own) |
 
-The extraction settings (concurrency, retries, the empty-streak flag and `MAX_UPLOAD_MB`) start from `.env`, and admins can change them from the web app's Settings page (`GET` / `PUT /api/settings`). Changes take effect without a restart and are kept in `settings.json` next to `.env`. Each extraction can also override its concurrency, rate limit and retries (`options` on `POST /api/extractions`).
+The extraction settings (concurrency, retries, the empty-streak flag, `MAX_UPLOAD_MB` and `ZIP_OVER_MB`) start from `.env`, and admins can change them from the web app's Settings page (`GET` / `PUT /api/settings`). Changes take effect without a restart and are kept in `settings.json` next to `.env`. Each extraction can also override its concurrency, rate limit and retries (`options` on `POST /api/extractions`).

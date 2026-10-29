@@ -212,7 +212,7 @@ class ExtractionService {
     const retryDelay = options.retryDelayMs ?? settings.retryDelayMs;
     this.log(run.id, 'info', `${country.code}: ${concurrency} at a time, up to ${perMinute}/min, ${retries} retries from ${retryDelay / 1000}s`);
 
-    const files = new MonthFiles(country.code);
+    const files = new MonthFiles(country.code, run.id, plan.hsCodeSource === 'test');
     const limit = new Semaphore(concurrency);
     const rateLimit = new RateLimiter(perMinute);
     const streak = new EmptyStreak(country.code, settings.emptyStreakFlagAt, stats, (msg) => this.log(run.id, 'warn', msg));
@@ -258,7 +258,7 @@ class ExtractionService {
         try {
           const file = await files.save(period);
           stats.files.push(...file.paths);
-          this.log(run.id, 'success', `Saved ${file.paths.length > 1 ? `${file.paths.length} parts (each under ${settingsService.get().maxUploadMb} MB): ${file.paths.join(', ')}` : file.paths[0]} (${file.rows} rows)`);
+          this.log(run.id, 'success', `Saved ${file.paths.length > 1 ? `${file.paths.length} zips (each under ${settingsService.get().maxUploadMb} MB): ${file.paths.join(', ')}` : file.paths[0]} (${file.rows} rows)`);
         } catch (err: any) {
           unsaved.push({ period, reason: err.message });
           this.log(run.id, 'error', `${country.code} ${period}: could not save the file: ${err.message}`);

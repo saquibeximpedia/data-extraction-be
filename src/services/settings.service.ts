@@ -18,8 +18,10 @@ export const appSettingsSchema = z.object({
   retryDelayMs: z.number().int().min(100).max(60_000),
   /** Requests in a row returning 0 records before a run is flagged */
   emptyStreakFlagAt: z.number().int().min(10).max(100_000),
-  /** A month's CSV larger than this is split into parts */
+  /** Largest file uploaded; a bigger month is stored as several zips */
   maxUploadMb: z.number().int().min(1).max(500),
+  /** A month's CSV larger than this is stored zipped (0: every month) */
+  zipOverMb: z.number().int().min(0).max(5000),
 });
 
 export type AppSettings = z.infer<typeof appSettingsSchema>;
@@ -33,6 +35,7 @@ const fromEnv = (): AppSettings => ({
   retryDelayMs: env.RETRY_DELAY_MS,
   emptyStreakFlagAt: env.EMPTY_STREAK_FLAG_AT,
   maxUploadMb: env.MAX_UPLOAD_MB,
+  zipOverMb: env.ZIP_OVER_MB,
 });
 
 function load(): AppSettings {

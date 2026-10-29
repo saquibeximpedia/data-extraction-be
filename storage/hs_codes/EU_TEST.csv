@@ -1,0 +1,19 @@
+﻿HS_CODE,DESCRIPTION
+01012100,Pure-bred breeding horses
+01012910,Horses for slaughter
+01012990,"Live horses (excl. for slaughter, pure-bred for breeding)"
+01013000,Live asses
+01019000,Live mules and hinnies
+01022110,"Pure-bred breeding heifers ""female bovines that have never calved"""
+01022130,Pure-bred breeding cows (excl. heifers)
+01022190,Pure-bred cattle for breeding (excl. heifers and cows)
+01022905,Live cattle of the sub-genus Bibos or Poephagus (excl. pure-bred for breeding)
+01022910,Live cattle of a weight <= 80 kg (excl. pure-bred for breeding)
+01022921,"Cattle of a weight > 80 kg but <= 160 kg, for slaughter"
+01022929,"Live cattle of a weight > 80 kg but <= 160 kg (excl. for slaughter, pure-bred for breeding)"
+01022941,"Cattle of a weight > 160 kg but <= 300 kg, for slaughter"
+01022949,"Live cattle of a weight > 160 kg but <= 300 kg (excl. for slaughter, pure-bred for breeding)"
+01022951,"Heifers ""female bovines that have never calved"" of a weight > 300 kg, for slaughter"
+01022959,"Live heifers ""female bovines that have never calved"" of a weight > 300 kg (excl. for slaughter and pure-bred for breeding)"
+01022961,"Cows of a weight > 300 kg, for slaughter (excl. heifers)"
+01022969,Live cows of a weight > 300 kg (excl. for slaughter and pure-bred for breeding and heifers)

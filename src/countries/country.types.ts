@@ -10,6 +10,20 @@ export interface FetchQuery {
 /** Rows per month; months without rows can be left out */
 export type MonthRows = Map<Period, TradeRecord[]>;
 
+/**
+ * Files the source publishes for download, one per month, offered in the web app as direct links
+ * instead of being extracted (nothing is fetched by the service)
+ */
+export interface BulkDownload {
+  /** What the files hold, shown beside the links */
+  description: string;
+  /** A month's file, with {YYYYMM} for the month, e.g. ".../full_v2_{YYYYMM}.7z" */
+  urlTemplate: string;
+  /** Where every published file is listed */
+  listingUrl: string;
+  source: CountrySource;
+}
+
 /** Where a country's data comes from, shown to users before they extract */
 export interface CountrySource {
   name: string;
@@ -46,6 +60,9 @@ export interface Country {
   rateLimitPerMinute?: number;
   /** Max requests in flight at once (default MAX_CONCURRENT_PER_COUNTRY) */
   concurrency?: number;
+
+  /** Monthly files users can download straight from the source, besides extracting */
+  bulkDownload?: BulkDownload;
 
   /** The code as the source expects it, or null if the source can't use it */
   normalizeHsCode(raw: string): string | null;

@@ -1,0 +1,810 @@
+﻿HS_CODE,DESCRIPTION
+010110,Pure-bred breeding horses and asses
+010210,Pure-bred breeding bovines
+010519,"Live domestic ducks, geese and guinea fowls, weighing <= 185 g"
+010592,"Live fowls of the species Gallus domesticus, weighing > 185 g but <= 2 kg"
+010593,"Live fowls of the species Gallus domesticus, weighing > 2 kg"
+020732,"Fresh or chilled ducks, geese and guinea fowls of the species domesticus, not cut into pieces"
+020733,"Frozen ducks, geese and guinea fowls of the species domesticus, not cut into pieces"
+020734,Fresh or chilled edible fatty livers of ducks or geese of the species domesticus
+020735,"Fresh or chilled cuts and edible offal of ducks, geese or guinea fowls of the species domesticus (excl. fatty livers)"
+020736,"Frozen cuts and edible offal of ducks, geese or guinea fowls of the species domesticus"
+020820,"Fresh, chilled or frozen frogs' legs"
+020900,"Pig fat, free of lean meat, and poultry fat, not rendered or otherwise extracted, fresh, chilled, frozen, salted, in brine, dried or smoked"
+030110,Live ornamental fish
+030212,"Fresh or chilled Pacific salmon ""Oncorhynchus nerka, Oncorhynchus gorbuscha, Oncorhynchus keta, Oncorhynchus tschawytscha, Oncorhynchus kisutch, Oncorhynchus masou and Oncorhynchus rhodurus"", Atlantic salmon ""Salmo salar"" and Danube salmon ""Hucho hucho"""
+030240,"Fresh or chilled herrings ""Clupea harengus, clupea pallasii"""
+030250,"Fresh or chilled cod ""gadus morhua, gadus ogac, gadus macrocephalus"""
+030261,"Fresh or chilled sardines ""Sardina pilchardus, Sardinops spp."", sardinella ""Sardinella spp."", brisling or sprats ""Sprattus sprattus"""
+030262,"Fresh or chilled haddock ""Melanogrammus aeglefinus"""
+030263,"Fresh or chilled coalfish ""Pollachius virens"""
+030264,"Fresh or chilled mackerel ""Scomber scombrus, Scomber australasicus, Scomber japonicus"""
+030265,Fresh or chilled dogfish and other sharks
+030266,"Fresh or chilled eels ""Anguilla spp."""
+030267,"Fresh or chilled swordfish ""Xiphias gladius"""
+030268,"Fresh or chilled toothfish ""Dissostichus spp."""
+030269,"Fresh or chilled freshwater and saltwater fish (excl. salmonidae, flat fish, tunas, skipjack or stripe-bellied bonito, herrings, cod, sardines, sardinella, brisling or sprats, haddock, coalfish, mackerel, sharks, eels {Anguilla spp.}, swordfish and toothfish)"
+030270,Fresh or chilled fish livers and roes
+030290,Fresh or chilled fish livers and roes
+030321,"Frozen trout ""Salmo trutta, Oncorhynchus mykiss, Oncorhynchus clarki, Oncorhynchus aguabonita, Oncorhynchus gilae, Oncorhynchus apache and Oncorhynchus chrysogaster"""
+030322,"Frozen Atlantic salmon ""Salmo salar"" and Danube salmon ""Hucho hucho"""
+030350,"Frozen herrings ""Clupea harengus, Clupea pallasii"""
+030352,"Frozen cod ""Gadus morhua, Gadus ogac, Gadus macrocephalus"""
+030360,"Frozen cod ""Gadus morhua, Gadus ogac and Gadus macrocephalus"""
+030361,"Frozen swordfish ""Xiphias gladius"""
+030362,"Frozen toothfish ""Dissostichus spp."""
+030371,"Frozen sardines ""Sardina pilchardus, Sardinops spp."", sardinella ""Sardinella spp."" and brisling or sprats ""Sprattus sprattus"""
+030372,"Frozen haddock ""Melanogrammus aeglefinus"""
+030373,"Frozen coalfish ""Pollachius virens"""
+030374,"Frozen mackerel ""Scomber scombrus, Scomber australasicus, Scomber japonicus"""
+030375,Frozen dogfish and other sharks
+030376,"Frozen eels ""Anguilla spp."""
+030377,"Frozen sea bass ""Dicentrarchus labrax, Dicentrarchus punctatus"""
+030378,"Frozen hake ""Merluccius spp., Urophycis spp."""
+030379,"Frozen freshwater and saltwater fish (excl. salmonidae, flat fish, tunas, skipjack or stripe-bellied bonito, herrings, cod, swordfish, toothfish, sardines, sardinella, brisling or sprats, haddock, coalfish, mackerel, dogfish and other sharks, eels {Anguilla spp.}, sea bass and hake)"
+030380,Frozen fish livers and roes
+030390,Frozen fish livers and roes
+030410,"Fresh or chilled fillets and other fish meat, whether or not minced"
+030411,"Fresh or chilled fillets and other meat ""whether or not minced"" of swordfish ""Xiphias gladius"""
+030412,"Fresh or chilled fillets and other  meat ""whether or not minced"" of toothfish ""Dissostichus spp."""
+030419,"Fresh or chilled fillets and other fish meat ""whether or not minced"" (excl. swordfish and toothfish)"
+030420,Frozen fish fillets
+030421,"Frozen fillets of swordfish ""Xiphias gladius"""
+030422,"Frozen fillets of toothfish ""Dissostichus spp."""
+030429,Frozen fish fillets (excl. swordfish and toothfish)
+030490,"Frozen fish meat, whether or not minced (excl. fillets)"
+030510,"Flours, meals and pellets of fish, fit for human consumption"
+030530,"Fish fillets, dried, salted or in brine, not smoked"
+030613,"Frozen shrimps and prawns, whether in shell or not, incl. shrimps and prawns in shell, cooked by steaming or by boiling in water"
+030621,"Rock lobster and other sea crawfish ""Palinurus spp., Panulirus spp. and Jasus spp."", even smoked, whether in shell or not, live, fresh, chilled, dried, salted or in brine, incl. in shell, cooked by steaming or by boiling in water"
+030622,"Lobsters ""Homarus spp."", even smoked, whether in shell or not, live, fresh, chilled, dried, salted or in brine, incl. lobsters in shell, cooked by steaming or by boiling in water"
+030623,"Shrimps and prawns, whether in shell or not, live, fresh, chilled, dried, salted or in brine, incl. shrimps and prawns in shell, cooked by steaming or by boiling in water"
+030624,"Crabs, even smoked, whether in shell or not, live, fresh, chilled, dried, salted or in brine, incl. crabs in shell, cooked by steaming or by boiling in water"
+030625,"Norway lobsters ""Nephrops norvegicus"", even smoked, whether in shell or not, live, fresh, chilled, dried, salted or in brine, incl. lobsters in shell, cooked by steaming or by boiling in water"
+030626,"Cold-water shrimps and prawns ""Pandalus spp., Crangon crangon"", even smoked, whether in shell or not, live, fresh, chilled, dried, salted or in brine, incl. shrimps and prawns in shell, cooked by steaming or by boiling in water"
+030627,"Shrimps and prawns, even smoked, whether in shell or not, live, fresh, chilled, dried, salted or in brine, incl. shrimps and prawns in shell, cooked by steaming or by boiling in water (excl. cold-water shrimps and prawns)"
+030629,"Crustaceans, even smoked, fit for human consumption, whether in shell or not, live, fresh, chilled, dried, salted or in brine, incl. crustaceans in shell, cooked by steaming or by boiling in water (excl. rock lobster and other sea crawfish, lobsters, crabs, Norway lobsters, shrimps and prawns); flours, meals and pellets of crustaceans, even smoked, fit for human consumption"
+030710,"Oysters, live, fresh, chilled, frozen, dried, salted or in brine"
+030741,"Live, fresh or chilled, not smoked, cuttle fish ""Sepia officinalis, Rossia macrosoma, Sepiola spp."" and squid ""Ommastrephes spp., Loligo spp., Nototodarus spp., Sepioteuthis spp."", with or without shell"
+030789,"Smoked, frozen, dried, salted or in brine, abalone ""Haliotis spp."", even in shell"
+040130,"Milk and cream of a fat content by weight of > 6%, not concentrated nor containing added sugar or other sweetening matter"
+040310,"Yogurt, whether or not flavoured or containing added sugar or other sweetening matter, fruits, nuts or cocoa"
+040700,"Birds' eggs, in shell, fresh, preserved or cooked"
+041000,"Turtles' eggs, birds' nests and other edible products of animal origin, n.e.s."
+050300,"Horsehair and horsehair waste, whether or not put up as a layer, with or without supporting material"
+050900,Natural sponges of animal origin
+060310,"Fresh cut flowers and flower buds, for bouquets or for ornamental purposes"
+060410,"Mosses and lichens for bouquets or for ornamental purposes, fresh, dried, dyed, bleached, impregnated or otherwise prepared"
+060491,"Foliage, branches and other parts of plants, without flowers or flower buds, grasses, fresh, for bouquets or ornamental purposes"
+060499,"Foliage, branches and other parts of plants, without flowers or flower buds, grasses, for bouquets or ornamental purposes, dried, dyed, bleached, impregnated or otherwise prepared"
+070910,Fresh or chilled globe artichokes
+070990,"Fresh or chilled vegetables (excl. potatoes, tomatoes, vegetables of the Allium spp., cabbages of the genus Brassica, lettuces {Lactuca sativa} and chicory of the species Cichorium, carrots, turnips, salad beetroot, salsify, celeriac, radishes and similar edible roots, cucumbers and gherkins, leguminous vegetables, asparagus, aubergines, mushrooms, truffles, fruits of the genus Capsicum or of the genus Pimenta, spinach, New Zealand spinach and orache spinach)"
+071130,"Capers provisionally preserved, e.g. by sulphur dioxide gas, in brine, in sulphur water or in other preservative solutions, but unsuitable in that state for immediate consumption"
+080240,"Fresh or dried chestnuts ""Castanea spp."", whether or not shelled or peeled"
+080250,"Fresh or dried pistachios, whether or not shelled or peeled"
+080260,"Macadamia nuts, fresh or dried, whether or not shelled or peeled"
+080290,"Nuts, fresh or dried, whether or not shelled or peeled (excl. coconuts, Brazil nuts, cashew nuts, almonds, hazelnuts, filberts, walnuts, chestnuts, pistachios, macadamia nuts, kola nuts and areca nuts)"
+080300,"Bananas, incl. plantains, fresh or dried"
+080520,"Fresh or dried mandarins incl. tangerines and satsumas, clementines, wilkings and similar citrus hybrids"
+080820,Fresh pears and quinces
+080920,Fresh cherries
+090420,"Fruits of the genus Capsicum or of the genus Pimenta, dried or crushed or ground"
+090500,Vanilla
+090610,Cinnamon and cinnamon-tree flowers (excl. crushed and ground)
+090700,"Cloves, whole fruit, cloves and stems"
+090810,Nutmeg
+090820,Mace
+090830,Cardamoms
+090910,Seeds of anise or badian
+090920,Coriander seeds
+090930,Cumin seeds
+090940,Caraway seeds
+090950,Seeds of fennel; juniper berries
+091010,Ginger
+091040,Thyme and bay leaves
+091050,Curry
+100110,Durum wheat
+100190,Wheat and meslin (excl. durum wheat)
+100200,Rye
+100300,Barley
+100400,Oats
+100700,Grain sorghum
+100820,Millet (excl. grain sorghum)
+110210,Rye flour
+110230,Rice flour
+120100,"Soya beans, whether or not broken"
+120210,"Groundnuts in shell, not roasted or otherwise cooked"
+120220,"Shelled groundnuts, whether or not broken (excl. roasted or otherwise cooked)"
+120720,"Cotton seeds, whether or not broken"
+120926,Timothy grass seed for sowing
+121110,"Liquorice roots, fresh or dried, whether or not cut, crushed or powdered"
+121210,"Locust beans, incl. locust bean seed, fresh, chilled, frozen or dried, whether or not ground"
+121220,"Seaweeds and other algae, fresh, chilled, frozen or dried, whether or not ground"
+121230,"Apricot, peach ""incl. nectarine"" or plum stones and kernels"
+130110,Natural lac
+140200,"Vegetable materials of a kind used primarily as stuffing or as padding, e.g. kapok, vegetable hair and eelgrass, whether or not put up as a layer, with or without supporting material"
+140300,"Vegetable materials, such as broom-corn, piassava, couch grass and istle, of a kind used primarily in brooms or in brushes, whether or not in hanks or bundles"
+140410,"Raw vegetable materials primarily for dyeing or tanning, n.e.s."
+150100,"Pig fat, incl. lard, and poultry fat, rendered or otherwise extracted (excl. lard stearin and lard oil)"
+150200,"Fats of bovine animals, sheep or goats (excl. lard stearin, lard oil, oleostearin, oleooil and tallow oil, not emulsified or mixed or otherwise prepared)"
+150910,Virgin olive oil and its fractions obtained from the fruit of the olive tree solely by mechanical or other physical means under conditions that do not lead to deterioration of the oil
+151000,"Other oils and their fractions, obtained solely from olives, whether or not refined, but not chemically modified, incl. blends of these oils or fractions with oils or fractions of heading 1509"
+151540,"Tung oil and its fractions, whether or not refined, but not chemically modified"
+160430,Caviar and caviar substitutes prepared from fish eggs
+160520,"Shrimps and prawns, prepared or preserved"
+160590,"Molluscs and aquatic invertebrates, prepared or preserved"
+170111,Raw cane sugar (excl. added flavouring or colouring)
+200320,"Truffles, prepared or preserved otherwise than by vinegar or acetic acid"
+200590,"Vegetables and mixtures of vegetables, prepared or preserved otherwise than by vinegar, non-frozen (excl. preserved by sugar, homogenised vegetables of subheading 2005.10, and tomatoes, mushrooms, truffles, potatoes, peas ""Pisum sativum"", beans ""Vigna, Phaseolus"", asparagus, olives and sweetcorn ""Zea Mays var. Saccharata"", unmixed)"
+200892,"Mixtures of fruits, nuts and other edible parts of plants, prepared or preserved, whether or not containing added sugar or other sweetening matter or spirit (excl. mixtures of nuts, groundnuts and other seeds and preparations of the Müsli type based on unroasted cereal flakes of subheading 1904.20.10, and prepared or preserved with vinegar, preserved with sugar but not laid in syrup, jams, fruit jellies, marmalades, fruit purée and pastes, obtained by cooking)"
+200980,"Juice of fruit or vegetables, unfermented, whether or not containing added sugar or other sweetening matter (excl. containing spirit, mixtures, and juice of citrus fruit, pineapples, tomatoes, grapes, incl. grape must and apples)"
+220290,"Non-alcoholic beverages (excl. water, fruit or vegetable juices and milk)"
+230220,"Bran, sharps and other residues of rice, whether or not in the form of pellets, derived from sifting, milling or other working"
+230670,"Oilcake and other solid residues, whether or not ground or in the form of pellets, resulting from the extraction of vegetable fats or oils from maize ""corn"" germ"
+240310,"Smoking tobacco, whether or not containing tobacco substitutes in any proportion"
+250621,Crude or roughly trimmed quartzite
+250629,"Quartzite, merely cut, by sawing or otherwise, in blocks or slabs of a square or rectangular shape (excl. roughly trimmed)"
+250820,Decolourising earths and fuller's earth
+251311,"Pumice stone, crude or in irregular pieces, incl. crushed pumice ""bimskies"""
+251319,"Pumice stone, crushed or ground"
+251621,"Sandstone, crude or roughly trimmed (excl. already with the characteristics of setts, curbstones and flagstones)"
+251622,"Sandstone, merely cut, by sawing or otherwise, into blocks or slabs of a square or rectangular shape (excl. already with the characteristics of setts, curbstones and flagstones)"
+251830,Dolomite ramming mix
+252400,Asbestos (excl. products made from asbestos)
+252810,"Sodium borates, natural, and concentrates thereof, whether or not calcined (excl. sodium borates separated from natural brine)"
+252890,"Borates, natural, and concentrates thereof, whether or not calcined, and natural boric acids containing <= 85% of H3BO3 calculated on the dry weight (excl. sodium borates and concentrates thereof and borates separated from natural brine)"
+270760,Phenols containing > 50% of phenols (excl. chemically defined)
+271011,"Light oils and preparations, of petroleum or bituminous minerals which >= 90% by volume ""incl. losses"" distil at 210°C ""ASTM D 86 method"""
+281123,Sulphur dioxide
+281210,Chlorides and chloride oxides
+282420,Red lead and orange lead
+282611,Fluorides of ammonium or of sodium
+282620,Fluorosilicates of sodium or of potassium
+282733,Iron chlorides
+282734,Cobalt chlorides
+282736,Zinc chloride
+283020,Zinc sulphide
+283030,Cadmium sulphide
+283323,Sulphates of chromium
+283326,Sulphate of zinc
+283523,Phosphate of trisodium
+283610,Commercial ammonium carbonate and other ammonium carbonates
+283670,Lead carbonates
+283800,"Fulminates, cyanates and thiocyanates"
+283920,"Silicates of potassium, incl. commercial silicates"
+284110,Aluminates
+284120,Chromates of zinc or of lead
+284440,"Radioactive elements, isotopes and compounds, and alloys and dispersions, incl. cermets, ceramic products and mixtures, containing these elements, isotopes and compounds; radioactive residues (excl. natural uranium, uranium enriched and depleted in U 235; plutonium, thorium and compounds of these products)"
+284800,"Phosphides, whether or not chemically defined (excl. ferrophosphorus, and inorganic or organic compounds of mercury whether or not chemically defined)"
+285100,"Inorganic compounds, incl. distilled or conductivity water and water of similar purity, n.e.s.; liquid air, whether or not rare gases have been removed; compressed air; amalgams (other than amalgams of precious metals)"
+285200,"Compounds, inorganic or organic, of mercury (excl. amalgams)"
+285300,"Inorganic compounds, incl. distilled or conductivity water and water of similar purity, n.e.s.; liquid air, whether or not rare gases have been removed; compressed air; amalgams (excl. amalgams of precious metals)"
+290330,"Fluorinated, brominated or iodinated derivatives of acyclic hydrocarbons"
+290331,"Ethylene dibromide (ISO) ""1,2-dibromoethane"""
+290339,"Fluorinated, brominated or iodinated derivatives of acyclic hydrocarbons (excl. ethylene dibromide (ISO) {1,2-dibromoethane})"
+290352,"Aldrin (ISO), chlordane (ISO) and heptachlor (ISO)"
+290490,"Sulphonated, nitrated or nitrosated derivatives of hydrocarbons, whether or not halogenated (excl. those containing only sulpho, nitro or nitroso groups)"
+290515,"Pentanol ""amyl alcohol"" and isomers thereof"
+290614,Terpineols
+290714,Xylenols and their salts
+290810,"Derivatives containing only halogen substituents and their salts, of phenols or phenol-alcohols"
+290820,"Sulphonated derivatives, their salts and esters, of phenols or phenol-alcohols"
+290890,"Halogenated, sulphonated, nitrated or nitrosated derivatives of phenols or phenol-alcohols (excl. derivatives containing only halogen substitutes and their salts or only sulpho groups, their salts and esters)"
+290942,Monomethyl ethers of ethylene glycol or of diethylene glycol
+291213,"Butanal ""butyraldehyde, normal isomer"""
+291230,Aldehyde-alcohols
+291421,Camphor
+291470,"Halogenated, sulphonated, nitrated or nitrosated derivatives of ketones or quinones (excl. inorganic or organic compounds of mercury)"
+291522,Sodium acetate
+291523,Cobalt acetates
+291534,Isobutyl acetate
+291535,2-Ethoxyethyl acetate
+291635,Esters of phenylacetic acid
+291636,Binapacryl (ISO)
+291731,Dibutyl orthophthalates
+291890,"Carboxylic acids with additional oxygen function and their anhydrides, halides, peroxides and peroxyacids; their halogenated, sulphonated, nitrated or nitrosated derivatives (excl. only with alcohol, phenol, aldehyde or ketone function)"
+291900,"Phosphoric esters and their salts, incl. lactophosphates; their halogenated, sulphonated, nitrated or nitrosated derivatives"
+292010,"Thiophosphoric esters ""phosphorothioates"" and their salts; their halogenated, sulphonated, nitrated or nitrosated derivatives"
+292213,Triethanolamine and its salts
+292222,"Anisidines, dianisidines, phenetidines, and their salts"
+292520,Imines and their derivatives; salts thereof
+293050,Captafol (ISO) and methamidophos (ISO)
+293100,Separate chemically defined organo-inorganic compounds (excl. organo-sulphur compounds and those of mercury)
+293131,Dimethyl methylphosphonate
+293132,Dimethyl propylphosphonate
+293133,Diethyl ethylphosphonate
+293134,Sodium 3-(trihydroxysilyl)propyl methylphosphonate
+293135,"2,4,6-Tripropyl-1,3,5,2,4,6-trioxatriphosphinane 2,4,6-trioxide"
+293136,"(5-Ethyl-2-methyl-2-oxido-1,3,2-dioxaphosphinan-5-yl)methyl methyl methylphosphonate"
+293137,"Bis{(5-ethyl-2-methyl-2-oxido-1,3,2-dioxaphosphinan-5-yl)methyl} methylphosphonate"
+293138,Salt of methylphosphonic acid and (aminoiminomethyl)urea (1 : 1)
+293139,"Separate chemically defined organo-phosphorous derivatives, n.e.s."
+293221,"Coumarin, methylcoumarins and ethylcoumarins"
+293229,"Lactones (excl. coumarin, methylcoumarins, ethylcoumarins, and inorganic or organic compounds of mercury)"
+293500,Sulphonamides
+293610,"Provitamins, unmixed"
+293731,Epinephrine
+293739,"Catecholamine hormones, their derivatives and structural analogues, used primarily as hormones (excl. epinephrine)"
+293740,"Amino-acid derivatives, used primarily as hormones"
+293921,Quinine and its salts
+293929,Alkaloids of cinchons and their derivatives; salts thereof (excl. quinine and its salts)
+293971,"Cocaine, ecgonine, levometamfetamine, metamfetamine (INN), metamfetamine racemate, and salts, esters and other derivatives thereof"
+293991,"Cocaine, ecgonine, levometamfetamine, metamfetamine (INN), metamfetamine racemate, and salts, esters and other derivatives thereof"
+293999,"Vegetable alkaloids, natural or reproduced by synthesis, and their salts, ethers, esters and other derivatives (excl. alkaloids of opium, alkaloids of cinchons, theophylline, aminophylline ""theophylline-ethylenediamine"" alkaloids of rye ergot and their salts and derivatives, cocaine, ecgonine, levometamfetamine, metamfetamine (INN), metamfetamine racemate, and salts, esters and other derivatives thereof caffeine and ephedrines, and their salts)"
+300110,"Dried glands and other organs for organo-therapeutic uses, whether or not powdered"
+300210,"Antisera and other blood fractions and immunological products, whether or not modified or obtained by means of biotechnological processes"
+300211,Malaria diagnostic test kits
+300219,"Immunological products, n.e.s. (code possibly empty, preceding subheadings seem exhaustive)"
+300220,Vaccines for human medicine
+300230,Vaccines for veterinary medicine
+300340,"Medicaments containing alkaloids or derivatives thereof, not containing hormones, steroids used as hormones or antibiotics, not in measured doses or put up for retail sale"
+300440,"Medicaments containing alkaloids or derivatives thereof, not containing hormones, steroids used as hormones or antibiotics, put up in measured doses ""incl. those in the form of transdermal administration"" or in forms or packings for retail sale"
+300620,Reagents for determining blood groups or blood factors
+300680,Waste pharmaceuticals
+310270,"Calcium cyanamide (excl. that in pellet or similar forms, or in packages with a gross weight of <= 10 kg)"
+310310,"Superphosphates (excl. those in tablets or similar forms, or in packages with a gross weight of <= 10 kg)"
+310320,"Basic slag (excl. that in pellet or similar forms, or in packages with a gross weight of <= 10 kg)"
+310410,"Carnallite, sylvite and other crude natural potassium salts (excl. those in pellet or similar forms, or in packages with a gross weight of <= 10 kg)"
+320630,"Pigments and preparations based on cadmium compounds of a kind used to dye fabrics or produce colorant preparations (excl. preparations of heading 3207, 3208, 3209, 3210, 3213 and 3215)"
+320643,"Pigments and preparations based on hexacyanoferrates ""Ferrocyanides and ferricyanides"", of a kind used to dye fabrics or produce colorant preparations (excl. preparations of heading 3207, 3208, 3209, 3210, 3213 and 3215)"
+330111,"Oils of bergamot, whether or not terpeneless, incl. concretes and absolutes"
+330114,"Oils of lime, whether or not terpeneless, incl. concretes and absolutes"
+330121,"Oils of geranium, whether or not terpeneless, incl. concretes and absolutes"
+330122,"Oils of jasmin, whether or not terpeneless, incl. concretes and absolutes"
+330123,"Oils of lavender or of lavandin, whether or not terpeneless, incl. concretes and absolutes"
+330126,"Oils of vetiver, whether or not terpeneless, incl. concretes and absolutes"
+340211,"Anionic organic surface-active agents, whether or not put up for retail sale (excl. soap)"
+340212,"Cationic organic surface-active agents, whether or not put up for retail sale (excl. soap)"
+340213,"Non-ionic organic surface-active agents, whether or not put up for retail sale (excl. soap)"
+340219,"Organic surface-active agents, whether or not put up for retail sale (excl. anionic, cationic or non-ionic agents and soap)"
+340220,"Surface-active preparations, washing preparations, auxiliary washing preparations and cleaning preparations put up for retail sale (excl. organic surface-active agents, soap and organic surface-active preparations in the form of bars, cakes, moulded pieces or shapes, and products and preparations for washing the skin in the form of liquid or cream)"
+340410,Chemically modified lignite waxes
+360300,"Safety fuses; detonating fuses; percussion or detonating caps; igniters; electric detonators (excl. grenade detonators and cartridge cases, whether or not with percussion caps)"
+370220,"Instant print film in rolls, sensitised, unexposed"
+370251,"Films, photographic, sensitised, in rolls, unexposed, with perforations, for colour photography ""polychrome"", with a width of <= 16 mm and a length of <= 14 m (excl. of paper, paperboard or textiles)"
+370291,"Photographic film, sensitised, in rolls, unexposed, with perforations, for monochrome photography, width <= 16 mm (excl. of paper, paperboard or textiles)"
+370293,"Photographic film, sensitised, in rolls, unexposed, with perforations, for monochrome photography, width > 16 mm but <= 35 mm, length <= 30 m (excl. of paper, paperboard and textiles; X-ray film and instant print roll film)"
+370294,"Photographic film, sensitised, in rolls, unexposed, with perforations, for monochrome photography, width > 16 mm but <= 35 mm, length > 30 m (excl. of paper, paperboard and textiles; X-ray film and instant print roll film)"
+370295,"Photographic film, sensitised, in rolls, unexposed, with perforations, for monochrome photography, width > 35 mm (excl. that of paper, paperboard or textiles, X-ray film, microfilm and film for the graphic arts)"
+370510,"Photographic plates and film, exposed and developed, for offset reproduction (excl. products made of paper, paperboard or textiles and ready-to-use plates)"
+370520,"Microfilm, exposed and developed (excl. microfilm for offset reproduction)"
+370590,"Photographic plates and film, exposed and developed (excl. products made of paper, paperboard or textiles, cinematographic film and film for offset reproduction)"
+380520,Pine oil containing alpha-terpineol as the main constituent
+380810,Insecticides put up for retail sale or as preparations or articles
+380820,Fungicides put up for retail sale or as preparations or articles
+380830,"Herbicides, germination inhibitors and plant-growth regulators put up for retail sale or as preparations or articles"
+380840,Disinfectants put up for retail sale or as preparations or articles
+380850,"Goods of heading 3808 containing one or more of the following substances: aldrin (ISO); binapacryl (ISO); camphechlor (ISO) (toxaphene); captafol (ISO); chlordane (ISO); chlordimeform (ISO); chlorobenzilate (ISO); DDT (ISO) (clofenotane (INN), 1,1,1-trichloro-2,2-bis(p-chlorophenyl)ethane); dieldrin (ISO, INN); 4,6-dinitro-o-cresol (DNOC (ISO)) or its salts; dinoseb (ISO), its salts or its esters; ethylene dibromide (ISO) (1,2-dibromoethane); ethylene dichloride (ISO) (1,2-dichloroethane); fluoroacetamide (ISO); heptachlor (ISO); hexachlorobenzene (ISO); 1,2,3,4,5,6-hexachlorocyclohexane (HCH (ISO)), including lindane (ISO, INN); mercury compounds; methamidophos (ISO); monocrotophos (ISO); oxirane (ethylene oxide); parathion (ISO); parathion-methyl (ISO) (methyl-parathion); pentachlorophenol (ISO), its salts or its esters; phosphamidon (ISO); 2,4,5-T (ISO) (2,4,5-trichlorophenoxyacetic acid), its salts or its esters; tributyltin compounds. Also dustable powder formulations containing a mixture of benomyl (ISO), carbofuran (ISO) and thiram (ISO)."
+380890,"Rodenticides and other plant protection products put up for retail sale or as preparations or articles (excl. insecticides, fungicides, herbicides and disinfectants)"
+381230,Anti-oxidising preparations and other compound stabilisers for rubber or plastics
+382200,"Diagnostic or laboratory reagents on a backing, prepared diagnostic or laboratory reagents whether or not on a backing, other than those of heading 3002 or 3006; certified reference materials"
+382420,Naphthenic acids and the water-insoluble salts and esters thereof
+382471,"Mixtures containing chlorofluorocarbons ""CFCs"", whether or not containing hydrochlorofluorocarbons ""HCFCs"", perfluorocarbons ""PFCs"" or hydrofluorocarbons ""HFCs"""
+382472,"Mixtures containing bromochlorodifluoromethane, bromotrifluoromethane or dibromotetrafluoroethanes"
+382473,"Mixtures containing hydrobromofluorocarbons ""HBFCs"""
+382474,"Mixtures containing hydrochlorofluorocarbons ""HCFCs"", whether or not containing perfluorocarbons ""PFCs"" or hydrofluorocarbons ""HFCs"", but not containing chlorofluorocarbons ""CFCs"""
+382475,Mixtures containing carbon tetrachloride
+382476,"Mixtures containing 1,1,1-trichloroethane ""methyl chloroform"""
+382477,"Mixtures containing bromomethane ""methyl bromide"" or bromochloromethane"
+382478,"Mixtures containing perfluorocarbons ""PFCs"" or hydrofluorocarbons ""HFCs"", but not containing chlorofluorocarbons ""CFCs"" or hydrochlorofluorocarbons ""HCFCs"""
+382479,"Mixtures containing halogenated derivatives of methane, ethane or propane (excl. those of subheadings 3824.71.00 to 3824.78.00)"
+382490,"Chemical products and preparations of the chemical or allied industries, incl. those consisting of mixtures of natural products, n.e.s."
+390720,"Polyethers, in primary forms (excl. polyacetals and goods of 3002 10)"
+390760,"Poly""ethylene terephthalate"", in primary forms"
+390930,"Amino-resins, in primary forms (excl. urea resins, thiourea resins and melamine resins)"
+392072,"Plates, sheets, film, foil and strip of vulcanised fibre, not reinforced, laminated, supported or similarly combined with other materials, without backing, unworked or merely surface-worked or merely cut into squares or rectangles"
+401013,"Conveyor belts or belting, of vulcanised rubber, reinforced only with plastics (other than textile materials)"
+401161,"Pneumatic tyres, new, of rubber, having a ""herring-bone"" or similar tread, of a kind used on agricultural or forestry vehicles and machines"
+401162,"Pneumatic tyres, new, of rubber, having a ""herring-bone"" or similar tread, of a kind used on construction or industrial handling vehicles and machines and having a rim size <= 61 cm"
+401163,"Pneumatic tyres, new, of rubber, having a ""herring-bone"" or similar tread, of a kind used on construction or industrial handling vehicles and machines and having a rim size > 61 cm"
+401169,"Pneumatic tyres, new, of rubber, having a ""herring-bone"" or similar tread (excl. of a kind used on agricultural or forestry and construction or industrial handling vehicles and machines)"
+401192,"Pneumatic tyres, of rubber, new, of a kind used on agricultural or forestry vehicles and machines (excl. having a ""herring-bone"" or similar tread)"
+401193,"Pneumatic tyres, new, of rubber, of a kind used on construction or industrial handling vehicles and machines and having a rim size <= 61 cm (excl. having a ""herring-bone"" or similar tread)"
+401194,"Pneumatic tyres, new, of rubber, of a kind used on construction or industrial handling vehicles and machines and having a rim size > 61 cm (excl. having a ""herring-bone"" or similar tread)"
+401199,"Pneumatic tyres, new, of rubber (excl. having a ""herring-bone"" or similar tread and pneumatic tyres of a kind used on agricultural or forestry and construction or industrial handling vehicles and machines, on motor cars, station wagons, racing cars, buses, lorries, aircraft, motorcycles and bicycles)(2002-2016);Pneumatic tyres, new, of rubber (excl. having a ""herring-bone"" or similar tread and pneumatic tyres of a kind used on motorcars, station wagons, racing cars, buses, lorries, aircraft, motorcycles and bicycles)(1988-2001)"
+401511,"Surgical gloves, of vulcanised rubber (excl. fingerstalls)"
+410310,"Raw hides and skins of goats or kids, fresh or salted, dried, limed, pickled or otherwise preserved, whether or not dehaired or split (excl. parchment-dressed and hides and skins of goats or kids from Yemen, Mongolia or Tibet)"
+420400,"Articles for technical use, of leather or composition leather"
+420610,"Catgut (excl. sterile catgut, other sterile surgical suture material and strings for musical instruments)"
+420690,"Articles of gut, goldbeater's skin, bladders or tendons (excl. silkworm gut, sterile catgut, other sterile surgical suture material and catgut, incl. strings for musical instruments)"
+430170,"Raw furskins of seal, whole, with or without heads, tails or paws"
+430213,"Tanned or dressed furskins of Astrakhan, Caracul, Persian, Broadtail or similar lamb, and Indian, Chinese, Mongolian or Tibetan lamb, whole, with or without heads, tails or paws, not assembled"
+440110,"Fuel wood, in logs, billets, twigs, faggots or similar forms"
+440130,"Sawdust and wood waste and scrap, whether or not agglomerated in logs, briquettes, pellets or similar forms"
+440140,"Sawdust and wood waste and scrap, not agglomerated"
+440200,"Wood charcoal, incl. shell or nut charcoal, whether or not agglomerated (excl. wood charcoal used as a medicament, charcoal mixed with incense, activated charcoal and charcoal in the form of crayons)"
+440310,"Wood in the rough, treated with paint, stains, creosote or other preservatives (excl. rough-cut wood for walking sticks, umbrellas, tool shafts and the like; wood in the form of railway sleepers; wood cut into boards or beams, etc.)"
+440320,"Coniferous wood in the rough, whether or not stripped of bark or sapwood, or roughly squared (excl. rough-cut wood for walking sticks, umbrellas, tool shafts and the like; wood in the form of railway sleepers; wood cut into boards or beams, etc.; wood treated with paint, stains, creosote or other preservatives)"
+440392,"Beech ""Fagus spp."" in the rough, whether or not stripped of bark or sapwood, or roughly squared (excl. rough-cut wood for walking sticks, umbrellas, tool shafts and the like; wood in the form of railway sleepers; wood cut into boards or beams, etc.; wood treated with paint, stains, creosote or other preservatives)(2002-2016);Beech ""Fagus spp."" in the rough, whether or not stripped of bark or sapwood, or roughly squared (excl. rough-cut wood for walking sticks, umbrellas, tool shafts and the like; wood in the form of railway sleepers; wood cut into boards or beams, etc.; wood treated with paint, stains, creosote or other preservatives)(1988-2001)"
+440610,"Railway or tramway sleepers ""cross-ties"" of wood, not impregnated"
+440690,"Railway or tramway sleepers ""cross-ties"" of wood, impregnated"
+440710,"Coniferous wood sawn or chipped lengthwise, sliced or peeled, whether or not planed, sanded or end-jointed, of a thickness of > 6 mm"
+440724,"Virola, mahogany ""Swietenia spp."", imbuia and balsa, sawn or chipped lengthwise, sliced or peeled, whether or not planed, sanded or end-jointed, of a thickness of > 6 mm"
+440920,"Wood, incl. strips and friezes for parquet flooring, not assembled, continuously shaped ""tongued, grooved, rebated, chamfered, V-jointed beaded, moulded, rounded or the like"" along any of its edges, ends or faces, whether or not planed, sanded or end-jointed (excl. coniferous wood)"
+441021,"Oriented strand board and waferboard, of wood, unworked or not further worked than sanded"
+441029,"Oriented strand board and waferboard, of wood (excl. unworked or not further worked than sanded)"
+441031,"Particle board and similar board, of wood, whether or not agglomerated with resins or other organic binding substances, unworked or not further worked than sanded (excl. oriented strand board and waferboard, fibreboard and hollow-core composite panels)"
+441032,"Particle board and similar board, of wood, whether or not agglomerated with resins or other organic binding substances, surface-covered with melamine-impregnated paper (excl. oriented strand board and waferboard, fibreboard and hollow-core composite panels)"
+441033,"Particle board and similar board, of wood, whether or not agglomerated with resins or other organic binding substances, surface-covered with decorative laminates of plastics (excl. oriented strand board and waferboard, fibreboard and hollow-core composite panels)"
+441039,"Particle board and similar board, of wood, whether or not agglomerated with resins or other organic binding substances (excl. unworked or not further worked than sanded, surface-covered with melamine-impregnated paper or with decorative laminates of plastics, oriented strand board and waferboard, fibreboard and hollow-core composite panels)"
+441111,"Fibreboard of wood or other ligneous materials, whether or not agglomerated with resins or other organic bonding agents, with a density of > 0,8 g/cm³, not mechanically worked or surface-coated (excl. particle board, whether or not bonded with one or more sheets of fibreboard; laminated wood with a layer of plywood; composite panels with outer layers of fibreboard; paperboard; furniture components identifiable as such)"
+441119,"Fibreboard of wood or other ligneous materials, whether or not agglomerated with resins or other organic bonding agents, with a density of > 0,8 g/cm³, mechanically worked or surface-coated (excl. sanded only; particle board, whether or not bonded with one or more sheets of fibreboard; laminated wood with a layer of plywood; composite panels with outer layers of fibreboard; paperboard; identifiable furniture components)"
+441121,"Fibreboard of wood or other ligneous materials, whether or not agglomerated with resins or other organic bonding agents, with a density of > 0,5 g to 0,8 g/cm³ (excl. mechanically worked or surface-coated; particle board, whether or not bonded with one or more sheets of fibreboard; laminated wood with a layer of plywood; composite panels with outer layers of fibreboard; paperboard; identifiable furniture components)"
+441129,"Fibreboard of wood or other ligneous materials, whether or not agglomerated with resins or organic bonding agents, with a density of > 0,5 g to 0,8 g/cm³, mechanically worked or surface-covered (excl. sanded only; particle board, whether or not bonded with one or more sheets of fibreboard; laminated wood with a layer of plywood; composite panels with outer layers of fibreboard; paperboard; identifiable furniture components)"
+441131,"Fibreboard of wood or other ligneous materials, whether or not agglomerated with resins or other organic bonding agents, with a density of > 0,35 g to 0,5 g/cm³ (excl. mechanically worked or surface-covered; particle board, whether or not bonded with one or more sheets of fibreboard; laminated wood with a layer of plywood; composite panels with outer layers of fibreboard; paperboard; identifiable furniture components)"
+441139,"Fibreboard of wood or other ligneous materials, whether or not agglomerated with resins or organic bonding agents, with a density of > 0,35 g to 0,5 g/cm³, mechanically worked or surface-coated (excl. sanded only; particle board, whether or not bonded with one or more sheets of fibreboard; laminated wood with a layer of plywood; composite panels with outer layers of fibreboard; paperboard; identifiable furniture components)"
+441191,"Fibreboard of wood or other ligneous materials, whether or not agglomerated with resins or other organic bonding agents, with a density of <= 0,35 g/cm³ (excl. mechanically worked or surface-coated; particle board, whether or not bonded with one or more sheets of fibreboard; laminated wood with a layer of plywood; composite panels with outer layers of fibreboard; paperboard; identifiable furniture components)"
+441199,"Fibreboard of wood or other ligneous materials, whether or not agglomerated with resins or other organic bonding agents, with a density of <= 0,35 g/cm³, mechanically worked or surface-coated (excl. sanded only; particle board, whether or not bonded with one or more sheets of fibreboard; laminated wood with a layer of plywood; composite panels with outer layers of fibreboard; paperboard; identifiable furniture components)"
+441213,"Plywood consisting solely of sheets of wood <= 6 mm thick, with at least one outer ply of tropical wood specified in Subheading Note 1 to this chapter (excl. sheets of compressed wood, hollow-core composite panels, inlaid wood and sheets identifiable as furniture components)"
+441214,"Plywood consisting solely of sheets of wood <= 6 mm thick, with at least one outer ply of non-coniferous wood or other tropical wood than specified in Subheading Note 1 to this chapter (excl. sheets of compressed wood, hollow-core composite panels, inlaid wood and sheets identifiable as furniture components)"
+441219,"Plywood consisting solely of sheets of wood <= 6 mm thick (excl. plywood of subheadings 4412.13 and 4412.14; sheets of compressed wood, hollow-core composite panels, inlaid wood and sheets identifiable as furniture components)"
+441222,"Veneered panels and similar laminated wood with at least one outer ply of tropical wood specified in Subheading Note 1 to this chapter (excl. sheets of compressed wood, hollow-core composite panels, inlaid wood and sheets identifiable as furniture components)"
+441223,Veneered panels and similar laminated wood with at least one outer ply of non-coniferous wood or other tropical wood than specified in Subheading Note 1 to this chapter and containing at least one layer of particle board (excl. hollow-core composite panels and sheets identifiable as furniture components)
+441229,"Veneered panels and similar laminated wood with at least one outer ply of non-coniferous wood or other tropical wood than specified in Subheading Note 1 to this chapter but not containing particle board (excl. plywood, sheets of compressed wood, hollow-core composite panels, parquet panels or sheets, inlaid wood and sheets identifiable as furniture components)"
+441232,"Plywood consisting solely of sheets of wood <= 6 mm thick, with at least one outer ply of non-coniferous wood or other tropical wood than specified in Subheading Note 1 to this chapter (excl. of bamboo, and sheets of compressed wood, cellular wood panels, inlaid wood and sheets identifiable as furniture components)"
+441293,"Veneered panels and similar laminated wood with at least one layer of particle board (excl. wood of subheading 4412.23, hollow-core composite panels and sheets identifiable as furniture components)"
+441294,"Laminated wood as blockboard, laminboard or battenboard (excl. of bamboo, plywood consisting solely of sheets of wood <= 6 mm thick, sheets of compressed wood, inlaid wood and sheets identifiable as furniture components)"
+441400,"Wooden frames for paintings, photographs, mirrors or similar objects"
+441810,"Windows, French windows and their frames, of wood"
+441820,"Doors and their frames and thresholds, of wood"
+441860,"Posts and beams, of wood"
+441871,"Flooring panels for mosaic floors, assembled, of wood"
+441872,"Flooring panels, multilayer, assembled, of wood (excl. for mosaic floors)"
+441890,"Builders' joinery and carpentry, of wood, incl. cellular wood panels (excl. windows, French windows and their frames, doors and their frames and thresholds, posts and beams, assembled flooring panels, wooden shuttering for concrete constructional work, shingles, shakes and prefabricated buildings)"
+441900,"Tableware and kitchenware, of wood (excl. interior fittings, ornaments, cooperage products, tableware and kitchenware components of wood, brushes, brooms and hand sieves)"
+442010,"Statuettes and other ornaments, of wood (excl. wood marquetry and inlaid wood)"
+442190,"Other articles of wood, n.e.s."
+460120,"Mats, matting and screens of vegetable plaiting materials, flat-woven or bound together in parallel"
+460191,"Plaits and similar products of plaiting materials, whether or not assembled into strips; plaiting materials, plaits and similar products of vegetable plaiting materials, flat-woven or bound together in parallel (excl. mats, matting and screens; wallcoverings of heading 4814; parts of footware or headgear)"
+460210,"Basketwork, wickerwork and other articles, made directly to shape from plaiting materials or made up from goods of heading 4601, and articles of loofah (excl. wallcoverings of heading 4814; twine, cord and rope; footware and headgear and parts thereof; vehicles and vehicle superstructures; goods of chapter 94, e.g. furniture, lighting fixtures)"
+480230,"Carbonising base paper, uncoated, in rolls or in square or rectangular sheets, of any size"
+480820,"Sack kraft paper, creped or crinkled, whether or not embossed or perforated, in rolls of a width > 36 cm or in square or rectangular sheets with one side > 36 cm and the other side > 15 cm in the unfolded state"
+480830,"Kraft paper, creped or crinkled, whether or not embossed or perforated, in rolls of a width > 36 cm or in square or rectangular sheets with one side > 36 cm and the other side > 15 cm in the unfolded state (excl. sack kraft paper)"
+480910,"Carbon and similar copying papers, whether or not printed, in rolls of a width > 36 cm or in square or rectangular sheets with one side > 36 cm and the other side > 15 cm in the unfolded state"
+481410,Ingrain' paper
+481430,"Wallpaper and similar wallcoverings of paper, consisting of paper covered, on the face side, with plaiting material, whether or not bound together in parallel strands or woven"
+481500,"Floor coverings on a base of paper or paperboard, whether or not cut to size (excl. similar floor coverings with textile backings, and floor coverings without backings)"
+481610,"Carbon or similar copying papers, in rolls of a width of <= 36 cm or in rectangular or square sheets with no side measuring > 36 cm in the unfolded state, or cut into shapes other than rectangles or squares, whether or not in boxes"
+481630,"Duplicator stencils of paper, whether or not in boxes"
+481840,"Sanitary towels and tampons, napkins and napkin for babies and similar sanitary articles, of paper pulp, paper, cellulose wadding or webs of cellulose fibres"
+482312,"Self-adhesive paper in strips or rolls with a width of <= 36 cm (excl. surface-coloured, surface-decorated or printed)"
+482319,Gummed or adhesive paper in strips or rolls of a width <= 36 cm (excl. self-adhesive)
+482360,"Trays, dishes, plates, cups and the like, of paper or paperboard"
+490510,"Globes, printed (excl. relief globes)"
+490591,"Maps and hydrographic or similar charts of all kinds, incl. atlases and topographical plans, printed and in book form (excl. globes, and maps and plans, in relief)"
+490599,"Maps and hydrographic or similar charts of all kinds, incl. atlases, wall maps and topographical plans, printed (excl. those in book form, and maps, plans and globes, in relief)"
+500310,"Silk waste, incl. cocoons unsuitable for reeling, yarn waste and garnetted stock, neither carded nor combed"
+500390,"Silk waste, incl. cocoons unsuitable for reeling, yarn waste and garnetted stock, carded or combed"
+520853,"Woven fabrics of cotton, containing >= 85% cotton by weight and weighing <= 200 g/m², in three-thread or four-thread twill, incl. cross twill, printed"
+521012,"Woven fabrics of cotton, containing predominantly, but < 85% cotton by weight, mixed principally or solely with man-made fibres and weighing <= 200 g/m², in three-thread or four-thread twill, incl. cross twill, unbleached"
+521022,"Woven fabrics of cotton, containing predominantly, but < 85% cotton by weight, mixed principally or solely with man-made fibres and weighing <= 200 g/m², in three-thread or four-thread twill, incl. cross twill, bleached"
+521042,"Woven fabrics of cotton, containing predominantly, but < 85% cotton by weight, mixed principally or solely with man-made fibres and weighing <= 200 g/m², in three-thread or four-thread twill, incl. cross twill, made from yarn of different colours"
+521052,"Woven fabrics of cotton, containing predominantly, but < 85% cotton by weight, mixed principally or solely with man-made fibres and weighing <= 200 g/m², in three-thread or four-thread twill, incl. cross twill, printed"
+521121,"Plain woven fabrics of cotton, containing predominantly, but < 85% cotton by weight, mixed principally or solely with man-made fibres and weighing > 200 g/m², bleached"
+521122,"Woven fabrics of cotton, containing predominantly, but < 85% cotton by weight, mixed principally or solely with man-made fibres and weighing > 200 g/m², in three-thread or four-thread twill, incl. cross twill, bleached"
+521129,"Woven fabrics of cotton, containing predominantly, but < 85% cotton by weight, mixed principally or solely with man-made fibres and weighing > 200 g/m², bleached (excl. those in three-thread or four-thread twill, incl. cross twill, and plain woven fabrics)"
+530410,"Sisal and other textile fibres of the genus Agave, raw"
+530490,"Sisal and other textile fibres of the genus Agave, processed but not spun; tow and waste of such fibres, incl. yarn waste and garnetted stock"
+530511,"Coconut ""coir"" fibres, raw"
+530519,"Coconut ""coir"" fibres, processed but not spun; tow, noils and waste of such fibres, incl. yarn waste and garnetted stock"
+530521,"Abaca ""Manila hemp or Musa textilis Nee"", raw"
+530529,"Abaca ""Manila hemp or Musa textilis Nee"", processed but not spun; tow, noils and waste of these fibres, incl. yarn waste and garnetted stock"
+530590,"Ramie and other vegetable textile fibres, n.e.s., raw or processed, but not spun; tow, noils and waste of such fibres, incl. yarn waste and garnetted stock"
+540210,High-tenacity filament yarn of nylon or other polyamides (excl. sewing thread and yarn put up for retail sale)
+540241,"Filament yarn of nylon or other polyamides, incl. monofilament of < 67 decitex, single, untwisted or with a twist of <= 50 turns per metre (excl. sewing thread, yarn put up for retail sale, high-tenacity yarn and textured yarn)"
+540242,"Filament yarn of polyester, incl. monofilament of < 67 decitex, single, untwisted or with a twist of <= 50 turns per metre, partially oriented (excl. sewing thread, yarn put up for retail sale and textured yarn)"
+540243,"Filament yarn of polyester, incl. monofilament of < 67 decitex, single, untwisted or with a twist of <= 50 turns per metre (excl. sewing thread, yarn put up for retail sale, textured yarn and yarn of partially oriented polyester filament)"
+540320,Textured artificial filament yarn (excl. sewing thread and yarn put up for retail sale)
+540410,Synthetic monofilament of >= 67 decitex and with a cross sectional dimension of <= 1 mm
+540610,"Synthetic filament yarn, put up for retail sale (excl. sewing thread)"
+540620,"Artificial filament yarn, put up for retail sale (excl. sewing thread)"
+550110,"Filament tow as specified in Note 1 to chapter 55, of nylon or other polyamides"
+550200,Artificial filament tow as specified in Note 1 to chapter 55
+550310,"Staple fibres of nylon or other polyamides, not carded, combed or otherwise processed for spinning"
+551322,"Woven fabrics containing predominantly, but < 85% polyester staple fibres by weight, mixed principally or solely with cotton and weighing <= 170 g/m², in three-thread or four-thread twill, incl. cross twill, dyed"
+551332,"Woven fabrics containing predominantly, but < 85% polyester staple fibres by weight, mixed principally or solely with cotton and weighing <= 170 g/m², in three-thread or four-thread twill, incl. cross twill, made of yarn of different colours"
+551333,"Woven fabrics containing predominantly, but < 85% polyester staple fibres by weight, mixed principally or solely with cotton and weighing <= 170 g/m², made of yarn of different colours (excl. those in three-thread or four-thread twill, incl. cross twill, and plain woven fabrics)"
+551342,"Woven fabrics containing predominantly, but < 85% polyester staple fibres by weight, mixed principally or solely with cotton and weighing <= 170 g/m², in three-thread or four-thread twill, incl. cross twill, printed"
+551343,"Woven fabrics containing predominantly, but < 85% polyester staple fibres by weight, mixed principally or solely with cotton and weighing <= 170 g/m², printed (excl. those in three-thread or four-thread twill, incl. cross twill, and plain woven fabrics)"
+551413,"Woven fabrics containing predominantly, but < 85% polyester staple fibres by weight, mixed principally or solely with cotton and weighing > 170 g/m², unbleached or bleached (excl. those in three-thread or four-thread twill, incl. cross twill, and plain woven fabrics)"
+551431,"Plain woven fabrics containing predominantly, but < 85% polyester staple fibres by weight, mixed principally or solely with cotton and weighing > 170 g/m², made of yarn of different colours"
+551432,"Woven fabrics containing predominantly, but < 85% polyester staple fibres by weight, mixed principally or solely with cotton and weighing > 170 g/m², in three-thread or four-thread twill, incl. cross twill, made of yarn of different colours"
+551433,"Woven fabrics containing predominantly, but < 85% polyester staple fibres by weight, mixed principally or solely with cotton and weighing > 170 g/m², made of yarn of different colours (excl. those in three-thread or four-thread twill, incl. cross twill, and plain woven fabrics)"
+551439,"Woven fabrics containing predominantly, but < 85% synthetic staple fibres by weight, mixed principally or solely with cotton and weighing > 170 g/m², made of yarn of different colours (excl. those of polyester staple fibres)"
+551592,"Woven fabrics containing predominantly, but < 85% synthetic staple fibres, mixed principally or solely with wool or fine animal hair (excl. those of acrylic, modacrylic or polyester staple fibres)"
+560110,"Sanitary towels and tampons, napkins and napkin liners for babies and similar sanitary articles, of wadding"
+560420,"High-tenacity yarn of polyesters, nylon, other polyamides or viscose, impregnated or coated with rubber or plastics"
+560710,"Twine, cordage, ropes and cables, of jute or other textile bast fibres of heading 5303, whether or not plaited or braided and whether or not impregnated, coated, covered or sheathed with rubber or plastics"
+570251,"Carpets and other floor coverings, of wool or fine animal hair, woven, not tufted or flocked, not of pile construction, not made up (excl. Kelem, Schumacks, Karamanie and similar hand-woven rugs)"
+570252,"Carpets and other floor coverings, of man-made textile materials, woven, not tufted or flocked, not of pile construction, not made up (excl. Kelem, Schumacks, Karamanie and similar hand-woven rugs)"
+570259,"Carpets and other floor coverings, of vegetable textile materials or coarse animal hair, woven, not tufted or flocked, not of pile construction, not made up (excl. Kelem, Schumacks, Karamanie and similar hand-woven rugs, and floor coverings of coconut fibres ""coir"")"
+570320,"Carpets and other floor coverings, of nylon or other polyamides, tufted ""needle punched"", whether or not made up"
+570330,"Carpets and other floor coverings, of man-made textile materials, tufted ""needle punched"", whether or not made up (excl. those of nylon or other polyamides)"
+580124,"Uncut warp pile fabrics ""épinglé"", of cotton (excl. terry towelling and similar woven terry fabrics, tufted textile fabrics and narrow woven fabrics of heading 5806)"
+580125,"Cut warp pile fabrics, of cotton (excl. terry towelling and similar woven terry fabrics, tufted textile fabrics and narrow woven fabrics of heading 5806)"
+580134,"Uncut warp pile fabrics ""épinglé"", of man-made fibres (excl. terry towelling and similar woven terry fabrics, tufted textile fabrics and narrow woven fabrics of heading 5806)"
+580135,"Cut warp pile fabrics, of man-made fibres (excl. terry towelling and similar woven terry fabrics, tufted textile fabrics and narrow woven fabrics of heading 5806)"
+580211,"Terry towelling and similar woven terry fabrics, of cotton, unbleached (excl. narrow woven fabrics of heading 5806, carpets and other floor coverings)"
+580219,"Terry towelling and similar woven terry fabrics, of cotton (excl. unbleached, narrow woven fabrics of heading 5806, carpets and other floor coverings)"
+580310,Cotton gauze (excl. narrow woven fabrics of heading 5806)
+580390,Gauze (excl. that of cotton and narrow woven fabrics of heading 5806)
+600510,"Warp knit fabrics ""incl. those made on galloon knitting machines"", of a width of > 30 cm, of wool or fine animal hair  (excl. those containing by weight >= 5% of elastomeric yarn or  rubber thread, and pile fabrics, incl. ""long pile"", looped pile fabrics, labels, badges and similar articles, and knitted or crocheted fabrics, impregnated, coated, covered or laminated)"
+600531,"Unbleached or bleached warp knit fabrics of synthetic fibres ""incl. those made on galloon knitting machines"", of a width of > 30 cm  (excl. those containing by weight >= 5% of elastomeric yarn or  rubber thread, and pile fabrics, incl. ""long pile"", looped pile fabrics, labels, badges and similar articles, and knitted or crocheted fabrics, impregnated, coated, covered or laminated)"
+600532,"Dyed warp knit fabrics of synthetic fibres ""incl. those made on galloon knitting machines"", of a width of > 30 cm  (excl. those containing by weight >= 5% of elastomeric yarn or  rubber thread, and pile fabrics, incl. ""long pile"", looped pile fabrics, labels, badges and similar articles, and knitted or crocheted fabrics, impregnated, coated, covered or laminated)"
+600533,"Warp knit fabrics of synthetic fibres, of yarns of different colours ""incl. those made on galloon knitting machines"", of a width of > 30 cm  (excl. those containing by weight >= 5% of elastomeric yarn or  rubber thread, and pile fabrics, incl. ""long pile"", looped pile fabrics, labels, badges and similar articles, and knitted or crocheted fabrics, impregnated, coated, covered or laminated)"
+600534,"Printed warp knit fabrics of synthetic fibres ""incl. those made on galloon knitting machines"", of a width of > 30 cm  (excl. those containing by weight >= 5% of elastomeric yarn or  rubber thread, and pile fabrics, incl. ""long pile"", looped pile fabrics, labels, badges and similar articles, and knitted or crocheted fabrics, impregnated, coated, covered or laminated)"
+610110,"Overcoats, car coats, capes, cloaks, anoraks, incl. ski jackets, windcheaters, wind-jackets and similar articles of wool or fine animal hair, for men or boys, knitted or crocheted (excl. suits, ensembles, jackets, blazers, bib and brace overalls and trousers)"
+610311,"Men's or boys' suits of wool or fine animal hair, knitted or crocheted (excl. tracksuits, ski suits and swimwear)"
+610312,"Men's or boys' suits of synthetic fibres, knitted or crocheted (excl. tracksuits, ski suits and swimwear)"
+610319,"Men's or boys' suits of textile materials, knitted or crocheted (excl. of wool or fine animal hair, synthetic fibres, tracksuits, ski suits and swimwear)"
+610321,"Men's or boys' ensembles of wool or fine animal hair, knitted or crocheted (excl. ski ensembles and swimwear)"
+610411,"Women's or girls' suits of wool or fine animal hair, knitted or crocheted (excl. ski overalls and swimwear)"
+610412,"Women's or girls' suits of cotton, knitted or crocheted (excl. ski overalls and swimwear)"
+610421,"Women's or girls' ensembles of wool or fine animal hair, knitted or crocheted (excl. ski ensembles and swimwear)"
+610792,"Men's or boys' bathrobes, dressing gowns and similar articles of man-made fibres, knitted or crocheted"
+611110,"Babies' garments and clothing accessories of wool or fine animal hair, knitted or crocheted (excl. hats)"
+611410,"Special garments for professional, sporting or other purposes, n.e.s., of wool or fine animal hair, knitted or crocheted"
+611511,"Pantyhose and tights of synthetic fibres, knitted or crocheted, measuring per single yarn < 67 decitex"
+611512,"Pantyhose and tights of synthetic fibres, knitted or crocheted, measuring per single yarn >= 67 decitex"
+611519,"Pantyhose and tights of textile materials, knitted or crocheted (excl. of synthetic fibres and hosiery for babies)"
+611520,"Women's full-length or knee-length hosiery, knitted or crocheted, measuring per single yarn < 67 decitex (excl. pantyhose and tights)"
+611591,"Full-length or knee-length stockings, socks and other hosiery, incl. stockings for varicose veins and footwear without applied soles, of wool or fine animal hair, knitted or crocheted (excl. pantyhose and tights, women's full-length or knee-length stockings, measuring per single yarn < 67 decitex, and hosiery for babies)"
+611592,"Full-length or knee-length stockings, socks and other hosiery, incl. stockings for varicose veins and footwear without applied soles, of cotton, knitted or crocheted (excl. pantyhose and tights, women's full-length or knee-length stockings, measuring per single yarn < 67 decitex, and hosiery for babies)"
+611593,"Full-length or knee-length stockings, socks and other hosiery, incl. stockings for varicose veins and footwear without applied soles, of synthetic fibres, knitted or crocheted (excl. pantyhose and tights, women's full-length or knee-length stockings, measuring per single yarn < 67 decitex, and hosiery for babies)"
+611720,"Ties, bow ties and cravats, knitted or crocheted"
+620111,"Men's or boys' overcoats, raincoats, car coats, capes, cloaks and similar articles, of wool or fine animal hair (excl. knitted or crocheted)"
+620112,"Men's or boys' overcoats, raincoats, car coats, capes, cloaks and similar articles, of cotton (excl. knitted or crocheted)"
+620113,"Men's or boys' overcoats, raincoats, car coats, capes, cloaks and similar articles, of man-made fibres (excl. knitted or crocheted)"
+620119,"Men's or boys' overcoats, raincoats, car coats, capes, cloaks and similar articles, of textile materials (excl. of wool or fine animal hair, cotton or man-made fibres, knitted or crocheted)"
+620191,"Men's or boys' anoraks, incl. ski jackets, windcheaters, wind-jackets and similar articles, of wool or fine animal hair (excl. knitted or crocheted, suits, ensembles, jackets, blazers and trousers)"
+620192,"Men's or boys' anoraks, windcheaters, wind jackets and similar articles, of cotton (not knitted or crocheted and excl. suits, ensembles, jackets, blazers, trousers and tops of ski suits)"
+620193,"Men's or boys' anoraks, windcheaters, wind jackets and similar articles, of man-made fibres (not knitted or crocheted and excl. suits, ensembles, jackets, blazers, trousers and tops of ski suits)"
+620199,"Men's or boys' anoraks, incl. ski jackets, windcheaters, wind-jackets and similar articles of textile materials (excl. of wool, fine animal hair, cotton or man-made fibres, knitted or crocheted, suits, ensembles, jackets, blazers and trousers)"
+620211,"Women's or girls' overcoats, raincoats, car coats, capes, cloaks and similar articles, of wool or fine animal hair (excl. knitted or crocheted)"
+620212,"Women's or girls' overcoats, raincoats, car coats, capes, cloaks and similar articles, of cotton (excl. knitted or crocheted)"
+620213,"Women's or girls' overcoats, raincoats, car coats, capes, cloaks and similar articles, of man-made fibres (excl. knitted or crocheted)"
+620219,"Women's or girls' overcoats, raincoats, car coats, capes, cloaks and similar articles, of textile materials (excl. of wool or fine animal hair, cotton or man-made fibres, knitted or crocheted)"
+620291,"Women's or girls' anoraks, incl. ski jackets, windcheaters, wind-jackets and similar articles, of wool or fine animal hair (excl. knitted or crocheted, suits, ensembles, jackets, blazers and trousers)"
+620292,"Women's or girls' anoraks, windcheaters, wind jackets and similar articles, of cotton (not knitted or crocheted and excl. suits, ensembles, jackets, blazers, trousers and tops of ski suits)"
+620293,"Women's or girls' anoraks, windcheaters, wind jackets and similar articles, of man-made fibres (not knitted or crocheted and excl. suits, ensembles, jackets, blazers, trousers and tops of ski suits)"
+620299,"Women's or girls' anoraks, incl. ski jackets, windcheaters, wind-jackets and similar articles, of textile materials (excl. of wool, fine animal hair, cotton or man-made fibres, knitted or crocheted, suits, ensembles, jackets, blazers and trousers)"
+620321,"Men's or boys' ensembles of wool or fine animal hair (excl. knitted or crocheted, ski ensembles and swimwear)"
+620510,"Men's or boys' shirts of wool or fine animal hair (excl. knitted or crocheted, nightshirts, singlets and other vests)"
+620792,"Men's or boys' singlets and other vests, bathrobes, dressing gowns and similar articles of man-made fibres (excl. knitted or crocheted, underpants, nightshirts and pyjamas)"
+620910,Babies' garments and clothing accessories of wool or fine animal hair (excl. knitted or crocheted and hats)
+621131,"Men's or boys' tracksuits and other garments, n.e.s. of wool or fine animal hair (excl. knitted or crocheted)"
+621141,"Women's or girls' tracksuits and other garments, n.e.s. of wool or fine animal hair (excl. knitted or crocheted)"
+621310,"Handkerchiefs of silk or silk waste, of which no side exceeds 60 cm (excl. knitted or crocheted)"
+630252,Table linen of flax (excl. knitted or crocheted)
+630292,"Toilet linen and kitchen linen of flax (excl. floorcloths, polishing cloths, dishcloths and dusters)"
+630311,"Curtains, incl. drapes, and interior blinds, curtain or bed valances of cotton, knitted or crocheted (excl. awnings and sunblinds)"
+630611,"Tarpaulins, awnings and sunblinds of cotton (excl. flat covers of light fabrics made up as tarpaulins)"
+630621,Tents of cotton (excl. fly sheets)
+630631,"Sails for boats, sailboards or landcraft, of synthetic fibres"
+630639,"Sails for boats, sailboards or landcraft, of textile materials (excl. synthetic fibres)"
+630641,Pneumatic mattresses of cotton
+630649,Pneumatic mattresses of textile materials (excl. cotton)
+630691,"Camping goods of cotton (excl. tents, awnings and sunblinds, sails, pneumatic mattresses, rucksacks, knapsacks and similar receptacles, filled sleeping bags, mattresses and cushions)"
+630699,"Camping goods of textile materials (excl. of cotton, tents, awnings and sunblinds, sails, pneumatic mattresses, rucksacks, knapsacks and similar receptacles, filled sleeping bags, mattresses and cushions)"
+640191,"Waterproof footwear covering the knee, with outer soles and uppers of rubber or of plastics, the uppers of which are neither fixed to the sole nor assembled by stitching, riveting, nailing, screwing, plugging or similar processes (excl. incorporating a protective metal toecap, skating boots with ice or roller skates attached, shin-guards and similar protective sportswear)"
+640230,"Footwear, incorporating a protective metal toecap, with outer soles and uppers of rubber or plastics (excl. waterproof footwear of heading 6401, sports footwear and orthopaedic footwear)"
+640330,"Footwear with leather uppers, made on a base or platform of wood, with neither an inner sole nor a protective metal toecap"
+640691,"Parts of footwear, of wood"
+640699,"Parts of footwear (excl. outer soles and heels of rubber or plastics, uppers and parts thereof, and general parts made of wood or asbestos)"
+650300,"Felt hats and other felt headgear, made from the hat bodies, hoods or plateaux of heading 6501, whether or not lined or trimmed (excl. made by assembling strips or pieces of felt, and toy and carnival headgear)"
+650510,"Hairnets of any material, whether or not lined or trimmed"
+650590,"Hats and other headgear, knitted or crocheted, or made up from lace, felt or other textile fabric, in the piece (but not in strips), whether or not lined or trimmed (excl. hairnets, headgear for animals, and toy and fancy-dress headgear)"
+650692,"Headgear of furskin, whether or not lined or trimmed (excl. toy and carnival headgear)"
+660310,"Handles and knobs for umbrellas and sun umbrellas of heading 6601 or for walking sticks, seat-sticks, whips, riding-crops and the like of heading 6602"
+680222,"Calcareous stone and articles thereof, simply cut or sawn, with a flat or even surface (excl. marble, travertine and alabaster, with a completely or partly planed, sand-dressed, coarsely or finely ground or polished surface, tiles, cubes and similar articles of subheading 6802,10, setts, curbstones and flagstones)"
+681110,"Corrugated sheets of asbestos-cement, cellulose fibre-cement or the like"
+681120,"Sheets, panels, paving, tiles and similar articles, of asbestos-cement, cellulose fibre-cement or the like (excl. corrugated sheets)"
+681130,"Tubes, pipes and tube or pipe fittings of asbestos-cement, cellulose fibre-cement or the like"
+681183,"Tubes, pipes and tube or pipe fittings of cellulose fibre-cement or the like, not containing asbestos"
+681190,"Articles of asbestos-cement, cellulose fibre-cement or the like (excl. tubes, pipes and tube or pipe fittings, corrugated and other sheets, panels, paving, tiles and similar articles)"
+681250,"Clothing, clothing accessories, footwear and headgear of asbestos or of mixtures with a basis of asbestos or a basis of asbestos and magnesium carbonate"
+681260,"Paper, millboard and felt of asbestos or of mixtures with a basis of asbestos or a basis of asbestos and magnesium carbonate (excl. containing < 35% by weight of asbestos)"
+681270,"Compressed asbestos fibre jointing, in sheets or rolls"
+681290,"Fabricated asbestos fibres; mixtures with a basis of asbestos or with a basis of asbestos and magnesium carbonate; articles of such mixtures or of asbestos, e.g., yarn, thread, cords, string, woven or knitted fabric, whether or not reinforced (excl. compressed asbestos fibre jointing, in sheets or rolls; paper, millboard and felt; clothing, clothing accessories, footwear and headgear; friction material with a basis of asbestos; articles of asbestos-cement)"
+681292,"Paper, millboard and felt of asbestos or of mixtures with a basis of asbestos or a basis of asbestos and magnesium carbonate (excl. containing < 35% by weight of asbestos and of crocidolite asbestos)"
+681293,"Compressed asbestos fibre jointing, in sheets or rolls (excl. of crocidolite asbestos)"
+681310,"Brake linings and pads with a basis of asbestos, of other mineral substances or of cellulose, whether or not combined with textile or other materials"
+681390,"Friction material and articles thereof, e.g. sheets, rolls, strips, segments, discs, washers and pads, for clutches and the like, with a basis of asbestos, other mineral substances or cellulose, whether or not combined with textile or other materials (excl. brake linings and pads)"
+681510,"Articles of graphite or other carbon, incl. carbon fibres, for non-electrical purposes"
+690710,"Unglazed ceramic tiles, mosaic cubes and similar articles, whether or not square or rectangular, the largest surface area of which is capable of being enclosed in a square of side of < 7 cm, whether or not on a backing"
+690790,"Unglazed ceramic flags and paving, hearth or wall tiles; unglazed ceramic mosaic cubes and the like, whether or not on a backing (excl. of siliceous fossil meals or similar siliceous earths, refractory ceramic goods, tiles specially adapted as table mats, ornamental articles, tiles specifically manufactured for stoves, tiles and cubes and the like the largest surface area of which is capable of being enclosed in a square of side of < 7 cm)"
+690810,"Glazed ceramic tiles, mosaic cubes and similar articles, whether or not square or rectangular, the largest surface area of which is capable of being enclosed in a square of side of < 7 cm, whether or not on a backing"
+690890,"Glazed ceramic flags and paving, hearth or wall tiles; glazed ceramic mosaic cubes and the like, whether or not on a backing (excl. of siliceous fossil meals or similar siliceous earths, refractory ceramic goods, tiles specially adapted as table mats, ornamental articles, tiles specifically manufactured for stoves, tiles and cubes and the like the largest surface area of which is capable of being enclosed in a square of side of < 7 cm)"
+701200,Glass inners for vacuum flasks or for other vacuum vessels
+701321,Drinking glasses of lead crystal
+701329,Drinking glasses (excl. glasses of glass ceramics or of lead crystal)
+701331,"Glassware of lead crystal, of a kind used for table or kitchen purposes (excl. articles of heading 7018, drinking glasses, glass preserving jars ""sterilising jars"", vacuum flasks and other vacuum vessels)"
+701332,"Glassware for table or kitchen purposes of glass having a linear coefficient of expansion <= 5 x 10 -6 per kelvin within a temperature range of 0°C to 300°C (excl. glassware of glass ceramics or lead crystal, articles of heading 7018, drinking glasses, glass preserving jars ""sterilising jars"", vacuum flasks and other vacuum vessels)"
+701339,"Glassware for table or kitchen purposes (excl. glass having a linear coefficient of expansion <= 5 x 10 -6 per kelvin within a temperature range of 0°C to 300°C, glassware of glass ceramics or lead crystal, articles of heading 7018, drinking glasses, glass preserving jars ""sterilising jars"", vacuum flasks and other vacuum vessels)"
+701931,Mats of irregularly laminated glass fibres
+701932,"Thin sheets ""voiles"" of irregularly laminated glass fibres"
+701939,"Webs, mattresses, boards and similar nonwoven products, of glass fibres (excl. mats and thin sheets ""voiles"")"
+701940,Woven fabrics of glass fibres made from rovings
+701951,"Woven fabrics, incl. narrow fabrics, of glass, of a width of <= 30 cm (excl. rovings)"
+701952,"Woven fabrics, incl. narrow fabrics, of glass filaments, of width of > 30 cm, plain weave, weighing < 250 g/m², made of yarn of a linear density of <= 136 tex per single yarn (excl. fabrics made from rovings)"
+701959,"Woven fabrics, incl. narrow fabrics, of glass fibres, of a width of > 30 cm (excl. plain weave, weighing < 250 g/m², of a linear density of <= 136 tex per single yarn, and fabrics made from rovings)"
+710420,"Precious and semi-precious stones, synthetic or reconstructed, unworked or simply sawn or roughly shaped, whether or not graded (excl. piezoelectric quartz)"
+710490,"Precious and semi-precious stones, synthetic or reconstructed, worked, whether or not graded but not strung, mounted or set, ungraded synthetic or reconstructed precious or semi-precious stones, temporarily strung for convenience of transport (excl. stones simply sawn or roughly shaped, piezoelectric quartz)"
+710820,Monetary gold
+722520,"Flat-rolled products of high-speed steel, of a width of >= 600 mm, hot-rolled or cold-rolled ""cold-reduced"""
+722693,"Flat-rolled products of alloy steel other than stainless, of a width of < 600 mm, hot-rolled or cold-rolled ""cold-reduced"" and electrolytically plated or coated with zinc (excl. products of high-speed steel or silicon-electrical steel)"
+722694,"Flat-rolled products of alloy steel other than stainless, of a width of < 600 mm, hot-rolled or cold-rolled ""cold-reduced"" and plated or coated with zinc (excl. electrolytically plated or coated, and products of high-speed steel or silicon-electrical steel)"
+722910,"Wire of high-speed steel, in coils (excl. bars and rods)"
+730410,"Line pipe of a kind used for oil or gas pipelines, seamless, of iron or steel (excl. products of cast iron)"
+730421,"Drill pipe, seamless, of a kind used in drilling for oil or gas, of iron or steel (excl. products of cast iron)"
+730610,"Line pipe of a kind used for oil or gas pipelines, of iron or steel, of an external diameter of <= 406,4 mm (excl. of cast iron and seamless tubes)"
+730620,"Casing and tubing of a kind used in drilling for oil or gas, of flat-rolled products of iron or steel, of an external diameter of <= 406,4 mm (excl. of cast iron and seamless tubes)"
+730660,"Tubes, pipes and hollow profiles, welded, of non-circular cross-section, of iron or steel (excl. seamless, and line pipe of a kind used for oil or gas pipelines or casing and tubing of a kind used in drilling for oil or gas)"
+731413,"Endless bands of iron or steel wire (excl. stainless), for machinery"
+731910,"Sewing, darning or embroidery needles, for use in the hand, of iron or steel"
+731920,Safety pins of iron or steel
+731930,"Pins of iron or steel, n.e.s."
+732113,"Appliances for baking, frying, grilling and cooking and plate warmers, for domestic use, of iron or steel, for solid fuel (excl. large cooking appliances)"
+732183,"Stoves, heaters, grates, fires, wash boilers, braziers and similar appliances, of iron or steel, for solid fuel (excl. cooking appliances, whether or not with oven, separate ovens, plate warmers, central heating boilers, hot water cylinders and large cooking appliances)"
+740110,Copper mattes
+740120,"Cement copper ""precipitated copper"""
+740323,"Copper-nickel base alloys ""cupro-nickel"" or copper-nickel-zinc base alloys ""nickel silver"" unwrought"
+740722,"Bars, rods and profiles of copper-nickel base alloys ""cupro-nickel"" or copper-nickel-zinc base alloys ""nickel silver"", n.e.s."
+741420,"Woven copper wire cloth, incl. endless (excl. woven products of metal fibres of a kind used for cladding, lining or similar purposes, cloth coated with flux for brazing, or made into hand sieves or machine parts)"
+741490,"Grill and netting, of copper wire; expanded metal, of copper (excl. grill and netting made into hand sieves or machine parts)"
+741600,"Copper springs (excl. clock and watch springs, spring washers and other lock washers)"
+741700,"Cooking or heating apparatus of a kind used for domestic purposes, non-electric, and parts thereof, of copper (excl. hot water heaters and geysers)"
+741811,"Pot scourers and scouring or polishing pads, gloves and the like, of copper (excl. sanitary ware)"
+741819,"Table, kitchen or other household articles, parts thereof, of copper (excl. pot scourers and scouring or polishing pads, gloves and the like, cans, boxes and similar containers of heading 7419, articles of the nature of a work implement, articles of cutlery, spoons, ladles, etc., ornamental articles and sanitary ware)"
+741910,"Chain and parts thereof, of copper (excl. watch chains, necklace chains and the like)"
+741991,"Articles of copper, cast, moulded, stamped or forged, but not further worked, n.e.s."
+741999,"Articles of copper, n.e.s."
+761511,"Pot scourers and scouring or polishing pads, gloves and the like, of aluminium (excl. sanitary ware)"
+761519,"Table, kitchen or other household articles, parts thereof, of aluminium (excl. pot scourers and scouring or polishing pads, gloves and the like, cans, boxes and similar containers of heading 7612, articles of the nature of a work implement, spoons, ladles, forks and other articles of heading 8211 to 8215, ornamental articles, fittings and sanitary ware)"
+780300,"Lead bars, rods, profiles and wire, n.e.s."
+780500,"Lead tubes, pipes and tube or pipe fittings ""e.g., couplings, elbows, sleeves"""
+790600,"Zinc tubes, pipes and tube or pipe fittings ""e.g., couplings, elbows, sleeves"""
+800400,"Tin plates, sheets and strip, of a thickness of > 0,2 mm"
+800500,"Tin foil of a thickness ""without any backing"" <= 0,2 mm, whether or not printed or backed with paper, paperboard, plastics or similar backing materials; tin powders and flakes (excl. tin granules and spangles of heading 8308)"
+800600,"Tin tubes, pipes and tube or pipe fittings ""e.g., couplings, elbows, sleeves"""
+810195,"Tungsten bars and rods (other than those obtained simply by sintering), profiles, plates, sheets, strip and foil, n.e.s."
+810390,"Articles of tantalum, n.e.s."
+810600,"Bismuth and articles thereof, n.e.s.; bismuth waste and scrap (excl. ash and residues containing bismuth)"
+810720,Unwrought cadmium; cadmium powders
+810730,Cadmium waste and scrap (excl. ashes and residues containing cadmium)
+810790,"Articles of cadmium, n.e.s."
+810920,Unwrought zirconium; zirconium powders
+810930,Zirconium waste and scrap (excl. ash and residues containing zirconium)
+810990,"Articles of zirconium, n.e.s."
+811230,"Germanium and articles thereof, n.e.s.; germanium waste and scrap (excl. ash and residues containing germanium)"
+811240,"Vanadium and articles thereof, n.e.s.; vanadium waste and scrap (excl. ash and residues containing vanadium)"
+820120,"Forks, incl. pitchforks, with working parts of base metal"
+820580,Anvils; portable forges; hand-operated or pedal-operated grinding wheels with frameworks
+841822,"Household electrical refrigerators, absorption-type"
+841931,Dryers for agricultural products
+841932,"Dryers for wood, paper pulp, paper or paperboard"
+842481,"Agricultural or horticultural mechanical appliances, whether or not hand-operated, for projecting, dispersing or spraying liquids or powders"
+842520,Pithead winding gear; winches for use underground
+842850,"Mines wagon pushers, locomotive or wagon traversers, wagon tippers and similar railway wagon handling equipment"
+843230,"Seeders, planters and transplanters for use in agriculture, horticulture and forestry"
+843240,"Manure spreaders and fertiliser distributors for use in agriculture, horticulture and forestry"
+844210,Phototypesetting and composing machines (excl. general purpose automatic data-processing machines also used for phototypesetting)
+844220,"Machinery, apparatus and equipment for typesetting or composing, with or without founding device (excl. phototypesetting and composing machines)"
+844321,"Letterpress printing machinery, reel fed (excl. flexographic printing machinery)"
+844329,Letterpress printing machinery (excl. flexographic printing and reel fed machinery)
+844330,Flexographic printing machinery
+844340,Gravure printing machinery
+844351,Ink-jet printing machines
+844359,"Printing machinery used for printing by means of the printing type, blocks, plates, cylinders and other printing components of heading 8442 (excl. hectograph or stencil duplicating machines, addressing machines and other office printing machines of heading 8469 to 8472, ink jet printing machines and offset, flexographic, letterpress and gravure printing machinery)"
+844360,"Machines for uses ancillary to printing, for the feeding, carriage or further processing of sheets or webs of paper"
+844390,"Parts of printing machinery and machines for uses ancillary to printing, n.e.s."
+844841,Shuttles for looms
+845240,"Furniture, bases and covers for sewing machines and parts thereof"
+845610,"Machine tools for working any material by removal of material, operated by laser or other light or photon beam processes (excl. soldering and welding machines, incl. those which can be used for cutting, material testing machines and machines for the manufacture of semiconductor devices or of electronic integrated circuits)"
+845691,Apparatus for dry-etching patterns on semiconductor materials
+845699,"Machine tools for working any material by removal of material, operated by electro-chemical processes or electron beam, ion beam or plasma arc processes (excl. for soldering and welding machines, materials testing machines and apparatus for-dry etching semiconductor materials)"
+845940,Boring machines for metals (excl. way-type unit head machines and boring-milling machines)
+846011,"Flat-surface grinding machines, for working metal, in which the positioning in any one axis can be set up to an accuracy of at least 0,01 mm, numerically controlled"
+846021,"Grinding machines, for working metal, in which the positioning in any one axis can be set up to an accuracy of at least 0,01 mm, numerically controlled (excl. flat-surface grinding machines and gear cutting, gear grinding and gear finishing machines)"
+846210,"Forging or die-stamping machines, incl. presses, and hammers"
+846221,"Bending, folding, straightening or flattening machines, incl. presses, numerically controlled, for working metal"
+846231,"Shearing machines, incl. presses, numerically controlled, for working metal (other than combined punching and shearing machines)"
+846241,"Punching or notching machines, incl. presses, and combined punching and shearing machines, numerically controlled, for working metal"
+846291,"Hydraulic presses for working metal (excl. forging, bending, folding, straightening and flattening presses)"
+846299,"Presses, not hydraulic, for working metal (excl. forging, bending, folding, straightening and flattening presses)"
+846900,"Typewriters and word-processing machines (excl. automatic data-processing machines and units thereof of heading 8443 and laser, thermal and electrosensitive printers)"
+846911,"Word-processing machines (excl. automatic data-processing machines and units thereof of heading 8471 and laser, thermal and electrosensitive printers)"
+846912,"Typewriters, automatic (excl. word-processing machines, automatic data-processing machines and units thereof of heading 8471 and laser, thermal and electrosensitive printers)"
+846920,"Typewriters, electric (excl. automatic typewriters, units for automatic data-processing machines of heading 8471 and laser, thermal and electrosensitive printers)"
+846930,"Typewriters, non-electric"
+847040,Accounting machines incorporating a calculating device (excl. data-processing machines of heading 8471)
+847110,Analogue or hybrid automatic data-processing machines
+847220,"Addressing machines and address plate embossing machines (excl. automatic typewriters, automatic data-processing machines and units therefor and laser, thermal or electrosensitive printers)"
+847310,"Parts and accessories for typewriters or word-processing machines of heading 8469, n.e.s."
+850530,Electromagnetic lifting heads
+850740,Nickel-iron accumulators (excl. spent)
+850910,"Domestic vacuum cleaners, incl. dry cleaners and wet vacuum cleaners, with self-contained electric motor"
+850920,"Domestic floor polishers, with self-contained electric motor"
+850930,"Domestic kitchen waste disposers, with self-contained electric motor"
+851410,Resistance heated industrial or laboratory furnaces and ovens (excl. drying ovens)
+851430,"Electric industrial or laboratory furnaces and ovens (excl. resistance heated, induction, dielectric and drying furnaces and ovens)"
+851712,"Telephones for cellular networks ""mobile telephones"" or for other wireless networks"
+851719,Line telephone sets; videophones (excl. line telephone sets with cordless handsets and entry-phone systems)
+851721,Fax machines for line telephony
+851722,Teleprinters for line telegraphy
+851730,Telephonic or telegraphic switching apparatus
+851750,"Apparatus for carrier-current line systems or digital line systems, for line telephony or line telegraphy (excl. telephone sets, videophones, fax machines, teleprinters and switching apparatus)"
+851770,"Parts of telephone sets, telephones for cellular networks or for other wireless networks and of other apparatus for the transmission or reception of voice, images or other data, n.e.s."
+851780,"Electrical apparatus for line telephony or line telegraphy (excl. telephone sets, videophones, fax machines, teleprinters, switching apparatus and carrier-current or digital line transmitting and receiving apparatus)"
+851790,"Parts of electrical apparatus for line telephony or line telegraphy, incl. line telephone sets with cordless handsets and telecommunication apparatus for carrier-current line systems or digital line systems and videophones, n.e.s."
+851910,Coin-operated or disc-operated record-players
+851921,Record players without loudspeaker
+851929,Record players with loudspeaker (excl. coin-operated or disc-operated record-players)
+851931,"Turntables ""record-decks"", with automatic record-changing mechanism"
+851939,"Turntables ""record-decks"", without automatic record-changing mechanism"
+851940,Transcribing machines
+851950,Telephone answering machines
+851992,"Pocket-size cassette players ""dimensions <= 170 mm x 100 mm x 45 mm"", with built-in amplifier, without built-in loudspeaker, capable of operating without an external source of electric power"
+851993,"Cassette players ""play only"" (excl. pocket-size and dictating machines)"
+851999,"Sound-reproducing apparatus, not incorporating a sound recording device (excl. record players, coin- or disc-operated record-players, dictating machines and cassette players)"
+852010,Dictating machines not capable of operating without an external source of power
+852020,Telephone answering machines incorporating a sound-reproducing device
+852032,"Magnetic tape recorders incorporating sound-reproducing apparatus, digital audio type (excl. dictating machines operating only with an external source of power, and telephone answering machines)"
+852033,Cassette recorders incorporating sound-reproducing apparatus (excl. digital audio type)
+852039,"Magnetic tape recorders incorporating sound-reproducing apparatus (excl. digital audio type, dictating machines operating only with an external source of power, telephone answering machines and cassette recorders)"
+852090,Sound recording equipment whether or not incorporating a sound reproducing device (excl. magnetic tape recorders incorporating sound-reproducing apparatus)
+852311,"Magnetic tapes, unrecorded, of a width <= 4 mm"
+852312,"Magnetic tapes, unrecorded, of a width > 4 mm but <= 6,5 mm"
+852313,"Magnetic tapes, unrecorded, of a width > 6,5 mm"
+852320,"Magnetic discs, unrecorded"
+852330,Cards incorporating an unrecorded magnetic stripe
+852340,Optical media for the recording of sound or of other phenomena (excl. goods of chapter 37)
+852390,"Prepared unrecorded media for sound recording or similar recording of other phenomena (excl. magnetic tapes, magnetic discs, cards incorporating a magnetic stripe and goods of chapter 37)"
+852410,Gramophone records
+852431,"Discs, recorded, for laser reading systems, for reproducing phenomena other than sound or image"
+852432,"Discs, recorded, for laser reading systems, for reproducing sound only(2002-2006);Discs, recorded, for laser reading systems, for reproducing sound only(1996-2001)"
+852439,"Discs, recorded, for laser reading systems, for reproducing sound and image or image only"
+852440,"Magnetic tapes, recorded, for reproducing phenomena other than sound or image"
+852451,"Magnetic tapes for reproducing sound or image, recorded, of a width <= 4 mm"
+852452,"Magnetic tapes for reproducing sound or image, recorded, of a width > 4 mm but <= 6,5 mm"
+852453,"Magnetic tapes for reproducing sound or image, recorded, of a width > 6,5 mm"
+852460,Cards incorporating a recorded magnetic stripe
+852510,"Transmission apparatus for radio-telephony, radio-telegraphy, radio-broadcasting or television"
+852520,"Transmission apparatus incorporating reception apparatus, for radio-telephony, radio-telegraphy, radio-broadcasting or television"
+852530,Television cameras (excl. video camera recorders)
+852540,Still image video cameras and other video camera recorders; digital cameras
+852580,"Television cameras, digital cameras and video camera recorders"
+852731,"Radio-broadcast receivers, for mains operation only, incl. apparatus capable of also receiving radio-telephony or radio-telegraphy, combined with sound recording or reproducing apparatus (excl. those of a kind used in motor vehicles)"
+852732,"Radio-broadcast receivers, for mains operation only, incl. apparatus capable of also receiving radio-telephony or radio-telegraphy, not combined with sound recording or reproducing apparatus but combined with a clock (excl. those of a kind used in motor vehicles)"
+852739,"Radio-broadcast receivers, for mains operation only, incl. apparatus capable of also receiving radio-telephony or radio-telegraphy, not combined with sound recording or reproducing apparatus and not combined with a clock (excl. those of a kind used in motor vehicles)"
+852790,"Receivers for radio-telephony, radio-telegraphy or commercial radio"
+852812,"Television receivers, colour, whether or not incorporating radio-broadcast receivers or sound or video recording or reproducing apparatus"
+852813,"Television receivers, black and white or other monochrome, whether or not incorporating radio-broadcast receivers or sound or video recording or reproducing apparatus"
+852821,"Video monitors, colour"
+852822,"Video monitors, black and white or other monochrome"
+852830,Video projectors
+852841,Cathode-ray tube monitors of a kind solely or principally used in an automatic data-processing machine of heading 8471
+852851,Monitors of a kind solely or principally used in an automatic data-processing machine of heading 8471 (excl. with cathode ray tube)
+852861,Projectors of a kind solely or principally used in an automatic data-processing machine of heading 8471
+853950,"Light-emitting diode ""LED"" lamps"
+854050,"Data-graphic display tubes, black and white or other monochrome (excl. photo cathode tubes and cathode ray tubes)"
+854072,Klystrons
+854140,"Photosensitive semiconductor devices, incl. photovoltaic cells whether or not assembled in modules or made up into panels; light emitting diodes (excl. photovoltaic generators)"
+854150,"Semiconductor devices, n.e.s."
+854210,"Cards incorporating an electronic integrated circuit ""smart cards"", whether or not with a magnetic stripe"
+854221,"Monolithic integrated circuits, digital (excl. cards incorporating an electronic monolithic digital integrated circuit ""smart cards"")"
+854229,"Electronic integrated circuits, monolithic, analogue or analogue-digital"
+854260,Hybrid integrated circuits
+854270,"Electronic microassemblies made from discrete, active or both active and passive components, combined and interconnected"
+854311,Ion implanters for doping semiconductor materials
+854319,"Electrical particle accelerators for electrons, protons, etc. (excl. ion implanters for doping semiconductor materials)"
+854381,"Proximity cards and tags, generally consisting of an integrated circuit with a read only memory attached to a printed antenna"
+854389,"Electrical machines and apparatus, having individual functions, not specified or included elsewhere in chapter 85"
+854441,"Electric conductors for a voltage <= 80 V, insulated, fitted with connectors, n.e.s."
+854451,"Electric conductors, for a voltage > 80 V but <= 1.000 V, insulated, fitted with connectors, n.e.s."
+854459,"Electric conductors, for a voltage > 80 V but <= 1.000 V, insulated, not fitted with connectors, n.e.s."
+854810,"Waste and scrap of primary cells, primary batteries and electric accumulators; spent primary cells, spent primary batteries and spent electric accumulators"
+854890,"Electrical parts of machinery or apparatus, not specified or included elsewhere in chapter 85"
+860620,Railway or tramway insulated or refrigerated goods vans and wagons (excl. tank wagons and the like of subheading 8606.10)
+870120,Road tractors for semi-trailers
+870190,"Tractors (excl. those of heading 8709, pedestrian-controlled tractors, road tractors for semi-trailers and track-laying tractors)"
+870831,"Mounted brake linings for tractors, motor vehicles for the transport of ten or more persons, motor cars and other motor vehicles principally designed for the transport of persons, motor vehicles for the transport of goods and special purpose motor vehicles"
+870839,"Brakes and servo-brakes and parts thereof for tractors, motor vehicles for the transport of ten or more persons, motor cars and other motor vehicles principally designed for the transport of persons, motor vehicles for the transport of goods and special purpose motor vehicles, n.e.s."
+870860,"Non-driving axles and parts thereof for tractors, motor vehicles for the transport of ten or more persons, motor cars and other motor vehicles principally designed for the transport of persons, motor vehicles for the transport of goods and special purpose motor vehicles, n.e.s."
+871411,"Saddles for motorcycles, incl. mopeds"
+871419,"Parts and accessories for motorcycles, incl. mopeds, n.e.s."
+880110,"Gliders, without motor and not capable of being fitted with a motor, and hang gliders"
+880190,"Kites and other non-powered aircraft, balloons and dirigibles (excl. gliders, hang gliders, children's kites and party balloons)"
+880310,"Propellers and rotors and parts thereof, for aircraft, n.e.s."
+880320,"Under-carriages and parts thereof, for aircraft, n.e.s."
+880330,"Parts of aeroplanes or helicopters, n.e.s. (excl. those for gliders)"
+880390,"Parts of aircraft and spacecraft, n.e.s."
+890310,Inflatable vessels for pleasure or sports
+890391,"Sailboats and yachts, with or without auxiliary motor, for pleasure or sports"
+890392,"Motor boats and motor yachts, for pleasure or sports (other than outboard motor boats)"
+900610,Cameras of a kind used for preparing printing plates or cylinders
+900620,"Cameras of a kind used for recording documents on microfilm, microfiche or other microforms"
+900651,"Cameras with a through-the-lens viewfinder {single lens reflex ""SLR""} for roll film of a width of <= 35 mm (excl. instant print cameras and special camereas of subheading 9006.10 or 9006.30)"
+900652,"Cameras for roll film of a width of < 35 mm (excl. instant print cameras, single lens reflex ""SLR"" cameras and special cameras of subheading 9006.10 or 9006.30)"
+900662,"Flashbulbs, flashcubes and the like, for photographic purposes (other than discharge lamps of heading 8539)"
+900711,Cinematographic cameras for film of < 16 mm width or for double-8 mm film
+900719,Cinematographic cameras for film of >= 16 mm width (excl. for double-8 mm film)
+900810,Slide projectors
+900820,"Microfilm, microfiche or other microform readers, whether or not capable of producing copies"
+900830,"Image projectors (excl. slide projectors and microfilm, microfiche or other microform readers)"
+900840,Photographic enlargers and reducers
+900911,"Electrostatic photocopying apparatus, operating by reproducing the original image directly onto the copy {direct process}"
+900912,"Electrostatic photocopying apparatus, operating by reproducing the original image via an intermediate onto the copy {indirect process}"
+900921,"Photocopying apparatus, incorporating an optical system (excl. electrostatic)"
+900922,Photocopying apparatus of the contact type
+900930,Thermo-copying apparatus (excl. thermo-printers)
+900991,Automatic document feeders for photocopying and thermo-copying apparatus
+900992,Paper feeders for photocopying and thermo-copying apparatus
+900993,Sorters for photocopying and thermo-copying apparatus
+900999,"Parts and accessories for photocopying and thermo-copying apparatus, n.e.s. (excl. automatic document feeders, paper feeders and sorters)"
+901041,Direct write-on wafer apparatus
+901042,Step and repeat aligners
+901049,Apparatus for the projection or drawing of circuit patterns on sensitised semiconductor materials (excl. direct write-on wafer apparatus and step and repeat aligners)
+902740,Exposure meters
+902780,"Instruments and apparatus for physical or chemical analysis, or for measuring or checking viscosity, porosity, expansion, surface tension or the like, or for measuring or checking quantities of heat, sound or light, n.e.s."
+903083,"Instruments and appliances for measuring or checking electrical quantities, with recording device (excl. appliances specially designed for telecommunications, cathode ray oscillographs and apparatus for measuring or checking semiconductor wafers or devices)"
+903130,Profile projectors
+910112,"Wrist-watches of precious metal or of metal clad with precious metal, whether or not incorporating a stop-watch facility, electrically operated, with opto-electronic display only (excl. with backs made of steel)"
+910620,Parking meters
+910911,"Clock movements of alarm clocks, complete and assembled, electrically operated, for alarm clocks (excl. watch movements)"
+910919,"Clock movements, complete and assembled, electrically operated (excl. alarm clocks and watch movements)"
+911410,"Springs for clocks or watches, incl. hairsprings"
+911420,Jewels for clocks or watches (excl. gems for clock and watch cases)
+920300,Keyboard pipe organs; harmoniums and similar keyboard instruments with free metal reeds (excl. string musical instruments)
+920410,Accordions and similar instruments
+920420,Mouth organs
+920910,"Metronomes, tuning forks and pitch pipes"
+920920,Mechanisms for musical boxes
+920993,"Parts and accessories for keyboard pipe organs, harmoniums and similar keyboard instruments with free metal reeds, n.e.s."
+930111,"Artillery weapons ""e.g. guns, howitzers and mortars"", self-propelled"
+930119,"Artillery weapons ""e.g. guns, howitzers and mortars"",  not self-propelled"
+930521,"Smooth barrels for sporting, hunting and target-shooting rifles of heading 9303"
+930529,"Parts and accessories for sporting, hunting and target-shooting rifles of heading 9303, n.e.s. (excl. shotgun barrels)"
+930610,"Cartridges for riveting or similar tools or for captive-bolt humane killers and parts thereof, n.e.s."
+940130,"Swivel seats with variable height adjustments (excl. medical, surgical, dental or veterinary, and barbers' chairs)"
+940140,"Seats, convertible into beds (excl. garden seats and camping equipment, and medical, dental or surgical furniture)"
+940150,"Seats of cane, osier, bamboo or similar materials"
+940151,Seats of bamboo or rattan
+940190,"Parts of seats, n.e.s."
+940380,"Furniture of cane, osier, bamboo or similar materials (excl. of metal, wood and plastics)"
+940381,"Furniture of bamboo or rattan (excl. seats and medical, surgical, dental or veterinary furniture)"
+940390,"Parts of furniture, n.e.s. (excl. of seats and medical, surgical, dental or veterinary furniture)"
+940510,Chandeliers and other electric ceiling or wall lighting fittings (excl. for lighting public open spaces or thoroughfares)
+940520,"Electric table, desk, bedside or floor-standing lamps"
+940530,Electric lighting sets of a kind used for Christmas trees
+940540,"Electric lamps and lighting fittings, n.e.s."
+940560,"Illuminated signs, illuminated nameplates and the like, with a permanently fixed light source"
+940600,"Prefabricated buildings, whether or not complete or already assembled"
+950100,"Wheeled toys designed to be ridden by children, e.g. tricycles, scooters, pedal cars (excl. normal bicycles with ball bearings); dolls' carriages"
+950210,"Dolls representing only human beings, whether or not clothed"
+950291,"Garments and accessories, footwear and headgear for dolls representing only human beings"
+950299,"Parts and accessories for dolls representing only human beings, n.e.s."
+950310,"Electric trains, incl. tracks, signals and other accessories therefor"
+950320,"Scale model assembly kits, whether or not working models (excl. electric trains, incl. tracks, signals and other accessories therefor)"
+950330,Construction sets and constructional toys (excl. scale model assembly kits)
+950341,Stuffed toys representing animals or non-human creatures
+950349,Toys representing animals or non-human creatures (excl. stuffed)
+950350,Toy musical instruments and apparatus
+950360,Puzzles
+950370,"Toys, put up in sets or outfits (excl. electric trains, incl. accessories, scale model assembly kits, construction sets and constructional toys, and puzzles)"
+950380,"Toys and models, incorporating a motor (excl. electric trains, scale model assembly kits, and toys representing animals, human or non-human creatures)"
+950390,"Toys, n.e.s."
+950410,Video games for use with a television receiver
+950890,"Roundabouts, swings, shooting galleries and other fairground amusements; travelling theatres (excl. travelling circuses and travelling menageries, booths, incl. the goods on sale, goods for distribution as prizes, gaming machines accepting coins or tokens, and tractors and other transport vehicles, incl. normal trailers)"
+960831,Indian ink drawing pens
+960839,"Fountain pens, stylograph pens and other pens (excl. indian ink drawing pens)"
+961420,Smoking pipes and pipe bowls
+961490,"Parts of smoking pipes, n.e.s.; cigar or cigarette holders, and parts thereof, n.e.s."
+970110,"Paintings, e.g. oil paintings, watercolours and pastels, and drawings executed entirely by hand (excl. technical drawings and the like of heading 4906, and hand-painted or hand-decorated manufactured articles)"
+970190,Collages and similar decorative plaques
+970200,"Original engravings, prints and lithographs"
+970300,"Original sculptures and statuary, in any material"
+970500,"Collections and collector's pieces of zoological, botanical, mineralogical, anatomical, historical, archaeological, palaeontological, ethnographic or numismatic interest"
+970600,Antiques of > 100 years old
+990500,Personal property belonging to natural persons transfering their normal place of residence
+991900,"The following goods, other than those mentioned above: -- trousseaux and household effects belonging to a person transferring his or her normal place of residence on the occasion of his or her marriage; personal property acquired by inheritance -- school outfits, educational materials and related household effects -- coffins containing bodies, funerary urns containing the ashes of deceased persons, and ornamental funerary articles -- goods for charitable or philanthropic organisations and goods for the benefit of disaster victims"
