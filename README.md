@@ -63,7 +63,7 @@ Errors are `{ "error": "...", ...details }`. Every route checks `ALLOWED_IPS`. E
 2. The country splits the work into **requests** (`splitQueries`), shaped by what its source returns in one call:
    - **South Africa**: one download per flow and month covering every chapter the codes are in.
    - **EU**: one request per flow, month and batch of up to 150 codes (every member state and partner).
-   - **Indonesia**: one request per HS code, flow and year.
+   - **Indonesia**: one request per flow, year and batch of up to 20 HS codes (the most BPS accepts), at most 15 a minute: a BPS key allows 1,000 requests an hour and 10,000 a day.
    - **Japan**: one request per flow, year and batch of up to 20 HS codes (codes of one heading stay together).
    - **Thailand** (the default): one request per HS code, month and flow.
 3. Requests run in parallel within the country's concurrency and rate limits, and temporary errors are retried with backoff. Each request ends with rows, with 0 records, or failed.

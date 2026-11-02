@@ -4,7 +4,7 @@ import { ExtractionRun, Period, RunFlag, RunLog, RunStats, RunTrigger, TradeFlow
 import { RateLimiter, Semaphore } from '../utils/concurrency';
 import { badRequest, conflict, notFound } from '../utils/errors';
 import { splitHsInput } from '../utils/hs-codes';
-import { withRetry } from '../utils/http';
+import { RetryableError, withRetry } from '../utils/http';
 import { periodOfDate, periodRange, toPeriod } from '../utils/period';
 import { db } from './db.service';
 import { MonthFiles } from './export.service';
@@ -233,7 +233,13 @@ class ExtractionService {
                   async () => {
                     await rateLimit.wait();
                     signal.throwIfAborted();
-                    return country.fetchRecords(query, signal);
+                    try {
+                      return await country.fetchRecords(query, signal);
+                    } catch (err) {
+                      // The source is struggling (429, 5xx, timeout): hold the country's other requests too, not just this retry
+                      if (err instanceof RetryableError) rateLimit.pause(retryDelay);
+                      throw err;
+                    }
                   },
                   retries,
                   retryDelay,

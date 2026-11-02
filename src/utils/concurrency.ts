@@ -50,4 +50,9 @@ export class RateLimiter {
       await new Promise((resolve) => setTimeout(resolve, slot - now));
     }
   }
+
+  /** Holds every call that hasn't started yet for at least `ms`, e.g. while the source is pushing back */
+  public pause(ms: number): void {
+    this.nextSlotAt = Math.max(this.nextSlotAt, Date.now() + ms);
+  }
 }

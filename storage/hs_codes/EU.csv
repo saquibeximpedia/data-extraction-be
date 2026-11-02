@@ -260,6 +260,7 @@
 02081090,"Fresh, chilled or frozen meat and edible offal of non-domestic rabbits and hares"
 02083000,"Fresh, chilled or frozen meat and edible offal of primates"
 02084010,"Fresh, chilled or frozen whales meat"
+02084020,"Fresh, chilled or frozen seal meat"
 02084080,"Fresh, chilled or frozen meat and edible offal of whales, dolphins and porpoises ""mammals of the order Cetacea"", of manatees and dugongs ""mammals of the order Sirenia"" and of seals, sea lions and walruses ""mammals of the suborder Pinnipedia"" (excl. whale and seal meat)"
 02085000,"Fresh, chilled or frozen meat and edible offal of reptiles ""e.g. snakes, turtles, crocodiles"""
 02086000,"Fresh, chilled or frozen meat and edible offal of camels and other camelids {Camelidae}"
@@ -392,7 +393,8 @@
 03028115,"Fresh or chilled piked dogfish ""Squalus acanthias"" and catsharks ""Scyliorhinus spp."""
 03028130,"Fresh or chilled porbeagle shark ""Lamna nasus""(2017-2500);Fresh or chilled porbeagle shark ""Lamna nasus""(2012-2016)"
 03028140,"Fresh or chilled blue shark ""Prionace glauca"""
-03028180,"Fresh or chilled dogfish and other sharks (excl. picked dogfish ""Squalus acanthias"", catsharks ""Scyliorhinus spp."", porbeagle shark ""Lamna nasus"" and blue shark ""Prionace glauca"")"
+03028150,"Fresh or chilled shortfin Mako shark ""Isurus Oxyrinchus"""
+03028170,"Fresh or chilled dogfish and other sharks (excl. piked dogfish ""Squalus acanthias"", catsharks ""Scyliorhinus spp."", porbeagle shark ""Lamna nasus"", blue shark ""Prionace glauca"" and shortfin Mako shark ""Isurus Oxyrinchus"")"
 03028200,"Fresh or chilled, rays and skates ""Rajidae"""
 03028300,"Fresh or chilled toothfish ""Dissostichus spp."""
 03028410,"Fresh or chilled European sea bass ""Dicentrarchus labrax"""
@@ -446,6 +448,7 @@
 03034518,"Frozen Atlantic bluefin tuna ""Thunnus thynnus"" (excl. for industrial processing or preservation)"
 03034591,"Frozen Pacific bluefin tuna ""Thunnus orientalis"", for industrial processing or preservation"
 03034599,"Frozen Pacific bluefin tuna ""Thunnus orientalis"" (excl. for industrial processing or preservation)"
+03034610,"Frozen Southern bluefin tunas ""Thunnus maccoyii"" for industrial processing or preservation"
 03034690,"Frozen Southern bluefin tunas ""Thunnus maccoyii"" (excl. for industrial processing or preservation)"
 03034920,"Frozen  tunas of the genus ""Thunnus"" for industrial processing or preservation (excl. Thunnus alalunga, Thunnus albacares, Thunnus obesus, Thunnus thynnus, Thunnus orientalis and Thunnus maccoyii)"
 03034985,"Frozen tunas of the genus ""Thunnus"" (excl. tunas for industrial processing or preservation and Thunnus alalunga, Thunnus albacares, Thunnus obesus, Thunnus thynnus, Thunnus orientalis and Thunnus maccoyii)"
@@ -486,7 +489,8 @@
 03038115,"Frozen piked dogfish ""Squalus acanthias"" and catsharks ""Scyliorhinus spp."""
 03038130,"Frozen porbeagle shark ""Lamna nasus""(2017-2500);Frozen porbeagle shark ""Lamna nasus""(2012-2016)"
 03038140,"Frozen blue shark ""Prionace glauca"""
-03038190,"Frozen dogfish and other sharks (excl. picked dogfish ""Squalus acanthias"", catsharks ""Scyliorhinus spp."", porbeagle shark ""Lamna nasus"" and blue shark ""Prionace glauca"")(2017-2024);Frozen dogfish and other sharks (excl. dogfish ""Squalus acanthias and Scyliorhinus spp."" and porbeagle shark)(2012-2016)"
+03038150,"Frozen shortfin Mako shark ""Isurus Oxyrinchus"""
+03038180,"Frozen dogfish and other sharks (excl. piked dogfish ""Squalus acanthias"", catsharks ""Scyliorhinus spp."", porbeagle shark ""Lamna nasus"", blue shark ""Prionace glauca"" and shortfin Mako shark ""Isurus Oxyrinchus"")"
 03038200,"Frozen rays and skates ""Rajidae"""
 03038300,"Frozen toothfish ""Dissostichus spp."""
 03038410,"Frozen European sea bass ""Dicentrarchus labrax"""
@@ -505,7 +509,11 @@
 03038990,"Frozen fish, n.e.s.(2017-2500);Frozen fish, n.e.s.(2012-2016)"
 03039110,Frozen hard and soft roes for the manufacture of deoxyribonucleic acid or protamine sulphate
 03039190,"Frozen fish livers, roes and milt (excl. hard and soft roes for the manufacture of deoxyribonucleic acid or protamine sulphate)"
-03039200,Frozen shark fins
+03039215,"Frozen fins of piked dogfish ""Squalus acanthias"" and catsharks ""Scyliorhinus spp."""
+03039230,"Frozen fins of porbeagle shark ""Lamna nasus"""
+03039240,"Frozen fins of blue shark ""Prionace glauca"""
+03039250,"Frozen fins of shortfin Mako shark ""Isurus Oxyrinchus"""
+03039290,"Frozen shark fins (excl. piked dogfish ""Squalus acanthias"", catsharks ""Scyliorhinus spp."", porbeagle shark ""Lamna nasus"", blue shark ""Prionace glauca"" and shortfin Mako shark ""Isurus Oxyrinchus"")"
 03039900,"Frozen fish fins, heads, tails, maws and other edible fish offal (excl. livers, roes, milt and shark fins)"
 03043100,"Fresh or chilled fillets of tilapia ""Oreochromis spp."""
 03043200,"Fresh or chilled fillets of catfish ""Pangasius spp., Silurus spp., Clarias spp., Ictalurus spp."""
@@ -522,6 +530,7 @@
 03044500,"Fresh or chilled fillets of swordfish ""Xiphias gladius"""
 03044600,"Fresh or chilled fillets of toothfish ""Dissostichus spp."""
 03044710,"Fresh or chilled fillets of picked dogfish ""Squalus acanthias"" and catsharks ""Scyliorhinus spp."""
+03044720,"Fresh or chilled fillets of porbeagle shark ""Lamna nasus"""
 03044730,"Fresh or chilled fillets of blue shark ""Prionace glauca"""
 03044790,"Fresh or chilled fillets of dogfish and other sharks (excl. picked dogfish ""Squalus acanthias"", catsharks ""Scyliorhinus spp."", porbeagle shark ""Lamna nasus"" and blue shark ""Prionace glauca"")"
 03044800,"Fresh or chilled fillets of rays and skates ""Rajidae"""
@@ -534,6 +543,7 @@
 03045400,"Fresh or chilled meat, whether or not minced, of swordfish ""Xiphias gladius"" (excl. fillets)"
 03045500,"Fresh or chilled meat, whether or not minced, of toothfish ""Dissostichus spp."" (excl. fillets)"
 03045610,"Fresh or chilled meat, whether or not minced, of picked dogfish ""Squalus acanthias"" and catsharks ""Scyliorhinus spp."" (excl. fillets)"
+03045620,"Fresh or chilled meat, whether or not minced, of porbeagle shark ""Lamna nasus"" (excl. fillets)"
 03045630,"Fresh or chilled meat, whether or not minced, of blue shark ""Prionace glauca"" (excl. fillets)"
 03045690,"Fresh or chilled meat, whether or not minced, of dogfish and other sharks (excl. fillets, picked dogfish ""Squalus acanthias"", catsharks ""Scyliorhinus spp."", porbeagle shark ""Lamna nasus"" and blue shark ""Prionace glauca"")"
 03045700,"Fresh or chilled meat, whether or not minced, of rays and skates ""Rajidae"" (excl. fillets)"
@@ -573,7 +583,8 @@
 03048811,"Frozen fillets of piked dogfish ""Squalus acanthias"" and catsharks ""Scyliorhinus spp."""
 03048815,"Frozen fillets of porbeagle shark ""Lamna nasus"""
 03048818,"Frozen fillets of blue shark ""Prionace glauca"""
-03048819,"Frozen fillets of dogfish and other sharks (excl. picked dogfish ""Squalus acanthias"", catsharks ""Scyliorhinus spp."", porbeagle shark ""Lamna nasus"" and blue shark ""Prionace glauca"")"
+03048822,"Frozen fillets of shortfin Mako shark ""Isurus Oxyrinchus"""
+03048829,"Frozen fillets of dogfish and other sharks (excl. piked dogfish ""Squalus acanthias"", catsharks ""Scyliorhinus spp."", porbeagle shark ""Lamna nasus"", blue shark ""Prionace glauca"" and shortfin Mako shark ""Isurus Oxyrinchus"")"
 03048890,"Frozen fillets of rays and skates ""Rajidae"""
 03048910,"Frozen fillets of freshwater fish, n.e.s.(2017-2500);Frozen fillets of freshwater fish, n.e.s.(2012-2016)"
 03048921,"Frozen fillets of redfish ""Sebastes marinus"""
@@ -646,7 +657,11 @@
 03056930,"Atlantic halibut ""Hippoglossus hippoglossus"", salted or in brine only (excl. fillets and offal)(2012-2500);Atlantic halibut ""Hippoglossus hippoglossus"", salted or in brine only (excl. fillets)(1988-2011)"
 03056950,"Pacific salmon ""Oncorhynchus nerka, Oncorhynchus gorbuscha, Oncorhynchus keta, Oncorhynchus tschawytscha, Oncorhynchus kisutch, Oncorhynchus masou and Oncorhynchus rhodurus"", Atlantic salmon ""Salmo salar"" and Danube salmon ""Hucho hucho"", only salted or in brine (excl. fillets and offal)(2012-2500);Pacific salmon ""Oncorhynchus nerka, Oncorhynchus gorbuscha, Oncorhynchus keta, Oncorhynchus tschawytscha, Oncorhynchus kisutch, Oncorhynchus masou and Oncorhynchus rhodurus"", Atlantic salmon ""Salmo salar"" and Danube salmon ""Hucho hucho"", only salted or in brine (excl. fillets)(1988-2011)"
 03056980,"Fish, only salted or in brine (excl. herring, cod, anchovies, tilapia, catfish, carp, eels, Nile perch, snakeheads, Boreogadus saida, Atlantic halibut, Pacific salmon, Atlantic salmon, Danube salmon and fillets and offal)(2017-2500);Fish, only salted or in brine (excl. herring, cod, anchovies, tilapia, catfish, carp, eels, Nile perch, snakeheads, Boreogadus saida, Atlantic halibut, Pacific salmon, Atlantic salmon, Danube salmon and fillets and offal)(2012-2016);Fish, salted or in brine, but neither dried nor smoked (excl. herrings, cod, anchovies, fish of the species Boreogadus saida, Atlantic halibut, Pacific salmon, Atlantic salmon, Danube salmon and fillets in general)(2004-2011)"
-03057100,"Shark fins, smoked, dried, salted or in brine"
+03057115,"Piked dogfish ""Squalus acanthias"" and catsharks ""Scyliorhinus spp."" fins, smoked, dried, salted or in brine"
+03057130,"Porbeagle shark ""Lamna nasus"" fins, smoked, dried, salted or in brine"
+03057140,"Blue shark ""Prionace glauca"" fins, smoked, dried, salted or in brine"
+03057150,"Shortfin Mako shark ""Isurus Oxyrinchus"" fins, smoked, dried, salted or in brine"
+03057190,"Shark fins, smoked, dried, salted or in brine (excl. piked dogfish ""Squalus acanthias"", catsharks ""Scyliorhinus spp."", porbeagle shark ""Lamna nasus"", blue shark ""Prionace glauca"" and shortfin Mako shark ""Isurus Oxyrinchus"")"
 03057200,"Fish heads, tails and maws, smoked, dried, salted or in brine"
 03057900,"Fish fins and other edible fish offal, smoked, dried, salted or in brine (excl. heads, tails, maws and shark fins)"
 03061110,"Frozen crawfish tails ""Palinurus spp., Panulirus spp., Jasus spp."", even smoked, whether in shell or not, incl. crawfish tails in their shell, cooked by steaming or by boiling in water(2017-2500);Frozen crawfish tails ""Palinurus spp., Panulirus spp., Jasus spp."", even in shell, incl. crawfish tails in their shell, cooked by steaming or by boiling in water (excl. smoked)(1995-2016)"
@@ -1010,7 +1025,9 @@
 07019010,"Potatoes for manufacture of starch, fresh or chilled"
 07019050,Fresh or chilled new potatoes from 1 January to 30 June
 07019090,"Potatoes, fresh or chilled (excl. new potatoes from 1 January to 30 June, seed potatoes and potatoes for manufacture of starch)"
-07020000,"Tomatoes, fresh or chilled"
+07020010,"Whole tomatoes, with greatest diameter <47mm, fresh or chilled"
+07020091,"Tomatoes in trusses, with greatest diameter =>47mm, fresh or chilled"
+07020099,"Tomatoes, fresh or chilled (excl. in trusses, and whole tomatoes with greatest diameter <47mm)"
 07031011,"Onion sets, fresh or chilled"
 07031019,"Onions, fresh or chilled (excl. sets)"
 07031090,"Shallots, fresh or chilled"
@@ -2005,6 +2022,7 @@
 20084090,"Pears, prepared or preserved, not containing added spirit or added sugar"
 20085011,"Apricots, prepared or preserved, containing added spirit, with sugar content of > 13% and actual alcoholic strength of <= 11,85% mas, in immediate packings of a net content of of > 1 kg"
 20085019,"Apricots, prepared or preserved, containing added spirit, with sugar content of > 13% and actual alcoholic strength of > 11,85% mas, in immediate packings of a net content of > 1 kg"
+20085031,"Apricots, prepared or preserved, containing added spirit, with actual alcoholic strength of <= 11,85% mas, in immediate packings of a net content of > 1 kg (excl. sugar content of > 13%)"
 20085039,"Apricots, prepared or preserved, containing added spirit, with actual alcoholic strength of > 11,85% mas, in immediate packings of a net content of > 1 kg (excl. sugar content of > 13%)"
 20085051,"Apricots, prepared or preserved, containing added spirit, with sugar content of > 15%, in immediate packings of a net content of <= 1 kg"
 20085059,"Apricots, prepared or preserved, containing added spirit, in immediate packings of a net content of <= 1 kg (excl. sugar content of> 15%)"
@@ -2036,6 +2054,7 @@
 20087098,"Peaches incl. nectarines, prepared or preserved, in immediate packings of a net content of < 5 kg (excl. added spirit and sugar)"
 20088011,"Strawberries, prepared or preserved, containing added spirit, with sugar content of > 9% and actual alcoholic strength of <= 11,85% mas"
 20088019,"Strawberries, prepared or preserved, containing added spirit, with sugar content of > 9% and actual alcoholic strength of > 11,85% mas"
+20088031,"Strawberries, prepared or preserved, containing added spirit, with actual alcoholic strength of <= 11,85% mas (excl. sugar content of > 9%)"
 20088039,"Strawberries, prepared or preserved, with sugar content <= 9%, of actual alcoholic strength > 11,85% mas"
 20088050,"Strawberries, prepared or preserved, containing no spirit but with added sugar, in immediate packings of a net content > 1 kg"
 20088070,"Strawberries, prepared or preserved, containing no spirit but with added sugar, in immediate packings of a net content of <= 1 kg"
@@ -2105,6 +2124,7 @@
 20091991,"Orange juice, unfermented, Brix value > 20 but <= 67 at 20°C, value of <= 30 € per 100 kg, containing > 30% added sugar (excl. containing spirit and frozen)"
 20091998,"Orange juice, unfermented, Brix value > 20 but <= 67 at 20°C, whether or not containing added sugar or other sweetening matter (excl. containing spirit and frozen, with a value of <= 30 € per 100 kg and with > 30% added sugar)"
 20092100,"Grapefruit juice, unfermented, Brix value <= 20 at 20°C, whether or not containing added sugar or other sweetening matter (excl. containing spirit)"
+20092911,"Grapefruit juice, unfermented, Brix value > 67 at 20°C, value of <= 30 € per 100 kg, whether or not containing added sugar or other sweetening matter (excl. containing spirit)"
 20092919,"Grapefruit juice, unfermented, Brix value > 67 at 20°C, value of > 30 € per 100 kg, whether or not containing added sugar or other sweetening matter (excl. containing spirit)"
 20092991,"Grapefruit juice, unfermented, Brix value > 20 but <= 67 at 20°C, value of <= 30 € per 100 kg, containing > 30% added sugar (excl. containing spirit)"
 20092999,"Grapefruit juice, unfermented, Brix value > 20 but <= 67 at 20°C, whether or not containing added sugar or other sweetening matter (excl. containing spirit, with a value of <= 30 € per 100 kg and with > 30% added sugar)"
@@ -2714,7 +2734,8 @@
 27101929,"Medium oils and preparations, of petroleum or bituminous minerals, n.e.s. (excl. for undergoing chemical transformation, and kerosene)"
 27101931,Gas oils of petroleum or bituminous minerals for undergoing a specific process as defined in Additional Note 5 to chapter 27
 27101935,"Gas oils of petroleum or bituminous minerals, for undergoing chemical transformation (excl. specific processes specified in Additional Note 5 to chapter 27)"
-27101943,"Gas oils of petroleum or bituminous minerals, with a sulphur content of <= 0,001% by weight (excl. containing biodiesel, and for undergoing chemical transformation)"
+27101942,"Gas oils of petroleum or bituminous minerals, with a sulphur content of <= 0,001% by weight, having a bio-based carbon content of => 80% by weight (excl. containing biodiesel, and for undergoing chemical transformation)"
+27101944,"Gas oils of petroleum or bituminous minerals, with a sulphur content of <= 0,001% by weight (excl. containing biodiesel, for undergoing chemical transformation, and having a bio-based carbon content of => 80% by weight)"
 27101946,"Gas oils of petroleum or bituminous minerals, with a sulphur content of > 0,001% but <= 0,002% by weight (excl. containing biodiesel, and for undergoing chemical transformation)"
 27101947,"Gas oils of petroleum or bituminous minerals, with a sulphur content of > 0,002% but <= 0,1% by weight (excl. containing biodiesel, and for undergoing chemical transformation)"
 27101948,"Gas oils of petroleum or bituminous minerals, with a sulphur content of > 0,1% by weight (excl. containing biodiesel, and for undergoing chemical transformation)"
@@ -2738,7 +2759,8 @@
 27102032,"Fuel oils of >= 70% of petroleum or bituminous minerals, with a sulphur content of <= 0,5% by weight, containing biodiesel"
 27102038,"Fuel oils of >= 70% of petroleum or bituminous minerals, with a sulphur content of > 0,5% by weight, containing biodiesel"
 27102090,"Oils of >= 70% of petroleum or bituminous minerals, containing biodiesel (excl. gas oils and fuel oils)"
-27109100,"Waste oils containing polychlorinated biphenyls {PCBs}, polychlorinated terphenyls {PCTs} or polybrominated biphenyls {PBBs}"
+27109110,Waste oils containing polychlorinated biphenyls [PCBs] => 50 mg/kg
+27109190,"Waste oils containing polychlorinated biphenyls [PCBs], polychlorinated terphenyls [PCTs] or polybrominated biphenyls [PBBs] (excl. containing PCBs => 50 mg/kg)"
 27109900,"Waste oils containing mainly petroleum or bituminous minerals (excl. those containing polychlorinated biphenyls {PCBs}, polychlorinated terphenyls {PCTs} or polybrominated biphenyls {PBBs})"
 27111100,"Natural gas, liquefied"
 27111211,"Propane of a purity of >= 99%, for use as a power or heating fuel, liquefied"
@@ -2973,10 +2995,12 @@
 28417000,Molybdates
 28418000,"Tungstates ""wolframates"""
 28419030,Zincates and vanadates
-28419085,"Salts of oxometallic or peroxometallic acids (excl. chromates, dichromates, peroxochromates, manganites, manganates, permanganates, molybdates, tungstates ""wolframamtes"", zincates and vanadates)"
+28419040,Lithium nickel manganese cobalt oxides
+28419070,"Salts of oxometallic or peroxometallic acids (excl. chromates, dichromates, peroxochromates, manganites, manganates, permanganates, molybdates, tungstates ""wolframates"", zincates, vanadates and lithium nickel manganese cobalt oxides)"
 28421000,"Double or complex silicates of inorganic acids or peroxoacids, incl. aluminosilicates whether or not chemically defined (excl. inorganic or organic compounds of mercury whether or not chemically defined)(2012-2500);Double or complex silicates of inorganic acids or peroxoacids, incl. aluminosilicates whether or not chemically defined (excl. inorganic or organic compounds of mercury)(2007-2011);Double or complex silicates of inorganic acids or peroxoacids, incl. aluminosilicates whether or not chemically defined(2002-2006);Double or complex silicates(1988-2001)"
 28429010,"Salts, double salts or complex salts of selenium or tellurium acids(2007-2500);Salts, double salts or complex salts of selenium or tellurium acids(1988-2006)"
-28429080,"Salts of inorganic acids or peroxoacids (excl. of oxometallic or peroxometallic acids, double or complex silicates {incl. aluminosilicates whether or not chemically defined}, salts, double salts or complex salts of selenium or tellurium acids, azides and inorganic or organic compounds of mercury)"
+28429020,Lithium iron phosphate
+28429070,"Salts of inorganic acids or peroxoacids, n.e.s."
 28431010,Colloidal silver
 28431090,Colloidal precious metals (excl. silver)
 28432100,Silver nitrate
@@ -2984,18 +3008,22 @@
 28433000,"Gold compounds, inorganic or organic, whether or not chemically defined"
 28439010,Amalgams of precious metals
 28439090,"Inorganic or organic compounds of precious metals, whether or not chemically defined (excl. silver and gold)"
+28441010,"Natural uranium, crude; waste and scrap, of natural uranium [Euratom]"
 28441030,"Natural uranium, worked {Euratom}"
 28441050,"Alloys, dispersions incl. cermets, ceramic products and mixtures containing natural uranium with iron or compounds of natural uranium with iron ""ferro-uranium"""
 28441090,"Compounds of natural uranium; alloys, dispersions incl. cermets, ceramic products and mixtures containing natural uranium or compounds of natural uranium {Euratom} (excl. ferro-uranium)"
 28442025,"Alloys, dispersions incl. cermets, ceramic products and mixtures containing uranium with iron enriched in U 235 ""ferro-uranium"""
 28442035,"Uranium enriched in U 235 and its compounds; alloys, dispersions incl. cermets, ceramic products and mixtures containing uranium enriched in U 235 {Euratom} (excl. ferro-uranium)"
+28442051,"Mixtures of uranium and plutonium with iron ""ferro-uranium"""
 28442059,Mixtures of uranium and plutonium {Euratom} (excl. ferro-uranium)
 28442099,"Plutonium and its compounds; alloys, dispersions incl. cermets, ceramic products and mixtures containing plutonium or compounds of this product (excl. mixtures of uranium and plutonium)(1999-2500);Plutonium and its compounds; alloys, dispersions, incl. cermets, ceramic products and mixtures containing plutonium or compounds of these products 'euratom' (excl. mixtures of uranium and plutonium)(1988-1994)"
 28443011,Cermets containing uranium depleted in U 235 or compounds of this product
 28443019,"Uranium depleted in U 235; alloys, dispersions, ceramic products and mixtures, containing uranium depleted in U 235 or compounds of this product (excl. cermets)"
 28443051,Cermets containing thorium or compounds of this product
+28443055,"Thorium, crude; waste and scrap, of thorium [Euratom]"
 28443061,"Bars, rods, angles, shapes and sections, sheets and strips, of thorium {Euratom}"
 28443069,"Thorium, worked; alloys, dispersions, ceramic products and mixtures containing thorium or compounds of this product {Euratom} (excl. cermets and bars, rods, angles, shapes and sections, sheets and strips)"
+28443091,"Compounds of thorium or of uranium depleted in U 235, whether or not intermixed [Euratom] (excl. thorium salts)"
 28443099,Thorium salts
 28444110,Artificial radioactive isotope and its compounds of tritium
 28444190,"Tritium and its compounds; alloys, dispersions incl. cermets, ceramic products and mixtures containing tritium or its compounds (excl. artificial radioactive isotope and its compounds)"
@@ -3097,7 +3125,9 @@
 29038100,"1,2,3,4,5,6-Hexachlorocyclohexane (HCH (ISO)), including lindane (ISO, INN)"
 29038200,"Aldrin (ISO), chlordane (ISO) and heptachlor (ISO)"
 29038300,Mirex (ISO)
-29038980,"Halogenated derivatives of cyclanic, cyclenic or cycloterpenic hydrocarbons (excl. 1,2,3,4,5,6-Hexachlorocyclohexane ""HCH (ISO)"", lindane {ISO, INN}, aldrin (ISO), chlordane (ISO), heptachlor (ISO), mirex (ISO), 1,2-Dibromo-4-{1,2-dibromoethyl}cyclohexane and tetrabromocyclooctanes)"
+29038910,"1,2-Dibromo-4-(1,2-dibromoethyl)cyclohexane; tetrabromocyclooctanes"
+29038920,Hexabromocyclododecanes [HBCDs]
+29038970,"Halogenated derivatives of cyclanic, cyclenic or cycloterpenic hydrocarbons (excl. 1,2,3,4,5,6-Hexachlorocyclohexane ""HCH [ISO]"", lindane [ISO, INN], aldrin [ISO], chlordane [ISO], heptachlor [ISO], mirex [ISO], 1,2-Dibromo-4-[1,2-dibromoethyl]cyclohexane, tetrabromocyclooctanes and hexabromocyclododecanes [HBCDs])"
 29039100,"Chlorobenzene, o-dichlorobenzene and p-dichlorobenzene"
 29039200,"Hexachlorobenzene (ISO) and DDT (ISO) (clofenotane (INN), 1,1,1-trichloro-2,2-bis(p-chlorophenyl)ethane)"
 29039300,Pentachlorobenzene (ISO)
@@ -3175,7 +3205,8 @@
 29093010,Diphenyl ether
 29093031,"Pentabromodiphenyl ether; 1,2,4,5-tetrabromo-3,6-bis""pentabromophenoxy""benzene"
 29093035,"1,2-Bis""2,4,6-tribromophenoxy""ethane for the manufacture of acrylonitrile-butadiene-styrene {ABS}"
-29093038,"Brominated derivatives of aromatic ethers (excl. pentabromodiphenyl ether, 1,2,4,5-tetrabromo-3,6-bis""pentabromophenoxy""benzene and 1,2-bis""2,4,6-tribromophenoxy""ethane for the manufacture of acrylonitrile-butadiene-styrene {ABS})"
+29093037,Decabromodiphenyl ether
+29093039,"Brominated derivatives of aromatic ethers (excl. pentabromodiphenyl ether, decabromodiphenyl ether, 1,2,4,5-tetrabromo-3,6-bis""pentabromophenoxy""benzene and 1,2-bis""2,4,6-tribromophenoxy""ethane for the manufacture of acrylonitrile-butadiene-styrene [ABS])"
 29093090,"Aromatic ethers and their halogenated, sulphonated, nitrated or nitrosated derivatives (excl. diphenyl ether and brominated derivatives)"
 29094100,"2,2'-Oxydiethanol ""diethylene glycol, digol"""
 29094300,Monobutyl ethers of ethylene glycol or of diethylene glycol
@@ -3240,8 +3271,9 @@
 29156090,Pentanoic acids and their salts and esters
 29157040,Palmitic acid and its salts and esters
 29157050,Stearic acid and its salts and esters
+29159015,Perfluorooctanoic acids and their salts
 29159030,Lauric acid and its salts and esters
-29159070,"Saturated acyclic monocarboxylic acids, their anhydrides, halides, peroxides and peroxyacids; their halogenated, sulphonated, nitrated or nitrosated derivatives (excl. formic acid and acetic acid, mono-, di- or trichloroacetic acids, propionic acid, butanoic and pentanoic acids, palmitic, stearic and lauric acids and their salts and esters, and acetic anhydride)"
+29159090,"Saturated acyclic monocarboxylic acids, their anhydrides, halides, peroxides and peroxyacids; their halogenated, sulphonated, nitrated or nitrosated derivatives (excl. formic acid and acetic acid, mono-, di- or trichloroacetic acids, propionic acid, butanoic and pentanoic acids, palmitic, stearic and lauric acids and their salts and esters, acetic anhydride, and perfluorooctanoic acids and their salts)"
 29161100,Acrylic acid and its salts
 29161200,Esters of acrylic acid(2009-2500);Esters of acrylic acid(1988-1993)
 29161300,Methacrylic acid and its salts
@@ -3380,7 +3412,8 @@
 29280010,"N,N-Bis""2-methoxyethyl""hydroxylamine"
 29280090,"Organic derivatives of hydrazine or of hydroxylamine (excl. N,N-bis""2-methoxyethyl""hydroxylamine)"
 29291000,Isocyanates(2009-2500);Isocyanates(1988-1993)
-29299000,"Compounds with nitrogen function (excl. amine-function compounds; oxygen-function amino-compounds; quaternary ammonium salts and hydroxides; lecithin and other phosphoaminolipids; carboxyamide-function compounds; amide-function compounds of carbonic acid; carboxyimide-function, imine-function or nitrile-function compounds; diazo-, azo- or azoxy-compounds; organic derivatives of hydrazine or of hydroxylamine and isocyanates)"
+29299010,"N,N-Dimethylphosphoramidic dichloride"
+29299090,"Compounds with nitrogen function (excl. amine-function compounds; oxygen-function amino-compounds; quaternary ammonium salts and hydroxides; lecithin and other phosphoaminolipids; carboxyamide-function compounds; amide-function compounds of carbonic acid; carboxyimide-function, imine-function or nitrile-function compounds; diazo-, azo- or azoxy-compounds; organic derivatives of hydrazine or of hydroxylamine, isocyanates and N,N-Dimethylphosphoramidic dichloride)"
 29301000,"2-(N,N-Dimethylamino) ethanethiol(2022-2500);Dithiocarbonates ""xanthates""(1988-2006)"
 29302000,Thiocarbamates and dithiocarbamates (excl. inorganic or organic compounds of mercury)(2007-2500);Thiocarbamates and dithiocarbamates(1988-2006)
 29303000,"Thiuram mono-, di- or tetrasulphides"
@@ -3394,7 +3427,8 @@
 29309030,"DL-2-hydroxy-4-""methylthio""butyric acid"
 29309040,"2,2'-Thiodiethyl bis{3-""3,5-di-tert-butyl-4-hydroxyphenyl""propionate}"
 29309050,"Mixture of isomers consisting of 4-methyl-2,6-bis""methylthio""-m-phenylenediamine and 2-methyl-4,6-bis""methylthio""-m-phenylenediamine"
-29309098,"Organo-sulphur compounds (excl. thiocarbamates and dithiocarbamates, thiuram mono-, di- or tetrasulphides, methionine, aldicarb (ISO), captafol (ISO), methamidophos (ISO), cysteine or cystine and their derivatives, thiodiglycol {INN} {bis(2-hydroxyethyl)sulfide}, DL-2-hydroxy-4-""methylthio""butyric acid, 2,2'-thiodiethyl bis{3-""3,5-di-tert-butyl-4-hydroxyphenyl""propionate}, a mixture of isomers consisting of 4-methyl-2,6-bis""methylthio""-m-phenylenediamine and 2-methyl-4,6-bis""methylthio""-m-phenylenediamine and 2-(N,N-Diethylamino)ethanethiol)(2022-2024);Organo-sulphur compounds (excl. thiocarbamates and dithiocarbamates, thiuram mono-, di- or tetrasulphides, methionine, aldicarb (ISO), captafol (ISO), methamidophos (ISO), cysteine or cystine and their derivatives, thiodiglycol {INN} {bis(2-hydroxyethyl)sulfide}, DL-2-hydroxy-4-""methylthio""butyric acid, 2,2'-thiodiethyl bis{3-""3,5-di-tert-butyl-4-hydroxyphenyl""propionate}, a mixture of isomers consisting of 4-methyl-2,6-bis""methylthio""-m-phenylenediamine and 2-methyl-4,6-bis""methylthio""-m-phenylenediamine and 2-(N,N-Diethylamino)ethanethiol)(2017-2021)"
+29309080,Phorate [ISO]
+29309095,"Organo-sulphur compounds (excl. thiocarbamates and dithiocarbamates, thiuram mono-, di- or tetrasulphides, methionine, aldicarb [ISO], captafol [ISO], methamidophos [ISO], cysteine or cystine and their derivatives, thiodiglycol [INN] [bis(2-hydroxyethyl)sulfide], DL-2-hydroxy-4-""methylthio""butyric acid, 2,2'-thiodiethyl bis[3-""3,5-di-tert-butyl-4-hydroxyphenyl""propionate], a mixture of isomers consisting of 4-methyl-2,6-bis""methylthio""-m-phenylenediamine and 2-methyl-4,6-bis""methylthio""-m-phenylenediamine, 2-(N,N-Diethylamino)ethanethiol and 2-(N,N-Dimethylamino) ethanethiol and phorate [ISO])"
 29311000,Tetramethyl lead and tetraethyl lead
 29312000,Tributyltin compounds
 29314100,Dimethyl methylphosphonate
@@ -3406,13 +3440,17 @@
 29314700,"(5-Ethyl-2-methyl-2-oxido-1,3,2-dioxaphosphinan-5-yl) methyl methyl methylphosphonate"
 29314800,"3,9-Dimethyl-2,4,8,10-tetraoxa-3,9-diphosphaspiro{5.5} undecane 3,9-dioxide"
 29314910,Sodium 3-(trihydroxysilyl)propyl methylphosphonate
+29314920,"Bis[(5-ethyl-2-methyl-2-oxido-1,3,2-dioxaphosphinan-5-yl)methyl] methylphosphonate"
 29314930,"Etidronic acid (INN) (1-hydroxyethane-1,1-diphosphonic acid) and its salts"
 29314940,"(Nitrilotrimethanediyl)tris(phosphonic acid), {ethane-1,2-diylbis{nitrilobis(methylene)}}tetrakis(phosphonic acid), {(bis{2-{bis(phosphonomethyl)amino}ethyl}amino)methyl}phosphonic acid, {hexane-1,6-diylbis{nitrilobis(methylene)}}tetrakis(phosphonic acid), {{(2-hydroxyethyl)imino}bis(methylene)}bis(phosphonic acid), and {(bis{6-{bis(phosphonomethyl)amino}hexyl}amino)methyl}phosphonic acid; salts thereof"
-29314990,"Separate chemically defined non-halogenated organo-phosphorous derivatives, n.e.s."
+29314950,Bis(1-methylpentyl) methylphosphonate
+29314960,Butyl methylphosphinate
+29314980,"Separate chemically defined non-halogenated organo-phosphorous derivatives, n.e.s."
 29315100,Methylphosphonic dichloride
 29315200,Propylphosphonic dichloride
 29315300,O-(3-chloropropyl) O-{4-nitro-3-(trifluoromethyl)phenyl} methylphosphonothionate
 29315400,"Trichlorfon ""ISO"""
+29315910,"Methylphosphonoyl difluoride ""methylphosphonic difluoride"""
 29315990,"Separate chemically defined halogenated organo-phosphorous derivatives, n.e.s."
 29319000,"Separate chemically defined organo-inorganic compounds (excl. organo-sulphur, mercury, tetramethyl lead, tetraethyl lead and tributyltin compounds, and organo-phosphorous derivatives)"
 29321100,Tetrahydrofuran
@@ -3449,6 +3487,7 @@
 29333925,"3,6-Dichloropyridine-2-carboxylic acid"
 29333935,"2-Hydroxyethylammonium-3,6-dichloropyridine-2-carboxylate"
 29333940,"2-Butoxyethyl""3,5,6-trichloro-2-pyridyloxy""acetate"
+29333945,"3,5-Dichloro-2,4,6-trifluoropyridine"
 29333950,Fluroxypyr (ISO) methyl ester
 29333955,4-Methylpyridine
 29333999,"Heterocyclic compounds with nitrogen hetero-atom{s} only, containing an unfused pyridine ring, whether or not hydrogenated, in the structure (excl. pyridine, piperidine, alfentanil (INN), anileridine (INN), bezitramide (INN), bromazepam (INN), difenoxin (INN), diphenoxylate (INN), dipipanone (INN), fentanyl (INN), ketobemidone (INN), methylphenidate (INN), pentazocine (INN), pethidine (INN), pethidine (INN) intermediate A, phencyclidine (INN) ""PCP"", phenoperidine (INN), pipradol (INN), piritramide (INN), propiram (INN), trimeperidine (INN), and their salts, and iproniazid (INN), ketobemidone hydrochloride ""INNM"", pyridostigmine bromide (INN), 2,3,5,6-tetrachloropyridine, 3,6-dichloropyridine-2-carboxylic acid, 2-hydroxyethylammonium-3,6-dichloropyridine-2-carboxylate, 2-butoxyethyl""3,5,6-trichloro-2-pyridyloxy""acetate, 3,5-dichloro-2,4,6-trifluoropyridine, fluroxypyr (ISO) methyl ester, 4-methylpyridine, and inorganic or organic compounds of mercury)(2022-2500);Heterocyclic compounds with nitrogen hetero-atom{s} only, containing an unfused pyridine ring, whether or not hydrogenated, in the structure (excl. pyridine, piperidine, alfentanil (INN), anileridine (INN), bezitramide (INN), bromazepam (INN), difenoxin (INN), diphenoxylate (INN), dipipanone (INN), fentanyl (INN), ketobemidone (INN), methylphenidate (INN), pentazocine (INN), pethidine (INN), pethidine (INN) intermediate A, phencyclidine (INN) ""PCP"", phenoperidine (INN), pipradol (INN), piritramide (INN), propiram (INN), trimeperidine (INN), and their salts, and iproniazid (INN), ketobemidone hydrochloride ""INNM"", pyridostigmine bromide (INN), 2,3,5,6-tetrachloropyridine, 3,6-dichloropyridine-2-carboxylic acid, 2-hydroxyethylammonium-3,6-dichloropyridine-2-carboxylate, 2-butoxyethyl""3,5,6-trichloro-2-pyridyloxy""acetate, 3,5-dichloro-2,4,6-trifluoropyridine, fluroxypyr (ISO) methyl ester, 4-methylpyridine, and inorganic or organic compounds of mercury)(2017-2021);Heterocyclic compounds with nitrogen hetero-atom{s} only, containing an unfused pyridine ring, whether or not hydrogenated, in the structure (excl. pyridine, piperidine, alfentanil (INN), anileridine (INN), bezitramide (INN), bromazepam (INN), difenoxin (INN), diphenoxylate (INN), dipipanone (INN), fentanyl (INN), ketobemidone (INN), methylphenidate (INN), pentazocine (INN), pethidine (INN), pethidine (INN) intermediate A, phencyclidine (INN) ""PCP"", phenoperidine (INN), pipradol (INN), piritramide (INN), propiram (INN), trimeperidine (INN), and their salts, and iproniazid (INN), ketobemidone hydrochloride ""INNM"", pyridostigmine bromide (INN), 2,3,5,6-tetrachloropyridine, 3,6-dichloropyridine-2-carboxylic acid, 2-hydroxyethylammonium-3,6-dichloropyridine-2-carboxylate, 2-butoxyethyl""3,5,6-trichloro-2-pyridyloxy""acetate, 3,5-dichloro-2,4,6-trifluoropyridine, fluroxypyr (ISO) methyl ester, 4-methylpyridine, and inorganic or organic compounds of mercury)(2007-2016);Heterocyclic compounds with nitrogen hetero-atom{s} only, containing an unfused pyridine ring, whether or not hydrogenated, in the structure (excl. pyridine, piperidine, alfentanil (INN), anileridine (INN), bezitramide (INN), bromazepam (INN), difenoxin (INN), diphenoxylate (INN), dipipanone (INN), fentanyl (INN), ketobemidone (INN), methylphenidate (INN), pentazocine (INN), pethidine (INN), pethidine (INN) intermediate A, phencyclidine (INN) ""PCP"", phenoperidine (INN), pipradol (INN), piritramide (INN), propiram (INN), trimeperidine (INN), and their salts, and iproniazid (INN), ketobemidone hydrochloride ""INNM"", pyridostigmine bromide (INN), 2,3,5,6-tetrachloropyridine, 3,6-dichloropyridine-2-carboxylic acid, 2-hydroxyethylammonium-3,6-dichloropyridine-2-carboxylate, 2-butoxyethyl""3,5,6-trichloro-2-pyridyloxy""acetate, 3,5-dichloro-2,4,6-trifluoropyridine, fluroxypyr (ISO) methyl ester and 4-methylpyridine)(2002-2006)"
@@ -3601,7 +3640,9 @@
 30069200,Waste pharmaceuticals
 30069300,"Placebos and blinded or double-blinded clinical trial kits for a recognised clinical trial, put up in measured doses"
 31010000,"Animal or vegetable fertilisers, whether or not mixed together or chemically treated; fertilisers produced by the mixing or chemical treatment of animal or vegetable products (excl. those in tablets or similar forms, or in packages with a gross weight of <= 10 kg)"
-31021010,"Urea, whether or not in aqueous solution, containing > 45% nitrogen in relation to the weight of the dry product (excl. that in tablets or similar forms, or in packages with a gross weight of <= 10 kg)"
+31021012,"Urea in aqueous solution, containing >45% nitrogen in relation to the weight of the dry product and containing =>31,8% but <=33,2 % by weight of urea (excl. that in packages with a gross weight of <= 10 kg)"
+31021015,"Urea in aqueous solution, containing >45% nitrogen in relation to the weight of the dry product and containing >33,2% but <=55% by weight of urea (excl. that in packages with a gross weight of <= 10 kg)"
+31021019,"Urea, whether or not in aqueous solution, containing >45% nitrogen in relation to the weight of the dry product (excl. that in tablets or similar forms, or in packages with a gross weight of <= 10 kg, or in aqueous solution containing =>31,8% but <=55% by weight of urea)"
 31021090,"Urea, whether or not in aqueous solution, containing <= 45% by weight of nitrogen on the dry anhydrous product (excl. goods of this chapter in tablets or similar forms or in packages of a gross weight of <= 10 kg)"
 31022100,"Ammonium sulphate (excl. that in tablets or similar forms, or in packages with a gross weight of <= 10 kg)"
 31022900,Double salts and mixtures of ammonium sulphate and ammonium nitrate (excl. goods of this chapter in tablets or similar forms or in packages of a gross weight of <= 10 kg)
@@ -3858,7 +3899,8 @@
 37071000,"Sensitising emulsions ""for photographic uses"""
 37079020,"Developers and fixers in the form of chemical preparations for photographic use, incl. unmixed products, in measured doses or put up for retail sale ready for use (excl. salts and compounds of heading 2843 to 2846)(2020-2500);Developers and fixers in the form of chemical preparations for photographic use, incl. unmixed products, in measured doses or put up for retail sale ready for use (excl. salts and compounds of heading 2843 to 2846)(2010-2016)"
 37079090,"Preparation of chemicals for photographic uses, incl. unmixed products put up in measured portions or put up for retail sale in a form ready for use (excl. varnishes, glues, adhesives and similar preparations, sensitising emulsions, developers and fixers and salts and precious-metal compounds etc. of heading 2843 to 2846)"
-38011000,"Artificial graphite (excl. retort graphite, retort carbon and goods of artificial graphite, incl. refractory materials based on artificial graphite)"
+38011010,"Artificial graphite powders containing <=0,05 % of ash by weight"
+38011090,"Artificial graphite (excl. retort graphite, retort carbon, goods of artificial graphite, incl. refractory materials based on artificial graphite, and powders containing <=0,05 % of ash by weight)"
 38012010,Colloidal graphite in suspension in oil; semi-colloidal graphite
 38012090,Colloidal graphite (excl. in suspension in oil and semi-colloidal graphite)
 38013000,Carbonaceous pastes for electrodes and similar pastes for furnace linings
@@ -3945,7 +3987,8 @@
 38160090,"Refractory cements, mortars, concretes and similar compositions (excl. dolomite ramming mix and preparations based on graphite or other carbonaceous substances)"
 38170050,Linear alkylbenzene
 38170080,"Mixed alkylbenzenes and mixed alkylnaphthalenes, produced by the alkylation of benzene and naphthalene (excl. linear alkylbenzene and mixed isomers of cyclic hydrocarbons)"
-38180010,"Silicon doped for use in electronics, in the form of discs, wafers, cylinders, rods or similar forms, whether or not polished or with a uniform epitaxial coating (excl. elements that have been further processed, e.g. by selective diffusion)"
+38180011,"Doped silicon wafers of a thickness <=200μm, rectangular, whether or not with cut or rounded corners ""photovoltaic wafers"""
+38180019,"Silicon doped for use in electronics, in the form of discs, wafers, cylinders, rods or similar forms, whether or not polished or with a uniform epitaxial coating (excl. elements that have been further processed, e.g. by selective diffusion, and ""photovoltaic"" rectangular wafers of a thickness <=200μm)"
 38180090,"Chemical elements and compounds doped for use in electronics, in the form of discs, wafers, cylinders, rods or similar forms, or cut into discs, wafers or similar forms, whether or not polished or with a uniform epitaxial coating (excl. elements that have been further processed, e.g. by selective diffusion, and doped silicon)"
 38190000,"Hydraulic brake fluids and other prepared liquids for hydraulic transmission not containing petroleum oil or bituminous mineral oil, or containing < 70% petroleum oil or bituminous mineral oil by weight"
 38200000,Anti-freezing preparations and prepared de-icing fluids (excl. prepared additives for mineral oils or other liquids used for the same purposes as mineral oils)
@@ -4380,6 +4423,7 @@
 41062290,"Hides and skins of goats or kids, in the dry state ""crust"", without wool on, whether or not split (excl. further prepared and pre-tanned only and vegetable pre-tanned Indian goat or kid hides and skins of subheading 4106.22.10)"
 41063100,"Hides and skins of swine, in the wet state (incl. wet-blue), tanned, without wool on, whether or not split (excl. further prepared and pre-tanned only)"
 41063200,"Hides and skins of swine, in the dry state (crust), without wool on, whether or not split (excl. further prepared and pre-tanned only)"
+41064010,"Hides and skins of reptiles, vegetable pre-tanned only"
 41064090,"Tanned or crust hides and skins of reptiles, whether or not split (excl. further prepared and vegetable pre-tanned only)"
 41069100,"Hides and skins of antelopes, deer, elks, elephants and other animals, incl. sea animals, without wool or hair on, and leather of hairless animals, in the wet state ""incl. wet-blue"", tanned, whether or not split (excl. further prepared and of bovine and equine animals, sheep and lambs, goats and kids, swine and reptiles, and pre-tanned only)"
 41069200,"Hides and skins of antelopes, deer, elks, elephants and other animals, incl. sea animals, without wool or hair on, and leather of hairless animals, in the dry state ""crust"",  whether or not split (excl. further prepared and of bovine and equine animals, sheep and lambs, goats and kids, swine and reptiles, and pre-tanned only)"
@@ -4476,7 +4520,8 @@
 44013200,Wood briquettes
 44013900,"Sawdust and wood waste and scrap, agglomerated in logs, briquettes or similar forms (excl. pellets)(2022-2500);Sawdust and wood waste and scrap, agglomerated in logs, briquettes or similar forms (excl. pellets)(2017-2021)"
 44014100,"Sawdust, not agglomerated"
-44014900,"Wood waste and scrap, not agglomerated (excl. sawdust)"
+44014910,"Bark and wood production waste, scrap, rejects and residues, not agglomerated (excl. sawdust)"
+44014990,"Wood waste and scrap, not agglomerated (excl. sawdust, bark and production waste, scrap, rejects and residues)"
 44021000,"Bamboo charcoal, incl. shell or nut charcoal, whether or not agglomerated (excl. used as a medicament, mixed with incense, activated bamboo charcoal and in the form of crayons)"
 44022000,"Wood charcoal of shell or nut, whether or not agglomerated (excl. of bamboo, used as a medicament, mixed with incense, activated charcoal and in the form of crayons)"
 44029000,"Wood charcoal, incl. shell or nut charcoal, whether or not agglomerated (excl. bamboo charcoal, wood charcoal used as a medicament, charcoal mixed with incense, activated charcoal and charcoal in the form of crayons)(2022-2500);Wood charcoal, incl. shell or nut charcoal, whether or not agglomerated (excl. bamboo charcoal, wood charcoal used as a medicament, charcoal mixed with incense, activated charcoal and charcoal in the form of crayons)(2007-2021)"
@@ -4537,8 +4582,11 @@
 44072550,"Dark red meranti, light red meranti and meranti bakau, sawn or chipped lengthwise, sliced or peeled, of a thickness of > 6 mm, sanded (excl. end-jointed)"
 44072590,"Dark red meranti, light red meranti and meranti bakau, sawn or chipped lengthwise, sliced or peeled, of a thickness of > 6 mm (excl. such products planed, sanded or end-jointed)"
 44072610,"White lauan, white meranti, white seraya, yellow meranti and alan, sawn or chipped lengthwise, sliced or peeled, of a thickness of > 6 mm, end-jointed, whether or not planed or sanded"
+44072630,"White lauan, white meranti, white seraya, yellow meranti and alan, sawn or chipped lengthwise, sliced or peeled, of a thickness of > 6 mm, planed (excl. end-jointed)"
+44072650,"White lauan, white meranti, white seraya, yellow meranti and alan, sawn or chipped lengthwise, sliced or peeled, of a thickness of > 6 mm, sanded (excl. end-jointed)"
 44072690,"White lauan, white meranti, white seraya, yellow meranti and alan, sawn or chipped lengthwise, sliced or peeled, of a thickness of > 6 mm (excl. planed, sanded or end-jointed)"
 44072710,"Sapelli, sawn or chipped lengthwise, sliced or peeled, of a thickness of > 6 mm, sanded, or end-jointed, whether or not planed or sanded"
+44072791,"Sapelli, sawn or chipped lengthwise, sliced or peeled, of a thickness of > 6 mm, planed (excl. end-jointed)"
 44072799,"Sapelli, sawn or chipped lengthwise, sliced or peeled, of a thickness of > 6 mm (excl. planed, sanded or end-jointed)"
 44072810,"Iroko, sawn or chipped lengthwise, sliced or peeled, of a thickness of > 6 mm, sanded, or end-jointed, whether or not planed or sanded"
 44072891,"Iroko, sawn or chipped lengthwise, sliced or peeled, of a thickness of > 6 mm, planed (excl. end-jointed)"
@@ -4611,10 +4659,12 @@
 44111292,"Medium density fibreboard ""MDF"" of wood, of a thickness <=5mm, of a density >0,8 g/cm³ ""HDF"", mechanically worked or surface covered"
 44111294,"Medium density fibreboard ""MDF"" of wood, of a thickness <=5mm, of a density <=0,8 g/cm³, mechanically worked or surface covered"
 44111310,"Medium density fibreboard ""MDF"" of wood, of a thickness > 5 mm but <= 9 mm, not mechanically worked or surface-covered"
-44111392,"Medium density fibreboard ""MDF"" of wood, of a thickness >5mm but <=9mm, of a density >0,8 g/cm³ ""HDF"", mechanically worked or surface covered"
+44111391,"Laminate floor coverings of medium density fibreboard ""MDF"" of wood, of a thickness >5mm but <=9mm, of a density >0,8 g/cm³ ""HDF"""
+44111393,"Medium density fibreboard ""MDF"" of wood, of a thickness >5mm but <=9mm, of a density >0,8 g/cm³ ""HDF"", mechanically worked or surface covered (excl. laminate floor coverings)"
 44111394,"Medium density fibreboard ""MDF"" of wood, of a thickness >5mm but <=9mm, of a density <=0,8 g/cm³, mechanically worked or surface covered"
 44111410,"Medium density fibreboard ""MDF"" of wood, of a thickness > 9 mm, not mechanically worked or surface-covered"
-44111492,"Medium density fibreboard ""MDF"" of wood, of a thickness >9mm, of a density >0,8 g/cm³ ""HDF"", mechanically worked or surface covered"
+44111491,"Laminate floor coverings of medium density fibreboard ""MDF"" of wood, of a thickness >9mm, of a density >0,8 g/cm³ ""HDF"""
+44111493,"Medium density fibreboard ""MDF"" of wood, of a thickness >9mm, of a density >0,8 g/cm³ ""HDF"", mechanically worked or surface covered (excl. laminate floor coverings)"
 44111495,"Medium density fibreboard ""MDF"" of wood, of a thickness >9mm, of a density >0,5 g/cm³ but <=0,8 g/cm³, mechanically worked or surface covered"
 44111497,"Medium density fibreboard ""MDF"" of wood, of a thickness >9mm, of a density <=0,5 g/cm³, mechanically worked or surface covered"
 44119210,"Fibreboard of wood or other ligneous materials, whether or not agglomerated with resins or other organic bonding agents, of a density of > 0,8 g/cm³, not mechanically worked or surface-covered (excl. medium density fibreboard ""MDF""; particle board, whether or not bonded with one or more sheets of fibreboard; laminated wood with a layer of plywood; cellular wood panels of which both sides are fibreboard; paperboard; furniture components identifiable as such)"
@@ -6444,6 +6494,7 @@
 71081200,"Gold, incl. gold plated with platinum, unwrought, for non-monetary purposes (excl. gold in powder form)"
 71081310,"Bars, rods, wire and sections, plates, sheets and strips of a thickness, excl. any backing, of > 0,15 mm, of gold, incl. gold plated with platinum"
 71081380,"Gold, incl. gold plated with platinum, in semi-manufactured forms, for non-monetary purposes (excl. sheets and strips of a thickness, excl. any backing, of > 0,15 mm and plates, bars, rods, wire and sections)"
+71082000,Monetary gold
 71090000,"Base metals or silver, clad with gold, not further worked than semi-manufactured"
 71101100,"Platinum, unwrought or in powder form"
 71101910,"Bars, rods, wire and sections; plates; sheets and strips of a thickness, excl. any backing, of > 0,15 mm, of platinum"
@@ -6910,7 +6961,8 @@
 73079910,"Threaded tube or pipe fittings, of iron or steel (excl. cast iron or stainless steel products, flanges, elbows, bends and sleeves)"
 73079980,"Tube or pipe fittings, of iron or steel (excl. of cast iron or stainless steel, threaded, butt welding fittings, and flanges)"
 73081000,"Bridges and bridge-sections, of iron or steel"
-73082000,"Towers and lattice masts, of iron or steel"
+73082010,Tubular wind turbine steel towers and tower-sections
+73082090,"Towers and lattice masts, of iron or steel (excl. tubular wind turbine steel towers and tower-sections)"
 73083000,"Doors, windows and their frames and thresholds for doors, of iron or steel"
 73084000,"Equipment for scaffolding, shuttering, propping or pit-propping (excl. composite sheetpiling products and formwork panels for poured-in-place concrete, which have the characteristics of moulds)(2012-2500);Props and similar equipment for scaffolding, shuttering or pit-propping (excl. composite sheetpiling products and formwork panels for poured-in-place concrete, which have the characteristics of moulds)(1988-1993)"
 73089051,"Panels comprising two walls of profiled ""ribbed"" sheet, of iron or steel, with an insulating core"
@@ -7523,7 +7575,9 @@
 84101100,"Hydraulic turbines and water wheels, of a power <= 1.000 kW (excl. hydraulic power engines and motors of heading 8412)"
 84101200,"Hydraulic turbines and water wheels, of a power > 1.000 kW but <= 10.000 kW (excl. hydraulic power engines and motors of heading 8412)"
 84101300,"Hydraulic turbines and water wheels, of a power > 10.000 kW (excl. hydraulic power engines and motors of heading 8412)"
-84109000,Parts of hydraulic turbines and water wheels incl. regulators(2010-2025);Parts of hydraulic turbines and water wheels n.e.s.; hydraulic turbine regulators(1988-1989)
+84109010,Rotors of hydraulic turbines and water wheels
+84109020,Stators of hydraulic turbines and water wheels
+84109090,Parts of hydraulic turbines and water wheels incl. regulators (excl. rotors and stators)
 84111100,Turbojets of a thrust <= 25 kN
 84111210,Turbojets of a thrust > 25 kN but <= 44 kN
 84111230,Turbojets of a thrust > 44 kN but <= 132 kN
@@ -7549,7 +7603,8 @@
 84128080,"Engines and motors, non-electrical (excl. steam turbines, internal combustion piston engine, hydraulic turbines, water wheels, gas turbines, reaction engines, hydraulic power engines and motors, pneumatic power engines and motors, steam or other vapour power engines and electric motors)"
 84129020,"Parts of reaction engines, n.e.s. (excl. of turbojets)"
 84129040,"Parts of hydraulic power engines and motors, n.e.s."
-84129080,"Parts of non-electrical engines and motors, n.e.s."
+84129060,Wind turbine blades
+84129070,"Parts of non-electrical engines and motors, n.e.s."
 84131100,"Pumps fitted or designed to be fitted with a measuring device, for dispensing fuel or lubricants, of the type used in filling stations or in garages"
 84131900,"Pumps for liquids, fitted or designed to be fitted with a measuring device (excl. pumps for dispensing fuel or lubricants, of the type used in filling stations or in garages)"
 84132000,Hand pumps for liquids (excl. those of subheading 8413.11 and 8413.19)
@@ -8338,7 +8393,8 @@
 85012000,"Universal AC-DC motors of an output > 37,5 W"
 85013100,"DC motors of an output > 37,5 W but <= 750 W and DC generators of an output <= 750 W(2022-2500);DC motors of an output > 37,5 W but <= 750 W and DC generators of an output <= 750 W(2006-2021)"
 85013200,DC motors and DC generators of an output > 750 W but <= 75 kW(2022-2500);DC motors and DC generators of an output > 750 W but <= 75 kW(2011-2021)
-85013300,DC motors and DC generators of an output > 75 kW but <= 375 kW(2022-2025);DC motors and DC generators of an output > 75 kW but <= 375 kW(2006-2021)
+85013310,Hydrogen fuel cell DC generators of an output > 75 kW but <= 375 kW
+85013390,DC motors and DC generators of an output > 75 kW but <= 375 kW (excl. photovoltaic and hydrogen fuel cell generators)
 85013400,DC motors and DC generators of an output > 375 kW(2022-2500);DC motors and DC generators of an output > 375 kW(2011-2021)
 85014020,"AC motors, single phase, of an output of > 37,5 W but <= 750 W"
 85014080,"AC motors, single phase, of an output of > 750 W"
@@ -8373,8 +8429,9 @@
 85023980,"Generating sets, non-wind-powered and non-powered by spark-ignition internal combustion piston engine (excl. turbogenerators)"
 85024000,Electric rotary converters
 85030010,Non-magnetic retaining rings for electric motors and electric generating sets
+85030020,"Steel laminations and stator and rotor cores, whether or not stacked, for electric motors and electric generating sets"
 85030091,"Parts suitable for use solely or principally with electric motors and generators, electric generating sets and rotary converters, n.e.s., of cast iron or cast steel"
-85030099,"Parts suitable for use solely or principally with electric motors and generators, electric generating sets and rotary converters, n.e.s. (excl. non-magnetic retaining rings and of cast iron or cast steel)"
+85030098,"Parts suitable for use solely or principally with electric motors and generators, electric generating sets and rotary converters, n.e.s. (excl. non-magnetic retaining rings, steel laminations and stator and rotor cores and of cast iron or cast steel)"
 85041020,"Inductors, whether or not connected with a capacitor"
 85041080,"Ballasts for discharge lamps or tubes (excl. inductors, whether or not connected with a capacitor)"
 85042100,"Liquid dielectric transformers, having a power handling capacity <= 650 kVA"
@@ -8389,8 +8446,8 @@
 85043400,Transformers having a power handling capacity > 500 kVA (excl. liquid dielectric transformers)
 85044060,Accumulator chargers (excl. polycrystalline semiconductor rectifiers)
 85044083,Rectifiers
-85044085,"Inverters having power handling capacity <= 7,5 kVA"
-85044086,"Inverters having power handling capacity > 7,5 kVA"
+85044084,Inverters with maximum power point tracking functionality
+85044087,Inverters without maximum power point tracking functionality
 85044095,"Static converters (excl. accumulator chargers, rectifiers, and inverters)"
 85045000,Inductors (excl. inductors for discharge lamps or tubes)
 85049011,Ferrite cores for transformers and inductors(2017-2500);Ferrite cores for transformers and inductors(1988-2016)
@@ -8428,7 +8485,8 @@
 85075000,Nickel-metal hydride accumulators (excl. spent)
 85076000,Lithium-ion accumulators (excl. spent)
 85078000,"Electric accumulators (excl. spent and lead-acid, nickel-cadmium, nickel-iron, nickel-metal hydride and lithium-ion accumulators)(2022-2500);Electric accumulators (excl. spent and lead-acid, nickel-cadmium, nickel-iron, nickel-metal hydride and lithium-ion accumulators)(2012-2021)"
-85079030,Separators for electric accumulators (excl. separators of vulcanised rubber other than hard rubber or of textiles)
+85079031,"Separators for electric accumulators, of plastic film of a thickness <=40 μm"
+85079039,"Separators for electric accumulators (excl. separators of vulcanised rubber other than hard rubber or of textiles, and separators of plastic film of a thickness <=40 μm)"
 85079080,Parts of electric accumulators (excl. separators)
 85081100,"Vacuum cleaners, incl. dry cleaners and wet vacuum cleaners, with self-contained electric motor, power <= 1 500 W and having a dust bag or other receptacle capacity <= 20 l"
 85081900,"Vacuum cleaners, incl. dry cleaners and wet vacuum cleaners, with self-contained electric motor ( excl. of a power <= 1 500 W and having a dust bag or other receptacle capacity <= 20 l)"
@@ -8534,8 +8592,7 @@
 85193000,"Turntables ""record-decks"""
 85198100,"Sound recording or sound reproducing apparatus, using magnetic, optical or semiconductor media (excl. those operated by coins, banknotes, bank cards, tokens or by other means of payment, turntables and telephone answering machines)(2022-2500);Sound recording or sound reproducing apparatus, using magnetic, optical or semiconductor media (excl. those operated by coins, banknotes, bank cards, tokens or by other means of payment, turntables and telephone answering machines)(2020-2021)"
 85198900,"Sound recording or sound reproducing apparatus (excl. using magnetic, optical or semiconductor media, those operated by coins, banknotes, bank cards, tokens or by other means of payment, turntables and telephone answering machines)"
-85211020,"Video recording or reproducing apparatus, whether or not incorporating a video tuner, for magnetic tape of a width of <= 1,3 cm and allowing recording or reproduction at a tape speed of <= 50 mm/s (excl. video camera recorders)"
-85211095,"Magnetic tape-type video recording or reproducing apparatus, whether or not incorporating a video tuner (excl. video camera recorders and those using magnetic tape of a width of <= 1,3 cm and allowing recording or reproduction at a tape speed of <= 50 mm/s)"
+85211000,"Magnetic tape-type video recording or reproducing apparatus, whether or not incorporating a video tuner (excl. video camera recorders)"
 85219000,"Video recording or reproducing apparatus, whether or not incorporating a video tuner (excl. magnetic tape-type and video camera recorders)(1992-2500);Video recording or reproducing apparatus (excl. magnetic tape-type)(1988-1991)"
 85221000,Pick-up cartridges
 85229000,Parts and accessories suitable for use solely or principally with sound reproducing and recording apparatus and with video equipment for recording and reproducing pictures and sound (excl. pick-up devices for grooved recording media)
@@ -8575,9 +8632,7 @@
 85271200,"Pocket-size radiocassette players {dimensions <= 170 mm x 100 mm x 45 mm}, with built-in amplifier, without built-in loudspeakers, capable of operating without an external source of electric power"
 85271300,"Radio-broadcast receivers capable of operating without an external source of power, combined with sound recording or reproducing apparatus (excl. pocket-size radiocassette players)"
 85271900,"Radio-broadcast receivers capable of operating without an external source of power, not combined with sound-reproducing apparatus"
-85272120,"Radio-broadcast receivers capable of receiving and decoding digital Radio Data System signals, of a kind used in motor vehicles, only capable of being operated with an external source of power, combined with sound recording or reproducing apparatus incorporating a laser reading system"
-85272152,"Cassette-radio-broadcast receivers capable of receiving and decoding digital Radio Data System signals, of a kind used in motor vehicles, only capable of being operated with an external source of power, combined with sound recording or reproducing apparatus incorporating an analogue and digital reading system"
-85272159,"Radio-broadcast receivers capable of receiving and decoding digital Radio Data System signals, of a kind used in motor vehicles, only capable of being operated with an external source of power, combined with sound recording or reproducing apparatus (excl. those with sound-reproducing apparatus or a laser reading system and cassette decks with an analogue and digital reading system)"
+85272130,"Radio-broadcast receivers capable of receiving and decoding digital Radio Data System signals, of a kind used in motor vehicles, only capable of being operated with an external source of power, combined with sound recording or reproducing apparatus"
 85272170,"Radio-broadcast receivers of a type used in motor vehicles, only capable of being operated with an external source of power, combined with sound recording or reproducing apparatus incorporating a laser reading system (excl. those capable of receiving and decoding digital Radio Data System signals)"
 85272192,"Cassette-radio-broadcast receivers of a kind used in motor vehicles, only capable of being operated with an external source of power, combined with sound recording or reproducing apparatus incorporating an analogue and digital reading system (excl. those capable of receiving and decoding digital Radio Data System signals)"
 85272198,"Radio-broadcast receivers of a kind used in motor vehicles, only capable of being operated with an external source of power, combined with sound recording or reproducing apparatus (excl. sound-reproducing apparatus incorporating a laser reading system, those capable of receiving and decoding digital Radio Data System signals and cassette decks with an analogue and digital reading system)"
@@ -8594,11 +8649,7 @@
 85286200,Projectors capable of directly connecting to and designed for use with an automatic data processing machine of heading 8471 (excl. with TV receiver)
 85286920,"Monochrome projectors (excl. with TV receiver, designed for computer use)"
 85286980,"Colour projectors (excl. with TV receiver, designed for computer use)"
-85287111,Video tuners electronic assemblies for incorporation into automatic data-processing machines
-85287115,"Video tuners with a microprocessor-based device incorporating a modem for gaining access to the Internet, and having a function of interactive information exchange, capable of receiving television signals (set-top boxes with a communication function)"
-85287119,"Video tuners (excl. electronic assemblies for incorporation into automatic data-processing machines and apparatus with a microprocessor-based device incorporating a modem for gaining access to the Internet and having a function of interactive information exchange capable of receiving television signals ""set-top boxes with communication function"")"
-85287191,"Apparatus with a microprocessor-based device incorporating a modem for gaining access to the Internet, and having a function of interactive information exchange, capable of receiving television signals (set-top boxes with a communication function, excl. video tuners)"
-85287199,"Reception apparatus for television, whether or not incorporating radio-broadcast receivers or sound or video recording or reproducing apparatus, not designed to incorporate a video display or screen (excl. video tuners, set-top boxes with a communication function)"
+85287100,"Reception apparatus for television, whether or not incorporating radio-broadcast receivers or sound or video recording or reproducing apparatus, not designed to incorporate a video display or screen"
 85287210,"Television projection equipment, colour, designed to incorporate a video display or screen"
 85287220,"Reception apparatus for television, colour, incorporating a video recorder or reproducer"
 85287230,"Reception apparatus for television, colour, with integral tube (excl. incorporating video recording or reproducing apparatus, and monitors)"
@@ -8613,13 +8664,9 @@
 85291080,Aerial filters and separators(2017-2500);Aerial filters and separators(2007-2016)
 85291095,"Aerial reflectors and parts suitable for use with aerials or aerial reflectors, n.e.s. (excl. aerial filters and separators)"
 85299015,"Organic light-emitting diode ""OLED"" modules and OLED panels for television reception apparatus"
-85299018,Parts suitable for use solely or principally with flat panel display modules of liquid crystals
-85299020,"Parts suitable for use solely or principally with transmission apparatus incorporating reception apparatus for radio-broadcasting or television, digital cameras, computer monitors and computer projectors, n.e.s."
-85299040,"Cabinets and cases, for transmission and reception apparatus for radio-broadcasting or television, television cameras, digital cameras, video camera recorders, radar apparatus, radio navigational aid apparatus or radio remote control apparatus, monitors and projectors, n.e.s.(2022-2024);Parts of radio-telegraphic or radio-telephonic transmission apparatus, transmission apparatus incorporating reception apparatus, still image digital video cameras and portable receivers for calling, alerting or paging, n.e.s.(1998-2006)"
-85299065,"Electronic assemblies suitable for use solely or principally with transmission and reception apparatus for radio-broadcasting or television, television cameras, digital cameras, video camera recorders, radar apparatus, radio navigational aid apparatus or radio remote control apparatus, monitors and projectors, n.e.s.(2017-2024);Electronic assemblies suitable for use solely or principally with transmission and reception apparatus for radio-broadcasting or television, television cameras, digital cameras, video camera recorders, radar apparatus, radio navigational aid apparatus or radio remote control apparatus, monitors and projectors, n.e.s.(2007-2016)"
-85299091,LED backlight modules for LCDs of headings 8525 to 8528 (excl. for computer monitors)
-85299092,"Parts suitable for use solely or principally with television cameras, reception apparatus for radio-broadcasting or television, and monitors and projectors, n.e.s. (excl. aerials, cabinets and casings, electronic assemblies and parts for monitors and projectors of a kind solely or principally used in an automatic data-processing machine)(2017-2024);Parts suitable for use solely or principally with television cameras, reception apparatus for radio-broadcasting or television, and monitors and projectors, n.e.s. (excl. aerials, cabinets and casings, electronic assemblies and parts for monitors and projectors of a kind solely or principally used in an automatic data-processing machine)(2007-2016)"
-85299097,"Parts suitable for use solely or principally with transmission apparatus not incorporating reception apparatus for radio-broadcasting or television, video camera recorders, radar apparatus, radio navigational aid apparatus and remote control apparatus, n.e.s.(2017-2024);Parts suitable for use solely or principally with transmission apparatus not incorporating reception apparatus for radio-broadcasting or television, video camera recorders, radar apparatus, radio navigational aid apparatus and remote control apparatus, n.e.s. (excl. assemblies and sub-assemblies, parts for digital cameras, aerials and aerial reflectors, and electronic assemblies)(2007-2016)"
+85299030,"Electronic assemblies suitable for use solely or principally with flat panel display modules, transmission and reception apparatus for radio-broadcasting or television, television cameras,digital cameras, video camera recorders, radar apparatus, radio navigational aid apparatus or radio remote control apparatus, monitors and projectors, n.e.s."
+85299093,"Parts suitable for use solely or principally with reception apparatus for radio-broadcasting or television, or with monitors or projectors, n.e.s. (excl. aerials and electronic assemblies)"
+85299096,"Parts suitable for use solely or principally with flat panel display modules, transmission apparatus for radio-broadcasting or television, television cameras, digital cameras, video camera recorders, radar apparatus, radio navigational aid apparatus or remote control apparatus, n.e.s. (excl. electronic assemblies)"
 85301000,"Electrical signalling, safety or traffic control equipment for railways or tramways (excl. mechanical or electromechanical equipment of heading 8608)"
 85308000,"Electrical signalling, safety or traffic control equipment (excl. that for railways or tramways and mechanical or electromechanical equipment of heading 8608)"
 85309000,"Parts of electrical signalling, safety or traffic control equipment, n.e.s.(2017-2500);Parts of electrical signalling, safety or traffic control equipment, n.e.s.(2007-2016);Parts of electrical signalling, safety or traffic control equipment, n.e.s.(1988-2006)"
@@ -8780,7 +8827,8 @@
 85437050,"Sunbeds, sunlamps and similar suntanning equipment"
 85437060,Electric fence energisers
 85437090,"Electrical machines and apparatus, having individual functions, n.e.s. in chap. 85(2022-2500);Electrical machines and apparatus, having individual functions, n.e.s. in chap. 85(2018-2021);Electrical machines and apparatus, having individual functions, n.e.s. in chap. 85(2017-2017);Electrical machines and apparatus, having individual functions, n.e.s. in chap. 85(2007-2016)"
-85439000,"Parts of electrical machines and apparatus, having individual functions, n.e.s. in chapter 85(2022-2025);Parts of electrical machines and apparatus, having individual functions, n.e.s. in chapter 85(2007-2021)"
+85439010,Assemblies of stacked galvanic cells for water electrolysis machines for the production of hydrogen or oxygen
+85439090,"Parts of electrical machines and apparatus, having individual functions, n.e.s. in chapter 85"
 85441110,"Winding wire for electrical purposes, of copper, lacquered or enamelled"
 85441190,"Winding wire for electrical purposes, of copper, insulated (excl. lacquered or enamelled)"
 85441900,"Winding wire for electrical purposes, of material other than copper, insulated"
@@ -8841,6 +8889,7 @@
 86050000,"Railway or tramway passenger coaches, luggage vans, post office coaches and other special purpose railway or tramway coaches (excl. self-propelled railway or tramway coaches, vans and trucks, railway or tramway maintenance or service vehicles and goods vans and wagons)"
 86061000,Railway or tramway tank wagons and the like (excl. self-propelled)
 86063000,Railway or tramway self-discharging goods vans and wagons (excl. tank wagons and the like and insulated or refrigerated goods vans and wagons)
+86069110,"Railway or tramway goods vans and wagons, covered and closed, specially designed for the transport of highly radioactive materials [Euratom] (excl. tank wagons and the like and insulated, refrigerated or self-discharging goods vans and wagons)"
 86069180,"Railway or tramway goods vans and wagons, covered and closed (excl. those specially designed for the transport of highly radioactive materials, tank wagons and the like and self-discharging goods vans and wagons)"
 86069200,"Railway or tramway goods vans and wagons, open, with non-removable sides of a height > 60 cm (excl. self-discharging wagons)"
 86069900,"Railway or tramway goods vans and wagons (excl. those specially designed for the transport of highly radioactive materials, tank wagons and the like, insulated, refrigerated or self-discharging goods vans and wagons and open goods vans and wagons with non-removable sides of a height > 60 cm)"
@@ -9103,6 +9152,7 @@
 88052100,Air combat simulators and parts thereof
 88052900,"Ground flying trainers and parts thereof, n.e.s. (excl. air combat simulators and parts thereof)"
 88061010,"Unmanned aircraft, designed for the carriage of passengers, of an unladen weight <= 2000 kg"
+88061090,"Unmanned aircraft, designed for the carriage of passengers, of an unladen weight > 2000 kg"
 88062110,"Unmanned multi rotor aircraft, for remote-controlled flight only, with maximum take-off weight <= 250 g, equipped with permanently integrated apparatus of subheading 852589 for capturing and recording video and still images"
 88062190,"Unmanned aircraft, for remote-controlled flight only, with maximum take-off weight <= 250 g (excl. multi rotors equipped with permanently integrated apparatus of subheading 852589 for capturing and recording video and still images)"
 88062210,"Unmanned multi rotor aircraft, for remote-controlled flight only, with maximum take-off weight > 250 g but <= 7 kg, equipped with permanently integrated apparatus of subheading 852589 for capturing and recording video and still images (excl. for passenger carriage)"
@@ -9110,11 +9160,13 @@
 88062300,"Unmanned aircraft, for remote-controlled flight only, with maximum take-off weight > 7 kg but <= 25 kg (excl. for passenger carriage)"
 88062400,"Unmanned aircraft, for remote-controlled flight only, with maximum take-off weight > 25 kg but <= 150 kg (excl. for passenger carriage)"
 88062910,"Unmanned aircraft, for remote-controlled flight only, with maximum take-off weight > 150 kg, of an unladen weight <= 2000 kg (excl. for passenger carriage)"
+88062920,"Unmanned aircraft, for remote-controlled flight only, of an unladen weight > 2000 kg (excl. for passenger carriage)"
 88069100,"Unmanned aircraft, with maximum take-off weight <= 250 g (excl. for remote-controlled flight only)"
 88069200,"Unmanned aircraft, with maximum take-off weight > 250 g but <= 7 kg (excl. for passenger carriage or for remote-controlled flight only)"
 88069300,"Unmanned aircraft, with maximum take-off weight > 7 kg but <= 25 kg (excl. for passenger carriage or for remote-controlled flight only)"
 88069400,"Unmanned aircraft, with maximum take-off weight > 25 kg but <= 150 kg (excl. for passenger carriage or for remote-controlled flight only)"
 88069910,"Unmanned aircraft, with maximum take-off weight > 150 kg, of an unladen weight <= 2000 kg (excl. for passenger carriage or for remote-controlled flight only)"
+88069920,"Unmanned aircraft, of an unladen weight > 2000 kg (excl. for passenger carriage or for remote-controlled flight only)"
 88071000,"Propellers and rotors and parts thereof, for aircraft, n.e.s."
 88072000,"Under-carriages and parts thereof, for aircraft, n.e.s."
 88073000,"Parts of aeroplanes, helicopters or unmanned aircraft, n.e.s. (excl. those for gliders)"
@@ -9127,6 +9179,7 @@
 89011090,"Cruise ships, excursion boats and similar vessels principally designed for the transport of persons and ferry-boats of all kinds (excl. seagoing vessels)"
 89012010,Sea-going tankers
 89012090,Tankers (excl. seagoing tankers)
+89013010,Sea-going refrigerated vessels (excl. tankers)
 89013090,Refrigerated vessels (excl. seagoing vessels and tankers)
 89019010,"Sea-going vessels for the transport of goods and seagoing vessels for the transport of both persons and goods (excl. refrigerated vessels, tankers, ferry-boats and vessels principally designed for the transport of persons)"
 89019090,"Vessels for the transport of goods and vessels for the transport of both persons and goods, whether or not mechanically propelled (excl. seagoing vessels, refrigerated vessels, tankers, ferry-boats and vessels principally designed for the transport of persons)"
