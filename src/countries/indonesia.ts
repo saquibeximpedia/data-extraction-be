@@ -29,11 +29,11 @@ export const indonesia: Country = {
       [...new Set(periods.map((p) => p.slice(0, 4)))].map((year) => ({ hsCodes: [hsCode], periods: periods.filter((p) => p.startsWith(year)), tradeType }))
     ),
 
-  async fetchRecords({ hsCodes: [hsCode], periods, tradeType }) {
+  async fetchRecords({ hsCodes: [hsCode], periods, tradeType }, signal) {
     const year = periods[0].slice(0, 4);
     const sumber = tradeType === 'EXPORT' ? 1 : 2;
     const url = `https://webapi.bps.go.id/v1/api/dataexim/sumber/${sumber}/kodehs/${hsCode}/jenishs/2/tahun/${year}/periode/1/key/${process.env.BPS_API_KEY}`;
-    const json = await getJson<any>(url, { source: 'BPS API', headers: { 'User-Agent': 'Mozilla/5.0' } });
+    const json = await getJson<any>(url, { source: 'BPS API', headers: { 'User-Agent': 'Mozilla/5.0' }, signal });
     if (json?.['data-availability'] !== 'available' || !json.data) return new Map();
 
     // "bulan" is "[08] Agustus"; the flow and requested code lead each row

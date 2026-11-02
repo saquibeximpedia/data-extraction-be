@@ -19,6 +19,10 @@ export const thailand: Country = {
   lagMonths: 2,
   tradeTypes: ['IMPORT', 'EXPORT'],
   hsCodeHint: 'Thailand accepts 4 to 11 digits.',
+  // One request per code, month and flow (~43,000 for a full month), answered in ~0.25s each;
+  // the API handled 20 at once without throttling (Nov 2026), so the default 60/min would take ~12 hours
+  concurrency: 8,
+  rateLimitPerMinute: 1200,
 
   // The API aggregates shorter prefixes, so 4–11 digits all work
   normalizeHsCode: (raw) => {
@@ -26,12 +30,14 @@ export const thailand: Country = {
     return /^\d{4,11}$/.test(digits) ? digits : null;
   },
 
-  async fetchRecords({ hsCodes: [hsCode], periods: [period], tradeType }) {
+  async fetchRecords({ hsCodes: [hsCode], periods: [period], tradeType }, signal) {
     const { year, month } = splitPeriod(period);
     const url = `${API_BASE}/${ENDPOINTS[tradeType]}?year=${year}&month=${month}&hs_code=${hsCode}&limit=100000`;
     const res = await getJson<any[] | { data?: any[] }>(url, {
       source: 'Thai MOC',
       headers: { 'User-Agent': BROWSER_UA, Referer: 'https://tradereport.moc.go.th/' },
+      signal,
+      timeoutMs: 60_000,
     });
     const list = Array.isArray(res) ? res : res.data ?? [];
     // An unpublished month comes back as one zero-valued row per partner country

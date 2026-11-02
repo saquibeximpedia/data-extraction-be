@@ -87,6 +87,7 @@ Files hold the source's own data, untouched; filtering happens downstream.
 | `ZAF` | The SARS file exactly as delivered: its 21 columns with the cell text unchanged (written as CSV). |
 | `THA` | Every field of the MOC response, with `request_hs_code` and `trade_flow` in front. |
 | `IDN` | Every field of the BPS response, with `request_hs_code` and `trade_flow` in front. |
+| `QAT` | Every field of the data.gov.qa row (English and Arabic description and country, quantity, weight in kg, value in riyals), with `trade_flow`, `request_hs_code` and `hs_code` (the code with its leading zero restored) in front. Field names differ by dataset (e.g. `hs8`/`lsn_year`/`lshhr_month` for 2019–2024 imports). |
 | `JPN` | One row per 9-digit commodity code, partner country and month: `trade_flow`, `hs_code`, `country_code`, `country_name`, `year`, `month`, `unit1`, `quantity1`, `unit2`, `quantity2`, `value_1000_yen`. Rows without trade are left out. |
 
 Supabase limits the size of one stored file (50 MB on the free plan; raise it under **Storage → Settings** on paid plans).
@@ -100,6 +101,8 @@ Supabase limits the size of one stored file (50 MB on the free plan; raise it un
 | `EU` | Eurostat Comext API (DS-045409) | 2 months | 8-digit CN codes only | — |
 | `IDN` | BPS DataExim API | 2 months | 8-digit tariff lines | `BPS_API_KEY` |
 | `JPN` | e-Stat API (Ministry of Finance trade statistics) | 2 months | 9-digit statistical codes (4–6 digits return every code under them) | `ESTAT_APP_ID` |
+| `PHL` | PSA OpenSTAT yearly files (download-only, not extracted) | 1 month | — (files cover every commodity) | — |
+| `QAT` | Qatar Open Data Portal (Opendatasoft API, PSA datasets) | 8 months | 4–12 digits; imports 12-digit from 2025 (8 before), exports 4-digit only | — |
 | `THA` | Thailand MOC trade report API | 2 months | 4–11 digits | — |
 | `ZAF` | SARS Trade Statistics portal | 2 months | 8-digit tariff lines (4–6 digits return every line under them) | — |
 
@@ -108,6 +111,10 @@ Supabase limits the size of one stored file (50 MB on the free plan; raise it un
 **EU** reads Eurostat Comext dataset DS-045409 over its SDMX 3.0 API. Eurostat refuses extractions estimated above 5 million rows, so codes go in batches of 150 per flow and month (a batch still too big is halved), and large requests are queued as jobs that `eu.ts` polls until ready (about a minute per batch). Codes Eurostat doesn't know are dropped from the batch. Only 8-digit CN codes are accepted: Eurostat's HS2/4/6 totals also hold trade it can't attribute to a CN code (confidential lines), so they don't match the CN8 rows. An HS subheading the CN doesn't split is its code plus `00` (293341 → 29334100). The saved lists were moved to CN8 in Oct 2026; the codes taken out (HS codes with no 2026 trade, mostly retired before 2022) are in `storage/hs_codes/archive/`.
 
 **EU bulk files** are not extracted. `eu.ts` describes Eurostat's monthly Comext files (`bulkDownload`: a link pattern `…/files/?downfile=comext/COMEXT_DATA/PRODUCTS/full_v2_{YYYYMM}.7z` and the folder listing), and the web app's extract page offers **Bulk file links**: a popup with each chosen month's direct link, opened in the browser. The service downloads nothing for them. Each file is a 7z of 25–45 MB holding about 5 million rows (both flows, every product, confidential `XX` rows, 18 columns).
+
+**Philippines** is download-only: `philippines.ts` has no `fetchRecords`, so the service refuses runs for it and the extract page shows only **Bulk file links**. PSA publishes one file per flow and year (tables 1.1E exports / 2.1E imports, PSCC2022, from 2024) as Excel and CSV under `openstat.psa.gov.ph/Portals/0/files/IMTS/{Export|Import}/{excel|csv}/`. A finished year's file is named `… (JANUARY - DECEMBER {YYYY}).{ext}`; the current year's is `… (JANUARY - {MONTH} {YYYY}) PRELIMINARY.{ext}` and is renamed as months are added, so the link is built from the latest month the source should have out (`bulkDownload.per: 'year'`). The site is behind a Cloudflare check only browsers pass, so the service couldn't fetch these files even if it tried. Years before 2024 are in other tables with other names; use the listing page.
+
+**Qatar** reads the Planning and Statistics Authority datasets on data.gov.qa through the Opendatasoft Explore API v2.1 (no key). Imports are three datasets by year range, each naming its fields differently: `qatar-imports-2014-2018` (`hs8` number), `qatar-imports-2019-2024-copy` (`hs8` text, `lsn_year`, `lshhr_month`) and `qatar-imports-2025-2026` (12-digit `harmonized_system_code`); exports are `qatar-export-statistics-2019-2024` (2014 onwards, `hs4` only). `qatar.ts` picks the dataset from the year and sends one `/exports/json` request per flow, year and batch of 40 codes, with an ODSQL `where` (`year = date'YYYY'`, the months, and one condition per code). Numeric codes lose their leading zero, so shorter codes become numeric ranges; codes longer than the dataset's are cut to its length (an export code returns its heading). Codes are cut to the dataset's length and de-duplicated before batching (a code a shorter one already covers is dropped), so no row is fetched twice. Each row goes to the most specific requested code that covers it. The saved list `QAT.csv` is the 8,583 12-digit lines in `qatar-imports-2025-2026` (Oct 2026; the `0` catch-all for consignments under QAR 20,000 left out): 215 requests per year for imports from 2025, about 157 for 2019–2024 imports and 29 for exports. `QAT_TEST.csv` holds 20 of them spread across chapters. When a new import dataset appears (e.g. for 2027), add it to `DATASETS`. In January 2026 imports the source copied value into `quantity`; NPC's yearly workbook (`npc.qa/en/statistics/Documents/ft/Imports_Exports_{YYYY}.xlsx`) has the right figures.
 
 **Japan** reads the e-Stat tables "Commodity by Country Import / Export". e-Stat re-issues a year's table under a new ID every month, so `japan.ts` looks up the current table for each flow and year (cached for 30 minutes) instead of hard-coding IDs. Import and export use different 9-digit codes: a 9-digit code a flow lacks returns that flow's codes under its 6-digit subheading.
 
@@ -121,6 +128,8 @@ Supabase limits the size of one stored file (50 MB on the free plan; raise it un
 4. Restart the service: it publishes the new country, and the web app shows it.
 
 `getJson` throws a `RetryableError` for 429/5xx/network failures, which the engine retries.
+
+A **download-only country** (links to the source's files, nothing extracted) leaves out `normalizeHsCode` and `fetchRecords` and sets `bulkDownload`: `urlTemplate` with `{YYYYMM}` for a file per month, or `per: 'year'` with `files` for a file per year (see `philippines.ts`). It needs no HS code files.
 
 ---
 

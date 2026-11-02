@@ -1,4 +1,4 @@
-import { Country, FetchQuery, findCountry, isEnabled, missingConfig } from '../countries';
+import { ExtractableCountry, FetchQuery, findCountry, isEnabled, isExtractable, missingConfig } from '../countries';
 import { env } from '../config/env';
 import { ExtractionRun, Period, RunFlag, RunLog, RunStats, RunTrigger, TradeFlow } from '../types';
 import { RateLimiter, Semaphore } from '../utils/concurrency';
@@ -100,7 +100,7 @@ class ExtractionService {
   public stopRun(runId: string): boolean {
     const live = this.live.get(runId);
     if (!live) return false;
-    this.log(runId, 'warn', 'Stopping: requests in flight finish, the rest are skipped.');
+    this.log(runId, 'warn', 'Stopping: requests in flight are cancelled and the rest skipped; the rows fetched so far are saved.');
     live.controller.abort();
     return true;
   }
@@ -110,6 +110,7 @@ class ExtractionService {
     const code = req.countryCode.toUpperCase();
     const country = findCountry(code);
     if (!country) throw notFound(`This extraction service has no extractor for ${code}. Download-only countries get their files uploaded in the web app.`);
+    if (!isExtractable(country)) throw badRequest(`${country.name} is download-only: use its bulk file links.`);
     if (!isEnabled(country)) throw badRequest(`${country.code} is disabled: set ${missingConfig(country).join(', ')} in .env`);
     if (req.tradeType !== 'ALL' && !country.tradeTypes.includes(req.tradeType)) {
       throw badRequest(`${country.code} supports ${country.tradeTypes.join('/')} only`);
@@ -195,6 +196,7 @@ class ExtractionService {
   private async runCountry(run: ExtractionRun, plan: CountryPlan, signal: AbortSignal, options: RunOptions): Promise<void> {
     const country = findCountry(plan.countryCode);
     if (!country) throw new Error(`Unknown country ${plan.countryCode}`);
+    if (!isExtractable(country)) throw new Error(`${country.code} is download-only`);
     if (!isEnabled(country)) throw new Error(`${country.code} is disabled: missing ${missingConfig(country).join(', ')}`);
 
     const stats = run.stats;
@@ -230,10 +232,12 @@ class ExtractionService {
                 const byMonth = await withRetry(
                   async () => {
                     await rateLimit.wait();
-                    return country.fetchRecords(query);
+                    signal.throwIfAborted();
+                    return country.fetchRecords(query, signal);
                   },
                   retries,
-                  retryDelay
+                  retryDelay,
+                  signal
                 );
                 const rows = [...byMonth.values()].reduce((n, list) => n + list.length, 0);
                 for (const [period, list] of byMonth) await files.add(period, list);
@@ -243,6 +247,11 @@ class ExtractionService {
                 streak.record(query, rows === 0);
                 this.log(run.id, rows ? 'success' : 'info', `${label}: ${rows ? `${rows} rows` : '0 records'}`);
               } catch (err: any) {
+                // Cancelled by a stop: skipped, not failed
+                if (signal.aborted) {
+                  stats.skipped++;
+                  return;
+                }
                 stats.failed++;
                 this.log(run.id, 'error', `${label}: ${err.message}`);
               }
@@ -278,7 +287,7 @@ class ExtractionService {
     }
   }
 
-  private validCodes(country: Country, raw: string[], stats: RunStats): string[] {
+  private validCodes(country: ExtractableCountry, raw: string[], stats: RunStats): string[] {
     const valid = new Set<string>();
     const invalid: string[] = [];
     for (const code of raw) {

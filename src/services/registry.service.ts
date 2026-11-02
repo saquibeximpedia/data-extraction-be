@@ -1,4 +1,4 @@
-import { BulkDownload, Country, CountrySource, isEnabled, listCountries, missingConfig } from '../countries';
+import { BulkDownload, Country, CountrySource, isEnabled, isExtractable, listCountries, missingConfig } from '../countries';
 import { TradeFlow } from '../types';
 import { db } from './db.service';
 import { hsCodesService } from './hs-codes.service';
@@ -13,8 +13,10 @@ export interface ExtractorInfo {
   enabled: boolean;
   missingConfig: string[];
   source: CountrySource;
-  /** Monthly files the web app links to directly (nothing is fetched by the service), or null */
+  /** Files the web app links to directly (nothing is fetched by the service), or null */
   bulkDownload: BulkDownload | null;
+  /** False for download-only countries: bulkDownload links only, no extraction */
+  extractable: boolean;
   lagMonths: number;
   publishDay: number;
   /** Earliest month with data, or null when the source has no limit */
@@ -36,6 +38,7 @@ function describe(country: Country): ExtractorInfo {
     missingConfig: missingConfig(country),
     source: country.source,
     bulkDownload: country.bulkDownload ?? null,
+    extractable: isExtractable(country),
     lagMonths: country.lagMonths,
     publishDay: country.publishDay ?? 1,
     startPeriod: country.startPeriod ?? null,
