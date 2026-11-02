@@ -3,6 +3,7 @@ import path from 'path';
 import readline from 'readline';
 import { env } from '../config/env';
 import { Period, TradeRecord } from '../types';
+import { heldService } from './held.service';
 import { settingsService } from './settings.service';
 import { storageService } from './storage.service';
 import { ZipFileWriter } from '../utils/zip';
@@ -23,6 +24,9 @@ async function* jsonLines(file: string): AsyncGenerator<TradeRecord> {
     }
   }
 }
+
+/** Where a run's files go: Storage, or held for the web app to save into the user's folder */
+export type RunDestination = 'storage' | 'device';
 
 /** Top folder for files of runs on the test HS codes */
 export const TEST_FOLDER = '_test';
@@ -64,9 +68,11 @@ export class MonthFiles {
 
   constructor(
     private readonly countryCode: string,
-    runId: string,
+    private readonly runId: string,
     /** A run on the test HS codes: its files go under _test/ */
-    private readonly test = false
+    private readonly test = false,
+    /** 'device': finished months are held on the service for the web app to save into the user's folder, not uploaded */
+    private readonly destination: RunDestination = 'storage'
   ) {
     this.dir = path.join(env.tempDir, runId, countryCode);
     fs.mkdirSync(this.dir, { recursive: true });
@@ -79,13 +85,13 @@ export class MonthFiles {
   }
 
   /** The months each country of a cut-off run had written */
-  static leftovers(runId: string, isTest: (countryCode: string) => boolean): MonthFiles[] {
+  static leftovers(runId: string, isTest: (countryCode: string) => boolean, destination: RunDestination = 'storage'): MonthFiles[] {
     const runDir = path.join(env.tempDir, runId);
     return fs
       .readdirSync(runDir, { withFileTypes: true })
       .filter((entry) => entry.isDirectory())
       .map((entry) => {
-        const files = new MonthFiles(entry.name, runId, isTest(entry.name));
+        const files = new MonthFiles(entry.name, runId, isTest(entry.name), destination);
         for (const name of fs.readdirSync(files.dir)) {
           const period = name.match(/^(\d{4}-\d{2})\.jsonl$/)?.[1];
           // The count is unknown until saved, which counts the rows itself
@@ -120,7 +126,8 @@ export class MonthFiles {
 
   /**
    * Uploads the month over its previous files and returns their paths and the row count: one CSV,
-   * or zipped when the CSV is bigger than ZIP_OVER_MB or one upload (see exportService).
+   * or zipped when the CSV is bigger than ZIP_OVER_MB or one upload (see exportService). A run saved
+   * to the user's device holds the same files on the service instead, under the same paths.
    */
   async save(period: Period): Promise<{ paths: string[]; rows: number }> {
     await this.writing;
@@ -156,10 +163,14 @@ export class MonthFiles {
       if (parts.length === 1) parts = await this.zipParts(csv, header, period, limit, false);
       uploads = parts.map((p) => ({ ...p, type: 'application/zip' }));
     }
+    const names = uploads.map((u) => u.name);
+    if (this.destination === 'device') {
+      for (const u of uploads) await heldService.put(this.runId, `${folder}/${u.name}`, u.file);
+      return { paths: names.map((n) => `${folder}/${n}`), rows };
+    }
     for (const u of uploads) await storageService.uploadFile(`${folder}/${u.name}`, u.file, u.type);
 
     // Drop what an earlier run left for this month (more parts, the CSV instead of a zip, or the other way)
-    const names = uploads.map((u) => u.name);
     const stale = (await storageService.list(folder).catch(() => [])).filter((n) => exportService.isMonthFile(n, this.countryCode, period) && !names.includes(n));
     if (stale.length) await storageService.removeFiles(stale.map((n) => `${folder}/${n}`)).catch(() => {});
 

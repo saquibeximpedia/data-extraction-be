@@ -7,7 +7,7 @@ import { splitHsInput } from '../utils/hs-codes';
 import { RetryableError, withRetry } from '../utils/http';
 import { periodOfDate, periodRange, toPeriod } from '../utils/period';
 import { db } from './db.service';
-import { MonthFiles } from './export.service';
+import { MonthFiles, RunDestination } from './export.service';
 import { hsCodesService } from './hs-codes.service';
 import { settingsService } from './settings.service';
 
@@ -31,6 +31,8 @@ export interface RunOptions {
   rateLimitPerMinute?: number;
   retryMaxAttempts?: number;
   retryDelayMs?: number;
+  /** 'device': files are held on the service for the web app to save into the user's folder, not stored */
+  destination?: RunDestination;
 }
 
 export interface ManualRequest {
@@ -214,7 +216,8 @@ class ExtractionService {
     const retryDelay = options.retryDelayMs ?? settings.retryDelayMs;
     this.log(run.id, 'info', `${country.code}: ${concurrency} at a time, up to ${perMinute}/min, ${retries} retries from ${retryDelay / 1000}s`);
 
-    const files = new MonthFiles(country.code, run.id, plan.hsCodeSource === 'test');
+    const files = new MonthFiles(country.code, run.id, plan.hsCodeSource === 'test', options.destination);
+    if (options.destination === 'device') this.log(run.id, 'info', 'Files are held on the service until the web app saves them to your folder; they are not stored.');
     const limit = new Semaphore(concurrency);
     const rateLimit = new RateLimiter(perMinute);
     const streak = new EmptyStreak(country.code, settings.emptyStreakFlagAt, stats, (msg) => this.log(run.id, 'warn', msg));
@@ -273,7 +276,7 @@ class ExtractionService {
         try {
           const file = await files.save(period);
           stats.files.push(...file.paths);
-          this.log(run.id, 'success', `Saved ${file.paths.length > 1 ? `${file.paths.length} zips (each under ${settingsService.get().maxUploadMb} MB): ${file.paths.join(', ')}` : file.paths[0]} (${file.rows} rows)`);
+          this.log(run.id, 'success', `${options.destination === 'device' ? 'Ready for your folder' : 'Saved'} ${file.paths.length > 1 ? `${file.paths.length} zips (each under ${settingsService.get().maxUploadMb} MB): ${file.paths.join(', ')}` : file.paths[0]} (${file.rows} rows)`);
         } catch (err: any) {
           unsaved.push({ period, reason: err.message });
           this.log(run.id, 'error', `${country.code} ${period}: could not save the file: ${err.message}`);

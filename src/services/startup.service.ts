@@ -1,5 +1,6 @@
 import { db } from './db.service';
-import { MonthFiles } from './export.service';
+import { MonthFiles, RunDestination } from './export.service';
+import { heldService } from './held.service';
 import { registryService } from './registry.service';
 
 const RETRY_MS = 60_000;
@@ -27,7 +28,8 @@ async function saveLeftovers(): Promise<void> {
     let failed = false;
     const plans: { countryCode: string; hsCodeSource?: string }[] = run.params.plans ?? [];
     const isTest = (code: string) => plans.some((p) => p.countryCode === code && p.hsCodeSource === 'test');
-    for (const files of MonthFiles.leftovers(runId, isTest)) {
+    const destination: RunDestination = run.params.options?.destination ?? 'storage';
+    for (const files of MonthFiles.leftovers(runId, isTest, destination)) {
       for (const period of files.periods) {
         try {
           const file = await files.save(period);
@@ -48,6 +50,14 @@ async function saveLeftovers(): Promise<void> {
   }
 }
 
+/** Removes files held for the user's device past HELD_KEEP_DAYS, saved or not */
+function pruneHeld(): void {
+  heldService
+    .prune()
+    .then((n) => n && console.log(`🧹 Removed ${n} run(s) of files held for download past their keep time`))
+    .catch((err) => console.error(`❌ Could not clear old held files: ${err.message}`));
+}
+
 /**
  * Checks the tables, marks runs cut off by a restart as interrupted (once), and publishes the
  * extractor list. On failure it tries again every minute, so running supabase/schema.sql while the
@@ -62,6 +72,8 @@ export async function connectDatabase(): Promise<void> {
       recovered = true;
       // In the background: a big month takes a while to upload
       saveLeftovers().catch((err) => console.error(`❌ Could not save rows left by cut-off runs: ${err.message}`));
+      pruneHeld();
+      setInterval(pruneHeld, 24 * 60 * 60 * 1000).unref();
     }
     await registryService.sync();
     Object.assign(databaseStatus, { ok: true, error: '', checkedAt: new Date().toISOString() });

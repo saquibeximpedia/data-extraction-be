@@ -18,6 +18,8 @@ export const extractionSchema = z.object({
       rateLimitPerMinute: z.number().int().min(1).max(600).optional(),
       retryMaxAttempts: z.number().int().min(0).max(10).optional(),
       retryDelayMs: z.number().int().min(100).max(60_000).optional(),
+      // 'device': files are held on the service for the web app to save into the user's folder, not stored
+      destination: z.enum(['storage', 'device']).optional(),
     })
     .optional(),
 });

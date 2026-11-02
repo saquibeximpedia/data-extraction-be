@@ -29,6 +29,11 @@ const envSchema = z.object({
   RETRY_MAX_ATTEMPTS: positiveInt('3'),
   RETRY_DELAY_MS: positiveInt('2000'),
 
+  // Runs saved to the user's device: their files wait in HELD_DIR until the web app saves them,
+  // and are removed after HELD_KEEP_DAYS whether saved or not
+  HELD_DIR: z.string().default('storage/held'),
+  HELD_KEEP_DAYS: positiveInt('14'),
+
   // Comma-separated; empty or * allows all
   ALLOWED_IPS: z.string().default(''),
 
@@ -51,4 +56,6 @@ export const env = {
   allowedIpList,
   /** Run rows are collected here before each month is uploaded to Storage */
   tempDir: path.join(os.tmpdir(), 'trade-data-exports'),
+  /** Finished files of runs saved to the user's device, by run: {heldDir}/{runId}/{CC}/{YYYY}/{file} */
+  heldDir: path.resolve(parsed.data.HELD_DIR),
 };
