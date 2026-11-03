@@ -22,6 +22,8 @@ export const extractionSchema = z.object({
       destination: z.enum(['storage', 'device']).optional(),
     })
     .optional(),
+  // A dataset ID read instead of each year's dataset (sources with datasets; one flow only)
+  dataset: z.string().trim().regex(/^[w-]{1,200}$/, "Use the dataset's ID: the last part of its link, e.g. import-2027").optional(),
 });
 
 /** PUT /api/settings: any subset of the settings */

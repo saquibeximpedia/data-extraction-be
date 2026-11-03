@@ -59,8 +59,9 @@ Errors are `{ "error": "...", ...details }`. Every route checks `ALLOWED_IPS`. E
 
 ## How an extraction runs
 
-1. A request names a country, a month or range, a flow (or both) and the HS codes (the saved complete or test list, or typed-in codes). Only one extraction per country runs at a time.
+1. A request names a country, a month or range, a flow (or both) and the HS codes (the saved complete or test list, or typed-in codes). A source whose requests return every code (`allHsCodes`: Bahrain, Qatar) needs no list: a complete run takes every code, and typed-in codes only keep those. Only one extraction per country runs at a time.
 2. The country splits the work into **requests** (`splitQueries`), shaped by what its source returns in one call:
+   - **Bahrain, Qatar**: one request per flow and month, returning the whole month (every code and partner).
    - **South Africa**: one download per flow and month covering every chapter the codes are in.
    - **EU**: one request per flow, month and batch of up to 150 codes (every member state and partner).
    - **Indonesia**: one request per flow, year and batch of up to 20 HS codes (the most BPS accepts), at most 15 a minute: a BPS key allows 1,000 requests an hour and 10,000 a day.
@@ -88,6 +89,7 @@ Files hold the source's own data, untouched; filtering happens downstream.
 | `THA` | Every field of the MOC response, with `request_hs_code` and `trade_flow` in front. |
 | `IDN` | Every field of the BPS response, with `request_hs_code` and `trade_flow` in front. |
 | `QAT` | Every field of the data.gov.qa row (English and Arabic description and country, quantity, weight in kg, value in riyals), with `trade_flow`, `request_hs_code` and `hs_code` (the code with its leading zero restored) in front. Field names differ by dataset (e.g. `hs8`/`lsn_year`/`lshhr_month` for 2019–2024 imports). |
+| `BHR` | One row per 8-digit HS code and partner, the same columns every year: `request_hs_code`, `trade_flow`, `period`, `hs_code`, `description_en`, `description_ar`, `partner_code` (ISO), `partner_name_en`, `partner_name_ar`, `value_bd`, `value_usd`, `weight_kg`, `quantity`, `unit`. The source's field names differ by year (2024 imports use transliterated Arabic names) and are mapped onto these. |
 | `JPN` | One row per 9-digit commodity code, partner country and month: `trade_flow`, `hs_code`, `country_code`, `country_name`, `year`, `month`, `unit1`, `quantity1`, `unit2`, `quantity2`, `value_1000_yen`. Rows without trade are left out. |
 
 Supabase limits the size of one stored file (50 MB on the free plan; raise it under **Storage → Settings** on paid plans).
@@ -98,11 +100,12 @@ Supabase limits the size of one stored file (50 MB on the free plan; raise it un
 
 | Code | Source | Default lag | HS codes accepted | Needs |
 |------|--------|-----|-------------------|-------|
+| `BHR` | Bahrain Open Data Portal (Opendatasoft API, iGA datasets) | 1 month | None needed (every 8-digit code); 2–8 digits keep only those | — |
 | `EU` | Eurostat Comext API (DS-045409) | 2 months | 8-digit CN codes only | — |
 | `IDN` | BPS DataExim API | 2 months | 8-digit tariff lines | `BPS_API_KEY` |
 | `JPN` | e-Stat API (Ministry of Finance trade statistics) | 2 months | 9-digit statistical codes (4–6 digits return every code under them) | `ESTAT_APP_ID` |
 | `PHL` | PSA OpenSTAT yearly files (download-only, not extracted) | 1 month | — (files cover every commodity) | — |
-| `QAT` | Qatar Open Data Portal (Opendatasoft API, PSA datasets) | 8 months | 4–12 digits; imports 12-digit from 2025 (8 before), exports 4-digit only | — |
+| `QAT` | Qatar Open Data Portal (Opendatasoft API, PSA datasets) | 8 months | None needed (every code); 4–12 digits keep only those. Imports 12-digit from 2025 (8 before), exports 4-digit only | — |
 | `THA` | Thailand MOC trade report API | 2 months | 4–11 digits | — |
 | `ZAF` | SARS Trade Statistics portal | 2 months | 8-digit tariff lines (4–6 digits return every line under them) | — |
 
@@ -114,7 +117,11 @@ Supabase limits the size of one stored file (50 MB on the free plan; raise it un
 
 **Philippines** is download-only: `philippines.ts` has no `fetchRecords`, so the service refuses runs for it and the extract page shows only **Bulk file links**. PSA publishes one file per flow and year (tables 1.1E exports / 2.1E imports, PSCC2022, from 2024) as Excel and CSV under `openstat.psa.gov.ph/Portals/0/files/IMTS/{Export|Import}/{excel|csv}/`. A finished year's file is named `… (JANUARY - DECEMBER {YYYY}).{ext}`; the current year's is `… (JANUARY - {MONTH} {YYYY}) PRELIMINARY.{ext}` and is renamed as months are added, so the link is built from the latest month the source should have out (`bulkDownload.per: 'year'`). The site is behind a Cloudflare check only browsers pass, so the service couldn't fetch these files even if it tried. Years before 2024 are in other tables with other names; use the listing page.
 
-**Qatar** reads the Planning and Statistics Authority datasets on data.gov.qa through the Opendatasoft Explore API v2.1 (no key). Imports are three datasets by year range, each naming its fields differently: `qatar-imports-2014-2018` (`hs8` number), `qatar-imports-2019-2024-copy` (`hs8` text, `lsn_year`, `lshhr_month`) and `qatar-imports-2025-2026` (12-digit `harmonized_system_code`); exports are `qatar-export-statistics-2019-2024` (2014 onwards, `hs4` only). `qatar.ts` picks the dataset from the year and sends one `/exports/json` request per flow, year and batch of 40 codes, with an ODSQL `where` (`year = date'YYYY'`, the months, and one condition per code). Numeric codes lose their leading zero, so shorter codes become numeric ranges; codes longer than the dataset's are cut to its length (an export code returns its heading). Codes are cut to the dataset's length and de-duplicated before batching (a code a shorter one already covers is dropped), so no row is fetched twice. Each row goes to the most specific requested code that covers it. The saved list `QAT.csv` is the 8,583 12-digit lines in `qatar-imports-2025-2026` (Oct 2026; the `0` catch-all for consignments under QAR 20,000 left out): 215 requests per year for imports from 2025, about 157 for 2019–2024 imports and 29 for exports. `QAT_TEST.csv` holds 20 of them spread across chapters. When a new import dataset appears (e.g. for 2027), add it to `DATASETS`. In January 2026 imports the source copied value into `quantity`; NPC's yearly workbook (`npc.qa/en/statistics/Documents/ft/Imports_Exports_{YYYY}.xlsx`) has the right figures.
+**Opendatasoft portals (Bahrain, Qatar).** Both publish a dataset per year (or per few years) and are read through the Explore API v2.1 (no key) with the helpers in `opendatasoft.ts`. Each request is one flow and month from `/catalog/datasets/{id}/exports/json?where=…`, which returns the whole month in one go (1–10 s); the paged `/records` endpoint stops at 100 rows a page and 10,000 in all, too few for a month. Typed-in codes filter the rows afterwards. The dataset for a year is the module's built-in one (Bahrain: else the iGA catalog entry titled for that year); a year with none fails its months with a message saying so, so it isn't mistaken for a month without trade.
+
+**Bahrain** reads the Information & eGovernment Authority datasets on data.gov.bh: imports (`import-2026`, `import-1-2025`… from 2021) and **total exports** (`total-exports-2026`, `total-export-1-2025`…, national origin plus re-exports, from 2020; 2020–2022 share `03-total-export-2019-2022`, filtered by `year = date'YYYY'`). Non-oil trade only. Months are written three ways (`September`, `09 September`, `09-September`), matched by `month = "September" or startswith(month, "09")`. Monthly totals match iGA's press releases (April 2026: imports BD 287.7M, exports BD 316.6M). About 25,000 import and 4,000 export rows a month; September of year Y is published around 20–26 October.
+
+**Qatar** reads the Planning and Statistics Authority datasets on data.gov.qa. Imports are three datasets by year range, each naming its fields differently: `qatar-imports-2014-2018` (`hs8` number), `qatar-imports-2019-2024-copy` (`hs8` text, `lsn_year`, `lshhr_month`) and `qatar-imports-2025-2026` (12-digit `harmonized_system_code`); exports are `qatar-export-statistics-2019-2024` (2014 onwards, `hs4` only). `qatar.ts` reads each dataset's field list once to find its year, month and code fields (names containing `year`, `month`, `hsN` or `harmonized`) and the code length (from `hsN`, else the longest code), so an added dataset needs only its ID. Numeric codes lose their leading zero; `hs_code` restores it. A typed-in code longer than the dataset's is cut to its length (an export code returns its heading), and each row goes to the most specific typed-in code that covers it. About 11,000–18,000 import and 1,000–2,000 export rows a month. `QAT.csv` (the 8,583 12-digit lines in `qatar-imports-2025-2026`) is no longer needed for complete runs; `QAT_TEST.csv` still drives test runs. In January 2026 imports the source copied value into `quantity`; NPC's yearly workbook (`npc.qa/en/statistics/Documents/ft/Imports_Exports_{YYYY}.xlsx`) has the right figures.
 
 **Japan** reads the e-Stat tables "Commodity by Country Import / Export". e-Stat re-issues a year's table under a new ID every month, so `japan.ts` looks up the current table for each flow and year (cached for 30 minutes) instead of hard-coding IDs. Import and export use different 9-digit codes: a 9-digit code a flow lacks returns that flow's codes under its 6-digit subheading.
 
@@ -124,8 +131,12 @@ Supabase limits the size of one stored file (50 MB on the free plan; raise it un
 
 1. Create `src/countries/<name>.ts` exporting a `Country` (see `country.types.ts`; `thailand.ts` is the shortest example). `fetchRecords` returns the rows per month. Add `splitQueries` when one call can answer several codes or months.
 2. Add it to the list in `src/countries/index.ts`.
-3. Put its HS codes in `storage/hs_codes/{CC}.csv` and a short `{CC}_TEST.csv` (the first column is read; headers are ignored).
+3. Put its HS codes in `storage/hs_codes/{CC}.csv` and a short `{CC}_TEST.csv` (the first column is read; headers are ignored). A source whose requests return every code sets `allHsCodes: true` and needs no `{CC}.csv`.
 4. Restart the service: it publishes the new country, and the web app shows it.
+
+**Choosing a dataset.** A country with yearly datasets lists them in `datasets`. The extract page then shows a **Dataset** dropdown: *Automatic* (each month reads its year's dataset), any listed dataset, or *New dataset ID…* with a text box for one not listed yet (e.g. next year's, before the code knows it). The choice is sent as `dataset`, read for every month of the run (`context.dataset` in `fetchRecords`), and logged. A dataset holds one flow, so the service refuses one with both flows picked; picking a listed dataset switches the form to its flow. A listed dataset keeps its years (a several-year one is still filtered by year), and Bahrain drops rows whose `year` isn't the month's, so a dataset of another year returns no rows instead of filing them under the wrong month. Nothing is saved: the next run is automatic again.
+
+To try a country without the engine, database or storage: `npx tsx scripts/month-check.ts <CC> <out-dir> <YYYY-MM>[,…] [hs codes…] [--flow IMPORT|EXPORT] [--dataset ID]` writes each month's CSV and a summary (`--dataset` reads that dataset for every month, as the extract page's Dataset dropdown would).
 
 `getJson` throws a `RetryableError` for 429/5xx/network failures, which the engine retries.
 

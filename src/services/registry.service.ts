@@ -1,4 +1,4 @@
-import { BulkDownload, Country, CountrySource, isEnabled, isExtractable, listCountries, missingConfig } from '../countries';
+import { BulkDownload, Country, CountrySource, DatasetRef, isEnabled, isExtractable, listCountries, missingConfig } from '../countries';
 import { TradeFlow } from '../types';
 import { db } from './db.service';
 import { hsCodesService } from './hs-codes.service';
@@ -25,6 +25,10 @@ export interface ExtractorInfo {
   hsCodeHint: string;
   hsCodeCount: number;
   testHsCodeCount: number;
+  /** Requests return every HS code: a run needs no saved list */
+  allHsCodes: boolean;
+  /** Datasets offered on the extract page to read instead of each year's own (none: the source has no datasets) */
+  datasets: DatasetRef[];
   /** The source's own limits (null: the service's setting applies) */
   concurrency: number | null;
   rateLimitPerMinute: number;
@@ -46,6 +50,8 @@ function describe(country: Country): ExtractorInfo {
     hsCodeHint: country.hsCodeHint,
     hsCodeCount: hsCodesService.getSaved(country.code, 'complete').length,
     testHsCodeCount: hsCodesService.hasTestFile(country.code) ? hsCodesService.getSaved(country.code, 'test').length : 0,
+    allHsCodes: Boolean(country.allHsCodes),
+    datasets: country.datasets ?? [],
     concurrency: country.concurrency ?? null,
     rateLimitPerMinute: country.rateLimitPerMinute ?? 60,
   };

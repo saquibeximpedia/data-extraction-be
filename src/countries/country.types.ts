@@ -10,6 +10,21 @@ export interface FetchQuery {
 /** Rows per month; months without rows can be left out */
 export type MonthRows = Map<Period, TradeRecord[]>;
 
+/** One flow's years `from`–`to` in one dataset of an open-data portal */
+export interface DatasetRef {
+  flow: TradeFlow;
+  from: number;
+  to: number;
+  /** The dataset's ID, the last part of its link on the portal */
+  id: string;
+}
+
+/** What the engine hands each request besides the query */
+export interface FetchContext {
+  /** A dataset ID chosen on the extract page for this run (one flow), read instead of each year's dataset */
+  dataset?: string;
+}
+
 /** One kind of yearly file (e.g. exports as CSV), for sources publishing a file per year */
 export interface YearFile {
   /** Shown on the link, e.g. "Exports · CSV" */
@@ -84,6 +99,18 @@ export interface Country {
   /** Monthly files users can download straight from the source, besides extracting */
   bulkDownload?: BulkDownload;
 
+  /**
+   * Each request returns every HS code the source has (whole months), so no list is needed: a run
+   * without codes takes them all, and entered codes only keep those
+   */
+  allHsCodes?: boolean;
+
+  /**
+   * The source's datasets, offered on the extract page to read instead of each year's own (any
+   * other ID can be entered there too); fetchRecords reads the choice from `context.dataset`
+   */
+  datasets?: DatasetRef[];
+
   /** The code as the source expects it, or null if the source can't use it */
   normalizeHsCode?(raw: string): string | null;
 
@@ -95,7 +122,7 @@ export interface Country {
    * Throw RetryableError (or use getJson) for temporary failures so they are retried.
    * `signal` aborts when the run is stopped: pass it to fetch (or getJson) so the request is cancelled.
    */
-  fetchRecords?(query: FetchQuery, signal: AbortSignal): Promise<MonthRows>;
+  fetchRecords?(query: FetchQuery, signal: AbortSignal, context: FetchContext): Promise<MonthRows>;
 }
 
 /** A country the engine can extract (not download-only) */

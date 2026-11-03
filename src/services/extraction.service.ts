@@ -21,8 +21,10 @@ export interface CountryPlan {
   periods: Period[];
   hsCodes: string[];
   tradeTypes: TradeFlow[];
-  /** Where the HS codes came from, for the run's description */
-  hsCodeSource: 'complete' | 'test' | 'custom';
+  /** Where the HS codes came from, for the run's description; 'all': none, the source returns every code */
+  hsCodeSource: 'complete' | 'test' | 'custom' | 'all';
+  /** A dataset ID chosen on the extract page, read instead of each year's dataset */
+  dataset?: string;
 }
 
 /** Per-run tuning from the web app's extract form; anything left out uses the settings or the country's own limits */
@@ -43,6 +45,8 @@ export interface ManualRequest {
   tradeType: 'ALL' | TradeFlow;
   mode?: 'complete' | 'test';
   options?: RunOptions;
+  /** A dataset ID to read instead of each year's dataset (sources with datasets; one flow only) */
+  dataset?: string;
 }
 
 interface LiveRun {
@@ -55,9 +59,10 @@ interface LiveRun {
 const perCodeAndMonth = (hsCodes: string[], periods: Period[], tradeType: TradeFlow): FetchQuery[] =>
   hsCodes.flatMap((code) => periods.map((period) => ({ hsCodes: [code], periods: [period], tradeType })));
 
+const describeCodes = (codes: string[]) => (codes.length > 1 ? `${codes.length} HS codes` : codes.length ? `HS ${codes[0]}` : 'every HS code');
+
 const describeQuery = (q: FetchQuery) =>
-  `${q.tradeType} ${q.periods.length > 1 ? `${q.periods[0]}…${q.periods[q.periods.length - 1]}` : q.periods[0]} ` +
-  (q.hsCodes.length > 1 ? `${q.hsCodes.length} HS codes` : `HS ${q.hsCodes[0]}`);
+  `${q.tradeType} ${q.periods.length > 1 ? `${q.periods[0]}…${q.periods[q.periods.length - 1]}` : q.periods[0]} ${describeCodes(q.hsCodes)}`;
 
 /**
  * Runs extractions in the background. Each country splits a run into requests (an HS code and
@@ -132,6 +137,11 @@ class ExtractionService {
 
     const requested = splitHsInput(req.hsCodes);
     const tradeTypes = req.tradeType === 'ALL' ? country.tradeTypes : [req.tradeType];
+    // A dataset holds one flow, so a chosen one needs Import or Export picked
+    const dataset = req.dataset?.trim() || undefined;
+    if (dataset && !country.datasets) throw badRequest(`${country.code} does not read datasets`);
+    if (dataset && tradeTypes.length !== 1) throw badRequest(`A dataset holds one flow: pick Import or Export to read ${dataset}`);
+    const custom = dataset ? { dataset } : {};
     if (requested.length) {
       if (requested.length > MAX_HS_CODES) throw badRequest(`Too many HS codes (${requested.length}); the limit is ${MAX_HS_CODES}.`);
       const invalid = requested.filter((c) => !country.normalizeHsCode(c));
@@ -140,14 +150,16 @@ class ExtractionService {
         throw badRequest(`${invalid.length} HS code${invalid.length === 1 ? ' is' : 's are'} not valid for ${country.code}: ${shown}`, { invalidHsCodes: invalid });
       }
       const hsCodes = [...new Set(requested.map((c) => country.normalizeHsCode(c)!))];
-      return { countryCode: country.code, periods, hsCodes, tradeTypes, hsCodeSource: 'custom' };
+      return { countryCode: country.code, periods, hsCodes, tradeTypes, hsCodeSource: 'custom', ...custom };
     }
 
     const isProd = env.NODE_ENV === 'prod' || env.NODE_ENV === 'production';
     const mode = !isProd && req.mode === 'test' ? 'test' : 'complete';
+    // Requests return every code, so a complete run needs no list (a saved one would only narrow it)
+    if (country.allHsCodes && mode === 'complete') return { countryCode: country.code, periods, hsCodes: [], tradeTypes, hsCodeSource: 'all', ...custom };
     const hsCodes = hsCodesService.getSaved(country.code, mode);
     if (!hsCodes.length) throw notFound(`No saved ${mode === 'test' ? 'test ' : ''}HS codes for ${country.code}. Enter codes, or add them to the server's HS code file.`);
-    return { countryCode: country.code, periods, hsCodes, tradeTypes, hsCodeSource: mode };
+    return { countryCode: country.code, periods, hsCodes, tradeTypes, hsCodeSource: mode, ...custom };
   }
 
   /** Records the run and starts it in the background. One run per country at a time. */
@@ -206,7 +218,9 @@ class ExtractionService {
     const split = country.splitQueries ?? perCodeAndMonth;
     const queries = plan.tradeTypes.flatMap((flow) => split([...hsCodes].sort(), plan.periods, flow));
     stats.planned += queries.length;
-    this.log(run.id, 'info', `${country.name} (${country.code}): ${queries.length} request(s) for ${hsCodes.length} HS code(s)`);
+    this.log(run.id, 'info', `${country.name} (${country.code}): ${queries.length} request(s) for ${describeCodes(hsCodes)}`);
+    const context = { dataset: plan.dataset };
+    if (plan.dataset) this.log(run.id, 'info', `${country.code}: reading dataset ${plan.dataset} for every month (chosen on the extract page)`);
 
     // One run per country at a time, so the limits belong to this run
     const settings = settingsService.get();
@@ -237,7 +251,7 @@ class ExtractionService {
                     await rateLimit.wait();
                     signal.throwIfAborted();
                     try {
-                      return await country.fetchRecords(query, signal);
+                      return await country.fetchRecords(query, signal, context);
                     } catch (err) {
                       // The source is struggling (429, 5xx, timeout): hold the country's other requests too, not just this retry
                       if (err instanceof RetryableError) rateLimit.pause(retryDelay);
