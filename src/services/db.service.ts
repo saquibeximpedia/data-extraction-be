@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { supabase } from '../config/supabase';
-import { ExtractionRun, Period, RunStats, RunStatus, RunTrigger } from '../types';
+import { ExtractionRun, Period, RunLog, RunStats, RunStatus, RunTrigger } from '../types';
 import { HttpError } from '../utils/errors';
 import { isPeriod } from '../utils/period';
 import type { ExtractorInfo } from './registry.service';
@@ -35,6 +35,7 @@ export const db = {
   /** Fails with a clear message when the tables or columns are missing */
   async check(): Promise<void> {
     await result(supabase.from('runs').select('id').limit(1), 'table runs');
+    await result(supabase.from('run_logs').select('run_id').limit(1), 'table run_logs');
     await result(supabase.from('month_status').select('period').limit(1), 'table month_status');
     await result(supabase.from('country_config').select('code, extractor').limit(1), 'table country_config');
   },
@@ -51,6 +52,11 @@ export const db = {
     const { status, stats, error, finished } = fields;
     const row = { status, stats, error, finished_at: finished ? new Date().toISOString() : undefined };
     await result(supabase.from('runs').update(row).eq('id', id), 'save run');
+  },
+
+  /** Replaces the run's stored log lines */
+  async saveLogs(id: string, logs: RunLog[]): Promise<void> {
+    await result(supabase.from('run_logs').upsert({ run_id: id, logs, updated_at: new Date().toISOString() }), 'save logs');
   },
 
   async getRun(id: string): Promise<ExtractionRun | null> {

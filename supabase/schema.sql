@@ -14,6 +14,14 @@ create table if not exists runs (
 );
 create index if not exists runs_started_at_idx on runs (started_at desc);
 
+-- A run's log lines [{ timestamp, level, message }], saved while it runs and kept after it ends.
+-- Apart from runs, so listing runs doesn't read every run's logs.
+create table if not exists run_logs (
+  run_id uuid primary key references runs (id) on delete cascade,
+  logs jsonb not null default '[]',
+  updated_at timestamptz not null default now()
+);
+
 -- One row per country.
 -- kind 'api':    the extraction service has an extractor for it; `extractor` is what the service
 --                publishes about it on start-up, `data` holds admins' overrides (name, links, lag...)
@@ -62,6 +70,7 @@ create table if not exists file_meta (
 alter table file_meta drop column if exists classification;
 
 alter table runs enable row level security;
+alter table run_logs enable row level security;
 alter table file_meta enable row level security;
 alter table country_config enable row level security;
 alter table month_status enable row level security;

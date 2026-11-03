@@ -23,6 +23,8 @@ export interface DatasetRef {
 export interface FetchContext {
   /** A dataset ID chosen on the extract page for this run (one flow), read instead of each year's dataset */
   dataset?: string;
+  /** Adds a line to the run's log, e.g. a retry the country handles itself */
+  log?(level: 'info' | 'warn', message: string): void;
 }
 
 /** One kind of yearly file (e.g. exports as CSV), for sources publishing a file per year */
@@ -95,6 +97,8 @@ export interface Country {
   rateLimitPerMinute?: number;
   /** Max requests in flight at once (default MAX_CONCURRENT_PER_COUNTRY) */
   concurrency?: number;
+  /** Wait before the first retry of a failed request, doubled for each next one (default RETRY_DELAY_MS) */
+  retryDelayMs?: number;
 
   /** Monthly files users can download straight from the source, besides extracting */
   bulkDownload?: BulkDownload;

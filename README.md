@@ -52,7 +52,7 @@ Errors are `{ "error": "...", ...details }`. Every route checks `ALLOWED_IPS`. E
 | `POST /api/extractions` | `{ countryCode, startDate, endDate, tradeType, mode, hsCodes? }` → `202 { runId }`; marks the months extracting |
 | `GET /api/runs` | Extractions running on this service, with live stats |
 | `GET /api/runs/:id` | One run: live stats while running, otherwise as stored |
-| `GET /api/runs/:id/logs` | Logs while the run is live (dropped when it ends) |
+| `GET /api/runs/:id/logs` | The newest 500 log lines while the run is live (after it ends, the web app reads the stored logs from `run_logs`) |
 | `POST /api/runs/:id/stop` | Stop a run; requests in flight finish, and files are saved for the months that returned rows |
 
 ---
@@ -66,6 +66,7 @@ Errors are `{ "error": "...", ...details }`. Every route checks `ALLOWED_IPS`. E
    - **EU**: one request per flow, month and batch of up to 150 codes (every member state and partner).
    - **Indonesia**: one request per flow, year and batch of up to 20 HS codes (the most BPS accepts), at most 15 a minute: a BPS key allows 1,000 requests an hour and 10,000 a day.
    - **Japan**: one request per flow, year and batch of up to 20 HS codes (codes of one heading stay together).
+   - **Turkey**: one request per flow, month and batch of up to 500 HS codes (one session on TÜİK's dashboard engine each).
    - **Thailand** (the default): one request per HS code, month and flow.
 3. Requests run in parallel within the country's concurrency and rate limits, and temporary errors are retried with backoff. Each request ends with rows, with 0 records, or failed.
 4. The run's rows are collected in temporary local files. Each month that returned rows is then written to `{CC}/{YYYY}/{CC}_{YYYY-MM}.csv`, replacing the previous file. A month whose CSV is bigger than `ZIP_OVER_MB` (default 5 MB) is zipped on the service first and stored as `{CC}_{YYYY-MM}.zip` (about 15 times smaller), or as `_part1.zip`, `_part2.zip`… when one zip would pass `MAX_UPLOAD_MB`; each zip holds one CSV with the header row. No CSV holds more than 1,000,000 rows (Excel shows at most 1,048,576), so a bigger month is always split into parts. Runs on the test HS codes write to `_test/{CC}/{YYYY}/…` instead, so they never replace real data. Files are also written when a run is stopped part-way, and after a crash the rows fetched so far are saved at the next start.
@@ -74,7 +75,9 @@ Starting an extraction marks its months **extracting**. A month becomes **comple
 
 **Flags.** If `EMPTY_STREAK_FLAG_AT` requests in a row (default 300) return 0 records, the run is flagged: there is no data there, or the source may be restricting requests. A month with no records at all gets an `EMPTY_MONTH` flag.
 
-**Logs and stats.** Logs are kept in memory while a run is live. Live stats are served from memory and saved to Supabase every few seconds.
+**Logs and stats.** Live stats and logs are served from memory and saved to Supabase every few seconds: stats in `runs`, log lines in `run_logs` (one row per run, kept after it ends, and shown on the run's page in the web app). A run keeps up to 5,000 lines: past that the oldest info lines go first, and warnings, errors and the run's first lines stay. Each retry is logged as a warning with its reason and wait (`retry 1/3 in 10s: …`), and a batch names its first and last code (`500 HS codes 010121000000…030389900000`), so a failed one can be run again with those codes. After updating, run `supabase/schema.sql` again to add `run_logs`; the service won't start without it.
+
+**Retries.** A request that fails with a temporary error is retried `RETRY_MAX_ATTEMPTS` times, waiting `RETRY_DELAY_MS` before the first retry and doubling after. A country can set its own first wait (`retryDelayMs`: Turkey 10 s); a value typed on the extract form overrides both.
 
 ---
 
@@ -91,6 +94,7 @@ Files hold the source's own data, untouched; filtering happens downstream.
 | `QAT` | Every field of the data.gov.qa row (English and Arabic description and country, quantity, weight in kg, value in riyals), with `trade_flow`, `request_hs_code` and `hs_code` (the code with its leading zero restored) in front. Field names differ by dataset (e.g. `hs8`/`lsn_year`/`lshhr_month` for 2019–2024 imports). |
 | `BHR` | One row per 8-digit HS code and partner, the same columns every year: `request_hs_code`, `trade_flow`, `period`, `hs_code`, `description_en`, `description_ar`, `partner_code` (ISO), `partner_name_en`, `partner_name_ar`, `value_bd`, `value_usd`, `weight_kg`, `quantity`, `unit`. The source's field names differ by year (2024 imports use transliterated Arabic names) and are mapped onto these. |
 | `JPN` | One row per 9-digit commodity code, partner country and month: `trade_flow`, `hs_code`, `country_code`, `country_name`, `year`, `month`, `unit1`, `quantity1`, `unit2`, `quantity2`, `value_1000_yen`. Rows without trade are left out. |
+| `TUR` | One row per 12-digit GTİP code and partner country, the columns of TÜİK's own report: `trade_flow`, `period`, `hs_code` (leading zero kept), `description` (Turkish), `partner_code` (TÜİK's numeric code, not ISO), `partner_name`, `value_usd`, `quantity1_kg`, `quantity2`, `unit` (e.g. `KG/ADET`: quantity 1 in kg, quantity 2 in pieces). Rows without trade are left out. |
 
 Supabase limits the size of one stored file (50 MB on the free plan; raise it under **Storage → Settings** on paid plans).
 
@@ -107,6 +111,7 @@ Supabase limits the size of one stored file (50 MB on the free plan; raise it un
 | `PHL` | PSA OpenSTAT yearly files (download-only, not extracted) | 1 month | — (files cover every commodity) | — |
 | `QAT` | Qatar Open Data Portal (Opendatasoft API, PSA datasets) | 8 months | None needed (every code); 4–12 digits keep only those. Imports 12-digit from 2025 (8 before), exports 4-digit only | — |
 | `THA` | Thailand MOC trade report API | 2 months | 4–11 digits | — |
+| `TUR` | TÜİK foreign trade dashboard (its Qlik Sense engine, general trade) | 2 months, around day 3 | 12-digit GTİP codes (11 digits get the leading zero back) | — |
 | `ZAF` | SARS Trade Statistics portal | 2 months | 8-digit tariff lines (4–6 digits return every line under them) | — |
 
 **South Africa** has no API. `south-africa.ts` fills in the portal's download form over plain HTTP (ASP.NET postbacks) and reads the workbook. The portal accepts many chapters in one query, so each download is one month of every needed chapter (about 40 s for all chapters), two at a time. Several months of heavy chapters in one query can stall the portal, so months are not combined.
@@ -124,6 +129,12 @@ Supabase limits the size of one stored file (50 MB on the free plan; raise it un
 **Qatar** reads the Planning and Statistics Authority datasets on data.gov.qa. Imports are three datasets by year range, each naming its fields differently: `qatar-imports-2014-2018` (`hs8` number), `qatar-imports-2019-2024-copy` (`hs8` text, `lsn_year`, `lshhr_month`) and `qatar-imports-2025-2026` (12-digit `harmonized_system_code`); exports are `qatar-export-statistics-2019-2024` (2014 onwards, `hs4` only). `qatar.ts` reads each dataset's field list once to find its year, month and code fields (names containing `year`, `month`, `hsN` or `harmonized`) and the code length (from `hsN`, else the longest code), so an added dataset needs only its ID. Numeric codes lose their leading zero; `hs_code` restores it. A typed-in code longer than the dataset's is cut to its length (an export code returns its heading), and each row goes to the most specific typed-in code that covers it. About 11,000–18,000 import and 1,000–2,000 export rows a month. `QAT.csv` (the 8,583 12-digit lines in `qatar-imports-2025-2026`) is no longer needed for complete runs; `QAT_TEST.csv` still drives test runs. In January 2026 imports the source copied value into `quantity`; NPC's yearly workbook (`npc.qa/en/statistics/Documents/ft/Imports_Exports_{YYYY}.xlsx`) has the right figures.
 
 **Japan** reads the e-Stat tables "Commodity by Country Import / Export". e-Stat re-issues a year's table under a new ID every month, so `japan.ts` looks up the current table for each flow and year (cached for 30 minutes) instead of hard-coding IDs. Import and export use different 9-digit codes: a 9-digit code a flow lacks returns that flow's codes under its 6-digit subheading.
+
+**Turkey** has no download API at this level. TÜİK's report page *Foreign Trade by Countries and HS Codes* (`bi.tuik.gov.tr/extensions/tuik-mashup/index.html?report_type=2`) is a Qlik Sense mashup, and `turkey.ts` talks to its engine the way the page does: `GET /resources/autogenerated/product-info.json` for an anonymous session cookie, `GET /qps/csrftoken` for a token, then JSON-RPC over `wss://bi.tuik.gov.tr/app/{app id}?reloadUri=…&qlik-csrf-token=…` (without `reloadUri` the server answers HTTP 200 instead of opening the socket). Each request opens a session, selects the year (`YIL`), month (`AY`) and its codes (`ISTPOZ`), and reads a table of code × partner with the flow's `DOLAR`, `MIKTAR_1` and `MIKTAR_2` (`IHRITH_FLAG` 1 = exports, 2 = imports) in pages of 10,000 cells. The app is the English general-trade one (`6310efbf-…`, the system TÜİK's press releases use; `TUR_APP_ID` overrides it, e.g. `2d1b1108-9cf2-436d-8a54-420aec9d4350` for special trade).
+
+The engine skips a selection that matches nothing without saying so, and a skipped selection widens the table: a month not published yet drops the year (every year's October came back for 2026-10), and codes without trade that month leave no code selected (the whole month, 245,000 rows). So each request reads the selections back and returns no rows unless the year, the month and at least one code are all selected. Codes are text without their leading zero (`10121000000`); a number or the 12-digit form selects nothing.
+
+`TUR.csv` is every code with trade in 2026 (13,772 codes on 3 Nov 2026), so retired codes, such as the pre-2012 horse code `010110101000`, aren't requested. Rebuild it each January, when the tariff changes, with `npx tsx scripts/tur-hs-codes.ts [YYYY]`: a code new that year is only extracted once it is in the list. A full month is 28 batches per flow, about 10 minutes at the default 2 requests at a time; the engine stalls under more. A page that gets no answer within 60 s is read again on a new session, carrying on from that page (tables are sorted, so pages line up across sessions), up to 6 tries 10 s, 20 s, 30 s… apart, each logged; only then does the request fail and the engine retry the batch (from 10 s). The data starts in 2013, and a month appears about two months later (September 2026 on 3 November).
 
 **Start month.** A country can set `startPeriod`, the earliest month it has data for (Japan: 2026-01). Admins can change it in the web app; the service refuses extractions that start earlier.
 

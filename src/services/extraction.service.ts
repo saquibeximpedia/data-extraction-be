@@ -1,4 +1,4 @@
-import { ExtractableCountry, FetchQuery, findCountry, isEnabled, isExtractable, missingConfig } from '../countries';
+import { ExtractableCountry, FetchContext, FetchQuery, findCountry, isEnabled, isExtractable, missingConfig } from '../countries';
 import { env } from '../config/env';
 import { ExtractionRun, Period, RunFlag, RunLog, RunStats, RunTrigger, TradeFlow } from '../types';
 import { RateLimiter, Semaphore } from '../utils/concurrency';
@@ -14,6 +14,12 @@ import { settingsService } from './settings.service';
 const MAX_MANUAL_MONTHS = 60;
 const MAX_HS_CODES = 1000;
 const SAVE_STATS_MS = 5000;
+/** Log lines kept per run (a full Thailand run logs ~86,000); past this the oldest info lines go first, warnings and errors stay */
+const MAX_LOG_LINES = 5000;
+/** The run's first lines (what it extracts, its limits) are always kept */
+const KEEP_FIRST_LINES = 10;
+/** Lines served to the live view, the newest */
+const LIVE_LOG_LINES = 500;
 
 /** What to extract for one country within a run */
 export interface CountryPlan {
@@ -53,6 +59,8 @@ interface LiveRun {
   run: ExtractionRun;
   controller: AbortController;
   logs: RunLog[];
+  /** Lines added since the logs were last saved */
+  logsChanged: boolean;
 }
 
 /** Default split: one request per HS code and month */
@@ -61,8 +69,10 @@ const perCodeAndMonth = (hsCodes: string[], periods: Period[], tradeType: TradeF
 
 const describeCodes = (codes: string[]) => (codes.length > 1 ? `${codes.length} HS codes` : codes.length ? `HS ${codes[0]}` : 'every HS code');
 
+/** A batch names its first and last code (codes are sorted), so a failed one can be run again on its own */
 const describeQuery = (q: FetchQuery) =>
-  `${q.tradeType} ${q.periods.length > 1 ? `${q.periods[0]}…${q.periods[q.periods.length - 1]}` : q.periods[0]} ${describeCodes(q.hsCodes)}`;
+  `${q.tradeType} ${q.periods.length > 1 ? `${q.periods[0]}…${q.periods[q.periods.length - 1]}` : q.periods[0]} ${describeCodes(q.hsCodes)}` +
+  (q.hsCodes.length > 1 ? ` ${q.hsCodes[0]}…${q.hsCodes[q.hsCodes.length - 1]}` : '');
 
 /**
  * Runs extractions in the background. Each country splits a run into requests (an HS code and
@@ -79,18 +89,36 @@ class ExtractionService {
   }
 
   public log(runId: string, level: RunLog['level'], message: string): void {
-    const logs = this.live.get(runId)?.logs;
-    if (logs) {
+    const live = this.live.get(runId);
+    if (live) {
+      const logs = live.logs;
       logs.push({ timestamp: new Date().toISOString(), level, message });
-      if (logs.length > 500) logs.shift();
+      if (logs.length > MAX_LOG_LINES) {
+        const oldestInfo = logs.findIndex((l, i) => i >= KEEP_FIRST_LINES && (l.level === 'info' || l.level === 'success'));
+        logs.splice(oldestInfo === -1 ? KEEP_FIRST_LINES : oldestInfo, 1);
+      }
+      live.logsChanged = true;
     }
     const symbol = level === 'success' ? '✅' : level === 'warn' ? '⚠️' : level === 'error' ? '❌' : 'ℹ️';
     console.log(`${symbol} [Run ${runId.slice(0, 8)}] ${message}`);
   }
 
-  /** Logs exist only while a run is live */
+  /** The newest lines of a live run; a finished run's logs are read from the database by the web app */
   public getLogs(runId: string): RunLog[] {
-    return this.live.get(runId)?.logs ?? [];
+    return this.live.get(runId)?.logs.slice(-LIVE_LOG_LINES) ?? [];
+  }
+
+  /** Saves a run's log lines if any were added; a failure is reported but doesn't stop the run */
+  private async saveLogs(runId: string): Promise<void> {
+    const live = this.live.get(runId);
+    if (!live?.logsChanged) return;
+    live.logsChanged = false;
+    try {
+      await db.saveLogs(runId, live.logs);
+    } catch (err: any) {
+      live.logsChanged = true;
+      console.error(`❌ Could not save the logs of run ${runId}: ${err.message}`);
+    }
   }
 
   /** A running run's stats come from memory (the stored copy is saved every few seconds) */
@@ -173,14 +201,17 @@ class ExtractionService {
     const described = plans.map(({ hsCodes, ...p }) => ({ ...p, hsCodeCount: hsCodes.length, hsCodes: hsCodes.length <= 20 ? hsCodes : undefined }));
     const hasOptions = Object.values(options).some((v) => v !== undefined);
     const run = await db.createRun(trigger, { plans: described, startedBy, ...(hasOptions ? { options } : {}) });
-    this.live.set(run.id, { run, controller: new AbortController(), logs: [] });
+    this.live.set(run.id, { run, controller: new AbortController(), logs: [], logsChanged: false });
     this.log(run.id, 'info', `Run started: ${plans.map((p) => `${p.countryCode} [${p.periods.join(', ')}]`).join('; ')}`);
     return { run, done: this.execute(run.id, plans, options) };
   }
 
   private async execute(runId: string, plans: CountryPlan[], options: RunOptions): Promise<void> {
     const { run, controller } = this.live.get(runId)!;
-    const saver = setInterval(() => db.saveRun(runId, { stats: run.stats }).catch(() => {}), SAVE_STATS_MS);
+    const saver = setInterval(() => {
+      db.saveRun(runId, { stats: run.stats }).catch(() => {});
+      void this.saveLogs(runId);
+    }, SAVE_STATS_MS);
     let status: ExtractionRun['status'] = 'COMPLETED';
     let error: string | undefined;
     try {
@@ -202,6 +233,8 @@ class ExtractionService {
       this.log(runId, 'error', `Aborted: ${err.message}`);
     } finally {
       clearInterval(saver);
+      // Logs first: the web app reloads the page once the run is saved as ended
+      await this.saveLogs(runId);
       await db.saveRun(runId, { status, stats: run.stats, error, finished: true }).catch((err) => console.error(`❌ Could not save run ${runId}: ${err.message}`));
       this.live.delete(runId);
     }
@@ -219,7 +252,7 @@ class ExtractionService {
     const queries = plan.tradeTypes.flatMap((flow) => split([...hsCodes].sort(), plan.periods, flow));
     stats.planned += queries.length;
     this.log(run.id, 'info', `${country.name} (${country.code}): ${queries.length} request(s) for ${describeCodes(hsCodes)}`);
-    const context = { dataset: plan.dataset };
+    const context: FetchContext = { dataset: plan.dataset };
     if (plan.dataset) this.log(run.id, 'info', `${country.code}: reading dataset ${plan.dataset} for every month (chosen on the extract page)`);
 
     // One run per country at a time, so the limits belong to this run
@@ -227,7 +260,7 @@ class ExtractionService {
     const concurrency = options.concurrency ?? country.concurrency ?? settings.maxConcurrentPerCountry;
     const perMinute = options.rateLimitPerMinute ?? country.rateLimitPerMinute ?? 60;
     const retries = options.retryMaxAttempts ?? settings.retryMaxAttempts;
-    const retryDelay = options.retryDelayMs ?? settings.retryDelayMs;
+    const retryDelay = options.retryDelayMs ?? country.retryDelayMs ?? settings.retryDelayMs;
     this.log(run.id, 'info', `${country.code}: ${concurrency} at a time, up to ${perMinute}/min, ${retries} retries from ${retryDelay / 1000}s`);
 
     const files = new MonthFiles(country.code, run.id, plan.hsCodeSource === 'test', options.destination);
@@ -245,13 +278,14 @@ class ExtractionService {
                 return;
               }
               const label = `[${country.code}] ${describeQuery(query)}`;
+              const requestContext: FetchContext = { ...context, log: (level, message) => this.log(run.id, level, `${label}: ${message}`) };
               try {
                 const byMonth = await withRetry(
                   async () => {
                     await rateLimit.wait();
                     signal.throwIfAborted();
                     try {
-                      return await country.fetchRecords(query, signal, context);
+                      return await country.fetchRecords(query, signal, requestContext);
                     } catch (err) {
                       // The source is struggling (429, 5xx, timeout): hold the country's other requests too, not just this retry
                       if (err instanceof RetryableError) rateLimit.pause(retryDelay);
@@ -260,7 +294,8 @@ class ExtractionService {
                   },
                   retries,
                   retryDelay,
-                  signal
+                  signal,
+                  (attempt, delay, err: any) => this.log(run.id, 'warn', `${label}: retry ${attempt}/${retries} in ${Math.round(delay / 1000)}s: ${err.message}`)
                 );
                 const rows = [...byMonth.values()].reduce((n, list) => n + list.length, 0);
                 for (const [period, list] of byMonth) await files.add(period, list);

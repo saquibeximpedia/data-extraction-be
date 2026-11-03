@@ -1,0 +1,20 @@
+﻿hs_code,description
+010121000000,Atlar; damızlık olanlar
+080222000000,Fındık;kabuksuz (taze veya kurutulmuş)
+080251000000,Antep Fıstığı; kabuklu (taze veya kurutulmuş)
+090240000000,Siyah çay (fermente edilmiş) ve kısmen fermente edilmiş çay (hazır ambalajlarda >3 kg.)
+100199000011,Adi buğday; tohumluk olanlar HARİÇ
+170199100011,Kristal beyaz şeker; ilave aroma veya renk verici madde içerenler HARİÇ (katı halde)
+271012110000,Hafif yağlar ve müstahzarları; özel bir işleme tabi tutulacak olanlar
+271019110000,Orta yağlar (özel bir işleme tabi tutulacak olan)
+300490000011,Onkolojik ilaçlar; dozlandırılmış veya perakende satış için ambalajlanmış
+390120100000,"Polietilen; özgül kütlesi >= 0,958, Al <= 50 mgr/kg, Ca <= 2 mgr/kg, Cr <= 2 mgr/kg, Fe <= 2 mgr/kg, Ni <= 2 mgr/kg, Ti <= 2 mgr/kg, V <= 8 mgr/kg"
+520100100000,Hidrofil veya ağartılmış pamuklar; karde edilmemiş veya penyelenmemiş
+610910000000,"Tişört, fanila, atlet, kaşkorse vb. giyim eşyası; pamuktan (örme veya kroşe)"
+710812000012,Standart dışı işlenmemiş altın; para yerine kullanılmayan
+720449100000,Demir ve çelikten parçalanmış olan diğer döküntü ve hurdalar
+760421000000,Aluminyum alaşımlarından içi boş profiller
+840734100000,"Kara taşıtlarının MONTAJ SANAYİİ için kıvılcım ile ateşlemeli içten yanmalı doğrusal pistonlu motorlar (8701.10, 8703, 8704, 8705); silindir >1000 cm3"
+870322101000,"Binek otomobilleri; YENİ, sadece benzinli, taşıma kapasitesi < 10 kişi, 1000 cm3 < silindir hacmi <= 1500 cm3"
+870323110000,"Karavanlar; YENİ, sadece benzinli, 1500 cm3 < silindir hacmi <= 3000 cm3"
+940330110000,Bürolarda kullanılan ahşaptan yazı masaları; yüksekliği <= 80 cm

@@ -45,14 +45,24 @@ export async function getJson<T = any>(url: string, options: GetJsonOptions = {}
   return JSON.parse(text) as T;
 }
 
-/** Runs `fn`, retrying RetryableErrors with exponential backoff and jitter; a stopped run is not retried */
-export async function withRetry<T>(fn: () => Promise<T>, maxRetries: number, baseDelayMs: number, signal?: AbortSignal): Promise<T> {
+/**
+ * Runs `fn`, retrying RetryableErrors with exponential backoff and jitter; a stopped run is not retried.
+ * `onRetry` hears about each retry before its wait (attempt 1 is the first retry).
+ */
+export async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries: number,
+  baseDelayMs: number,
+  signal?: AbortSignal,
+  onRetry?: (attempt: number, delayMs: number, err: unknown) => void
+): Promise<T> {
   for (let attempt = 0; ; attempt++) {
     try {
       return await fn();
     } catch (err) {
       if (!(err instanceof RetryableError) || attempt >= maxRetries || signal?.aborted) throw err;
       const delay = baseDelayMs * 2 ** attempt + Math.floor(Math.random() * 250);
+      onRetry?.(attempt + 1, delay, err);
       await sleep(delay, signal);
     }
   }

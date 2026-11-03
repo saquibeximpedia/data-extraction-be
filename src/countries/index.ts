@@ -7,11 +7,12 @@ import { philippines } from './philippines';
 import { qatar } from './qatar';
 import { southAfrica } from './south-africa';
 import { thailand } from './thailand';
+import { turkey } from './turkey';
 
 export type { BulkDownload, Country, CountrySource, DatasetRef, ExtractableCountry, FetchContext, FetchQuery, MonthRows, YearFile } from './country.types';
 
 /** Every supported country. To add one: create its file in this folder and list it here. */
-const ALL_COUNTRIES: Country[] = [bahrain, eu, indonesia, japan, philippines, qatar, thailand, southAfrica];
+const ALL_COUNTRIES: Country[] = [bahrain, eu, indonesia, japan, philippines, qatar, thailand, southAfrica, turkey];
 
 const byCode = new Map(ALL_COUNTRIES.map((c) => [c.code, c]));
 

@@ -32,6 +32,7 @@ export interface ExtractorInfo {
   /** The source's own limits (null: the service's setting applies) */
   concurrency: number | null;
   rateLimitPerMinute: number;
+  retryDelayMs: number | null;
 }
 
 function describe(country: Country): ExtractorInfo {
@@ -54,6 +55,7 @@ function describe(country: Country): ExtractorInfo {
     datasets: country.datasets ?? [],
     concurrency: country.concurrency ?? null,
     rateLimitPerMinute: country.rateLimitPerMinute ?? 60,
+    retryDelayMs: country.retryDelayMs ?? null,
   };
 }
 
