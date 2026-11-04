@@ -41,6 +41,32 @@ export const storageService = {
     return data.filter((entry) => entry.id !== null).map((entry) => entry.name);
   },
 
+  /** Every file under a folder, at any depth, as paths from the bucket's root */
+  async listTree(folder: string): Promise<{ path: string; size: number }[]> {
+    const out: { path: string; size: number }[] = [];
+    const walk = async (prefix: string): Promise<void> => {
+      for (let offset = 0; ; offset += 1000) {
+        const { data, error } = await bucket().list(prefix, { limit: 1000, offset, sortBy: { column: 'name', order: 'asc' } });
+        if (error) throw new HttpError(502, `List: ${error.message}`);
+        for (const entry of data) {
+          const p = prefix ? `${prefix}/${entry.name}` : entry.name;
+          if (entry.id === null) await walk(p);
+          else if (!entry.name.startsWith('.')) out.push({ path: p, size: Number(entry.metadata?.size ?? 0) });
+        }
+        if (data.length < 1000) return;
+      }
+    };
+    await walk(folder ? safePath(folder) : '');
+    return out;
+  },
+
+  /** Downloads a file to a local path */
+  async download(relativePath: string, localPath: string): Promise<void> {
+    const { data, error } = await bucket().download(safePath(relativePath));
+    if (error) throw new HttpError(/not.?found/i.test(error.message) ? 404 : 502, `Download ${relativePath}: ${error.message || 'failed'}`);
+    await fs.promises.writeFile(localPath, Buffer.from(await data.arrayBuffer()));
+  },
+
   /** Removes files if they exist (e.g. a month's CSV once it is stored zipped instead) */
   async removeFiles(relativePaths: string[]): Promise<void> {
     const { error } = await bucket().remove(relativePaths.map(safePath));

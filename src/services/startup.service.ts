@@ -29,19 +29,21 @@ async function saveLeftovers(): Promise<void> {
     const plans: { countryCode: string; hsCodeSource?: string }[] = run.params.plans ?? [];
     const isTest = (code: string) => plans.some((p) => p.countryCode === code && p.hsCodeSource === 'test');
     const destination: RunDestination = run.params.options?.destination ?? 'storage';
-    for (const files of MonthFiles.leftovers(runId, isTest, destination)) {
-      for (const period of files.periods) {
+    for (const { files, stuck } of await MonthFiles.leftovers(runId, isTest, destination)) {
+      for (const { period, flow } of files.months) {
         try {
-          const file = await files.save(period);
+          const file = await files.save(period, flow);
           run.stats.files.push(...file.paths.filter((p) => !run.stats.files.includes(p)));
-          saved.push(`${files.country} ${period} (${file.rows} rows)`);
-          console.log(`♻️  Run ${runId.slice(0, 8)}: saved the ${file.rows} rows fetched for ${files.country} ${period} before the service stopped`);
+          saved.push(`${files.country} ${period} ${flow} (${file.rows} rows)`);
+          console.log(`♻️  Run ${runId.slice(0, 8)}: saved the ${file.rows} rows fetched for ${files.country} ${period} ${flow} before the service stopped`);
         } catch (err: any) {
           failed = true;
-          console.error(`❌ Run ${runId.slice(0, 8)}: could not save ${files.country} ${period}: ${err.message}`);
+          console.error(`❌ Run ${runId.slice(0, 8)}: could not save ${files.country} ${period} ${flow}: ${err.message}`);
         }
       }
-      if (!failed) await files.cleanup();
+      // Rows from before files were kept per flow, without a trade_flow to place them by
+      for (const file of stuck) console.error(`❌ Run ${runId.slice(0, 8)}: ${file} has rows without trade_flow, so it can't be split into imports and exports; it is left there. Extract that month again.`);
+      if (!failed && !stuck.length) await files.cleanup();
     }
     if (saved.length) {
       const error = `${run.error ?? 'Extraction service stopped mid-run'}. The rows fetched before that were saved (incomplete): ${saved.join(', ')}`;

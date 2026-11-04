@@ -298,7 +298,8 @@ class ExtractionService {
                   (attempt, delay, err: any) => this.log(run.id, 'warn', `${label}: retry ${attempt}/${retries} in ${Math.round(delay / 1000)}s: ${err.message}`)
                 );
                 const rows = [...byMonth.values()].reduce((n, list) => n + list.length, 0);
-                for (const [period, list] of byMonth) await files.add(period, list);
+                // Imports and exports go to files of their own; the request says which (not every source's rows do)
+                for (const [period, list] of byMonth) await files.add(period, query.tradeType, list);
                 stats.records = (stats.records ?? 0) + rows;
                 if (rows) stats.completed++;
                 else stats.noData++;
@@ -319,27 +320,30 @@ class ExtractionService {
       );
       streak.end();
 
-      // Each month is saved on its own: one that can't be stored doesn't lose the others
-      const unsaved: { period: string; reason: string }[] = [];
-      for (const period of files.periods) {
+      // Each month and flow is saved on its own: one that can't be stored doesn't lose the others
+      const unsaved: { label: string; reason: string }[] = [];
+      const saved = files.months;
+      for (const { period, flow } of saved) {
         try {
-          const file = await files.save(period);
+          const file = await files.save(period, flow);
           stats.files.push(...file.paths);
-          this.log(run.id, 'success', `${options.destination === 'device' ? 'Ready for your folder' : 'Saved'} ${file.paths.length > 1 ? `${file.paths.length} zips (each under ${settingsService.get().maxUploadMb} MB): ${file.paths.join(', ')}` : file.paths[0]} (${file.rows} rows)`);
+          this.log(run.id, 'success', `${options.destination === 'device' ? 'Ready for your folder' : 'Saved'} ${file.paths.length > 1 ? `${file.paths.length} parts: ${file.paths.join(', ')}` : file.paths[0]} (${file.rows} rows)`);
         } catch (err: any) {
-          unsaved.push({ period, reason: err.message });
-          this.log(run.id, 'error', `${country.code} ${period}: could not save the file: ${err.message}`);
+          unsaved.push({ label: `${period} ${flow}`, reason: err.message });
+          this.log(run.id, 'error', `${country.code} ${period} ${flow}: could not save the file: ${err.message}`);
         }
       }
       if (!signal.aborted) {
-        for (const period of plan.periods.filter((p) => !files.periods.includes(p))) {
-          const message = `${country.code} ${period}: no records came back. Not published yet, or the source returned nothing; check the source.`;
-          stats.flags.push({ countryCode: country.code, kind: 'EMPTY_MONTH', message, at: new Date().toISOString() });
-          this.log(run.id, 'warn', message);
+        for (const period of plan.periods) {
+          for (const flow of plan.tradeTypes.filter((f) => !saved.some((m) => m.period === period && m.flow === f))) {
+            const message = `${country.code} ${period} ${flow}: no records came back. Not published yet, or the source returned nothing; check the source.`;
+            stats.flags.push({ countryCode: country.code, kind: 'EMPTY_MONTH', message, at: new Date().toISOString() });
+            this.log(run.id, 'warn', message);
+          }
         }
       }
       // The run's error is kept after it ends (its logs are not), so it carries the reason
-      if (unsaved.length) throw new Error(`${country.code} ${unsaved.map((u) => u.period).join(', ')} could not be saved: ${unsaved[0].reason}${files.periods.length > unsaved.length ? ' (the other months were saved)' : ''}`);
+      if (unsaved.length) throw new Error(`${country.code} ${unsaved.map((u) => u.label).join(', ')} could not be saved: ${unsaved[0].reason}${saved.length > unsaved.length ? ' (the others were saved)' : ''}`);
     } finally {
       await files.cleanup();
     }

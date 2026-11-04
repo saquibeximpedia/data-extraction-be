@@ -3,6 +3,7 @@ import { health } from '../controllers/health.controller';
 import { requireAllowedIp, requireAuth } from '../middlewares/auth.middleware';
 import { countryRoutes } from './country.routes';
 import { extractionRoutes } from './extraction.routes';
+import { mergeRoutes } from './merge.routes';
 import { runRoutes } from './run.routes';
 import { settingsRoutes } from './settings.routes';
 
@@ -17,5 +18,6 @@ apiRoutes.get('/health', health);
 apiRoutes.use(requireAuth);
 apiRoutes.use('/countries', countryRoutes);
 apiRoutes.use('/extractions', extractionRoutes);
+apiRoutes.use('/merges', mergeRoutes);
 apiRoutes.use('/runs', runRoutes);
 apiRoutes.use('/settings', settingsRoutes);

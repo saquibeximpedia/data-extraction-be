@@ -2,17 +2,12 @@ import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
 import { env } from '../config/env';
-import { Period, TradeRecord } from '../types';
+import { Period, TradeFlow, TradeRecord } from '../types';
+import { escapeCell } from '../utils/csv';
+import { ZipFileWriter } from '../utils/zip';
 import { heldService } from './held.service';
 import { settingsService } from './settings.service';
 import { storageService } from './storage.service';
-import { ZipFileWriter } from '../utils/zip';
-
-function escapeCell(value: unknown): string {
-  if (value === null || value === undefined) return '';
-  const str = typeof value === 'object' ? JSON.stringify(value) : String(value);
-  return /[",\r\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
-}
 
 async function* jsonLines(file: string): AsyncGenerator<TradeRecord> {
   for await (const line of readline.createInterface({ input: fs.createReadStream(file), crlfDelay: Infinity })) {
@@ -32,41 +27,97 @@ export type RunDestination = 'storage' | 'device';
 export const TEST_FOLDER = '_test';
 
 const RUN_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const FLOWS: TradeFlow[] = ['IMPORT', 'EXPORT'];
 
 /**
- * Most rows in one CSV: Excel shows at most 1,048,576 rows (header included) and drops the rest,
- * so a bigger month goes into parts whatever its size. Exported for tests.
+ * Most rows in one CSV (9 lakh): below Excel's 1,048,576, so every file opens whole. A bigger
+ * month goes into parts whatever its size. Exported for tests.
  */
-export const MAX_ROWS_PER_FILE = 1_000_000;
+export const MAX_ROWS_PER_FILE = 900_000;
 
 /** Rows turned into text and appended at a time by MonthFiles.add */
 const ADD_CHUNK_ROWS = 2_000;
 
+/** Largest zip held for the user's device (no upload limit there; zips without ZIP64 stop at 4 GB) */
+const DEVICE_ZIP_LIMIT = 3 * 1024 ** 3;
+
 /**
- * Extracted files in Storage, one folder per country and year: {CC}/{YYYY}/{CC}_{YYYY-MM}.csv.
- * Runs on the test HS codes write under _test/{CC}/{YYYY}/ instead, apart from the real data.
- * A month whose CSV is bigger than ZIP_OVER_MB (or than one upload, MAX_UPLOAD_MB) is stored zipped:
- * {CC}_{YYYY-MM}.zip, or {CC}_{YYYY-MM}_part1.zip, _part2.zip… when one zip would pass MAX_UPLOAD_MB
- * (Supabase rejects large uploads). Each zip holds one CSV with the header row. Replaced on each run. (Files users upload
- * for download-only countries sit next to them; the web app handles those.)
+ * Extracted files, one folder per country, year, month and flow:
+ *   {CC}/{YYYY}/{MM}/{IMPORT|EXPORT}/{CC}_{YYYY-MM}_{FLOW}.zip
+ * or {CC}_{YYYY-MM}_{FLOW}_part1.zip, _part2.zip… when the month has more than MAX_ROWS_PER_FILE
+ * rows or one zip would pass MAX_UPLOAD_MB (Supabase rejects large uploads). Each zip holds one CSV
+ * with the header row. Files in Storage are always zipped; files held for the user's device stay a
+ * plain CSV up to ZIP_OVER_MB. Runs on the test HS codes write under _test/ instead, apart from
+ * the real data. Replaced on each run.
  */
 export const exportService = {
-  folderFor: (countryCode: string, period: Period, test = false) => `${test ? `${TEST_FOLDER}/` : ''}${countryCode}/${period.slice(0, 4)}`,
-  /** part 0 = the whole month in one file */
-  nameFor: (countryCode: string, period: Period, part = 0, ext: 'csv' | 'zip' = 'csv') => `${countryCode}_${period}${part ? `_part${part}` : ''}.${ext}`,
-  /** Whether a stored file is one of the extracted files of that month (whole or a part, CSV or zip) */
-  isMonthFile: (name: string, countryCode: string, period: Period) => new RegExp(`^${countryCode}_${period}(_part\\d+)?\\.(csv|zip)$`).test(name),
+  folderFor: (countryCode: string, period: Period, flow: TradeFlow, test = false) =>
+    `${test ? `${TEST_FOLDER}/` : ''}${countryCode}/${period.slice(0, 4)}/${period.slice(5, 7)}/${flow}`,
+  /** The file's name without its extension; part 0 = the whole month in one file */
+  baseFor: (countryCode: string, period: Period, flow: TradeFlow, part = 0) => `${countryCode}_${period}_${flow}${part ? `_part${part}` : ''}`,
+  /** Whether a stored file is one of the extracted files of that month and flow (whole or a part, CSV or zip) */
+  isMonthFile: (name: string, countryCode: string, period: Period, flow: TradeFlow) => new RegExp(`^${countryCode}_${period}_${flow}(_part\\d+)?\\.(csv|zip)$`).test(name),
 };
 
 /**
- * A run's rows for one country, kept per month in local JSON-lines files while the run goes,
- * then written to Storage as one CSV per month. Columns are the source's own fields, in the
- * order they first appear. The files sit in {tempDir}/{runId}/{CC}/, so rows fetched before the
- * service died (e.g. out of memory) are still there to save at the next start.
+ * Zips CSV records into zips under `limit` bytes, each holding one CSV that starts with the header
+ * row: one zip named `base(0)` when `single`, else parts `base(1)`, `base(2)`… A part ends once it
+ * nears the limit (deflate holds back a little) or holds MAX_ROWS_PER_FILE rows. Returns null when
+ * `single` and the records don't fit in one zip, for the caller to zip them again as parts.
+ */
+export async function zipRecords(
+  records: AsyncIterable<string>,
+  header: string,
+  dir: string,
+  base: (part: number) => string,
+  limit: number,
+  single: boolean
+): Promise<{ name: string; file: string }[] | null> {
+  const margin = Math.min(2 * 1024 * 1024, limit * 0.1);
+  const parts: { name: string; file: string }[] = [];
+  let zip!: ZipFileWriter;
+  let rows = 0;
+  const open = async () => {
+    rows = 0;
+    const name = base(single ? 0 : parts.length + 1);
+    const file = path.join(dir, `${name}.zip`);
+    parts.push({ name: `${name}.zip`, file });
+    zip = new ZipFileWriter(file, `${name}.csv`);
+    // BOM so Excel reads UTF-8 names correctly
+    await zip.write(`﻿${header}`);
+  };
+  await open();
+  for await (const record of records) {
+    if (zip.compressedBytes > limit - margin || rows >= MAX_ROWS_PER_FILE) {
+      await zip.close();
+      if (single) return null;
+      await open();
+    }
+    await zip.write(`\n${record}`);
+    rows++;
+  }
+  await zip.close();
+  return parts;
+}
+
+/** One month and flow of a run */
+export interface MonthFlow {
+  period: Period;
+  flow: TradeFlow;
+}
+
+const keyOf = (period: Period, flow: TradeFlow) => `${period}_${flow}`;
+
+/**
+ * A run's rows for one country, kept per month and flow in local JSON-lines files while the run
+ * goes, then written to Storage (or held for the device) as described in exportService. Columns
+ * are the source's own fields, in the order they first appear. The files sit in
+ * {tempDir}/{runId}/{CC}/, so rows fetched before the service died (e.g. out of memory) are still
+ * there to save at the next start.
  */
 export class MonthFiles {
   private readonly dir: string;
-  private readonly counts = new Map<Period, number>();
+  private readonly counts = new Map<string, MonthFlow>();
   private writing = Promise.resolve();
 
   constructor(
@@ -87,21 +138,45 @@ export class MonthFiles {
     return fs.readdirSync(env.tempDir).filter((name) => RUN_ID.test(name));
   }
 
-  /** The months each country of a cut-off run had written */
-  static leftovers(runId: string, isTest: (countryCode: string) => boolean, destination: RunDestination = 'storage'): MonthFiles[] {
+  /**
+   * The months and flows each country of a cut-off run had written. Files from before rows were
+   * kept per flow ({YYYY-MM}.jsonl) are split by each row's trade_flow; rows without one can't be
+   * placed, so their file is left (`stuck`) for a person to look at.
+   */
+  static async leftovers(runId: string, isTest: (countryCode: string) => boolean, destination: RunDestination = 'storage'): Promise<{ files: MonthFiles; stuck: string[] }[]> {
     const runDir = path.join(env.tempDir, runId);
-    return fs
-      .readdirSync(runDir, { withFileTypes: true })
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => {
-        const files = new MonthFiles(entry.name, runId, isTest(entry.name), destination);
-        for (const name of fs.readdirSync(files.dir)) {
-          const period = name.match(/^(\d{4}-\d{2})\.jsonl$/)?.[1];
-          // The count is unknown until saved, which counts the rows itself
-          if (period) files.counts.set(period, 0);
-        }
-        return files;
-      });
+    const out: { files: MonthFiles; stuck: string[] }[] = [];
+    for (const entry of fs.readdirSync(runDir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const files = new MonthFiles(entry.name, runId, isTest(entry.name), destination);
+      const stuck: string[] = [];
+      for (const name of fs.readdirSync(files.dir)) {
+        const m = name.match(/^(\d{4}-\d{2})_(IMPORT|EXPORT)\.jsonl$/);
+        if (m) files.counts.set(keyOf(m[1], m[2] as TradeFlow), { period: m[1], flow: m[2] as TradeFlow });
+        const legacy = name.match(/^(\d{4}-\d{2})\.jsonl$/)?.[1];
+        if (legacy && !(await files.splitLegacy(legacy))) stuck.push(path.join(files.dir, name));
+      }
+      out.push({ files, stuck });
+    }
+    return out;
+  }
+
+  /** Splits a {YYYY-MM}.jsonl by its rows' trade_flow; false (file kept) when a row has none */
+  private async splitLegacy(period: Period): Promise<boolean> {
+    const legacy = path.join(this.dir, `${period}.jsonl`);
+    for await (const record of jsonLines(legacy)) {
+      if (!FLOWS.includes(record.trade_flow as TradeFlow)) return false;
+    }
+    const batches: Record<string, TradeRecord[]> = { IMPORT: [], EXPORT: [] };
+    for await (const record of jsonLines(legacy)) {
+      const batch = batches[record.trade_flow as TradeFlow];
+      batch.push(record);
+      if (batch.length >= ADD_CHUNK_ROWS) await this.add(period, record.trade_flow as TradeFlow, batch.splice(0));
+    }
+    for (const flow of FLOWS) await this.add(period, flow, batches[flow]);
+    await this.writing;
+    await fs.promises.rm(legacy);
+    return true;
   }
 
   /** Removes a run's folder (all countries), e.g. one holding nothing to save */
@@ -113,121 +188,76 @@ export class MonthFiles {
     return this.countryCode;
   }
 
-  /** Months that have rows, oldest first */
-  get periods(): Period[] {
-    return [...this.counts.keys()].sort();
+  /** Months and flows that have rows, oldest first, imports before exports */
+  get months(): MonthFlow[] {
+    return [...this.counts.values()].sort((a, b) => a.period.localeCompare(b.period) || FLOWS.indexOf(a.flow) - FLOWS.indexOf(b.flow));
   }
 
   /**
-   * Appends rows to the month's file, ADD_CHUNK_ROWS at a time: one string for a whole request
-   * ran the heap out (a Turkey batch of 61,330 rows × 59 columns took ~260 MB as one string)
+   * Appends rows to the month's file for the flow, ADD_CHUNK_ROWS at a time: one string for a whole
+   * request ran the heap out (a Turkey batch of 61,330 rows × 59 columns took ~260 MB as one string)
    */
-  add(period: Period, rows: TradeRecord[]): Promise<void> {
+  add(period: Period, flow: TradeFlow, rows: TradeRecord[]): Promise<void> {
     if (!rows.length) return this.writing;
-    this.counts.set(period, (this.counts.get(period) ?? 0) + rows.length);
+    this.counts.set(keyOf(period, flow), { period, flow });
     // Appends run one after another so concurrent requests never interleave lines
     this.writing = this.writing.then(async () => {
       for (let i = 0; i < rows.length; i += ADD_CHUNK_ROWS) {
         const text = rows.slice(i, i + ADD_CHUNK_ROWS).map((r) => JSON.stringify(r)).join('\n') + '\n';
-        await fs.promises.appendFile(this.file(period), text);
+        await fs.promises.appendFile(this.file(period, flow), text);
       }
     });
     return this.writing;
   }
 
   /**
-   * Uploads the month over its previous files and returns their paths and the row count: one CSV,
-   * or zipped when the CSV is bigger than ZIP_OVER_MB or one upload (see exportService). A run saved
-   * to the user's device holds the same files on the service instead, under the same paths.
+   * Writes the month and flow over its previous files and returns their paths and the row count:
+   * zipped for Storage (built here, then uploaded), a CSV or zips for the device (see exportService).
    */
-  async save(period: Period): Promise<{ paths: string[]; rows: number }> {
+  async save(period: Period, flow: TradeFlow): Promise<{ paths: string[]; rows: number }> {
     await this.writing;
+    const source = this.file(period, flow);
     const columns = new Set<string>();
-    for await (const record of jsonLines(this.file(period))) for (const key of Object.keys(record)) columns.add(key);
+    let rows = 0;
+    for await (const record of jsonLines(source)) {
+      rows++;
+      for (const key of Object.keys(record)) columns.add(key);
+    }
     const keys = [...columns];
     const header = keys.map(escapeCell).join(',');
-    const { maxUploadMb, zipOverMb } = settingsService.get();
-    const limit = maxUploadMb * 1024 * 1024;
-
-    // The whole month as one local CSV first
-    const csv = `${this.file(period)}.csv`;
-    const out = fs.createWriteStream(csv);
-    // BOM so Excel reads UTF-8 names correctly
-    out.write(`﻿${header}`);
-    let size = 0;
-    let rows = 0;
-    for await (const record of jsonLines(this.file(period))) {
-      rows++;
-      const line = '\n' + keys.map((c) => escapeCell(record[c])).join(',');
-      size += Buffer.byteLength(line);
-      if (!out.write(line)) await new Promise((r) => out.once('drain', r));
-    }
-    await new Promise<void>((resolve, reject) => out.end((err?: Error | null) => (err ? reject(err) : resolve())));
-
-    const folder = exportService.folderFor(this.countryCode, period, this.test);
-    let uploads: { name: string; file: string; type: string }[];
-    if (size <= zipOverMb * 1024 * 1024 && size <= limit && rows <= MAX_ROWS_PER_FILE) {
-      uploads = [{ name: exportService.nameFor(this.countryCode, period), file: csv, type: 'text/csv; charset=utf-8' }];
-    } else {
-      // Named as parts; a month that fits in one zip is written again under the month's own name
-      let parts = await this.zipParts(csv, header, period, limit, true);
-      if (parts.length === 1) parts = await this.zipParts(csv, header, period, limit, false);
-      uploads = parts.map((p) => ({ ...p, type: 'application/zip' }));
-    }
-    const names = uploads.map((u) => u.name);
-    if (this.destination === 'device') {
-      for (const u of uploads) await heldService.put(this.runId, `${folder}/${u.name}`, u.file);
-      return { paths: names.map((n) => `${folder}/${n}`), rows };
-    }
-    for (const u of uploads) await storageService.uploadFile(`${folder}/${u.name}`, u.file, u.type);
-
-    // Drop what an earlier run left for this month (more parts, the CSV instead of a zip, or the other way)
-    const stale = (await storageService.list(folder).catch(() => [])).filter((n) => exportService.isMonthFile(n, this.countryCode, period) && !names.includes(n));
-    if (stale.length) await storageService.removeFiles(stale.map((n) => `${folder}/${n}`)).catch(() => {});
-
-    return { paths: names.map((n) => `${folder}/${n}`), rows };
-  }
-
-  /**
-   * Zips the month's local CSV into zips under `limit`, each holding one CSV that starts with the
-   * header row. A new zip starts once the current one nears the limit (deflate holds back a little)
-   * or its CSV reaches MAX_ROWS_PER_FILE rows.
-   */
-  private async zipParts(csv: string, header: string, period: Period, limit: number, asParts: boolean): Promise<{ name: string; file: string }[]> {
-    const margin = Math.min(2 * 1024 * 1024, limit * 0.1);
-    const parts: { name: string; file: string }[] = [];
-    let zip: ZipFileWriter | null = null;
-    let partRows = 0;
-    const open = () => {
-      partRows = 0;
-      const part = asParts ? parts.length + 1 : 0;
-      const file = `${csv}.${parts.length + 1}.zip`;
-      parts.push({ name: exportService.nameFor(this.countryCode, period, part, 'zip'), file });
-      zip = new ZipFileWriter(file, exportService.nameFor(this.countryCode, period, part));
-      return zip.write(`﻿${header}`);
+    const records = async function* () {
+      for await (const record of jsonLines(source)) yield keys.map((c) => escapeCell(record[c])).join(',');
     };
+    const base = (part: number) => exportService.baseFor(this.countryCode, period, flow, part);
+    const folder = exportService.folderFor(this.countryCode, period, flow, this.test);
 
-    let first = true;
-    // Inside a quoted cell that holds a line break, where a part must not end
-    let quoted = false;
-    for await (const line of readline.createInterface({ input: fs.createReadStream(csv), crlfDelay: Infinity })) {
-      // The local CSV's first line is its header
-      if (first) {
-        first = false;
-        await open();
-        continue;
-      }
-      if (asParts && !quoted && (zip!.compressedBytes > limit - margin || partRows >= MAX_ROWS_PER_FILE)) {
-        await zip!.close();
-        await open();
-      }
-      await zip!.write(`\n${line}`);
-      if ((line.match(/"/g)?.length ?? 0) % 2) quoted = !quoted;
-      // A row ends where no quoted cell is left open
-      if (!quoted) partRows++;
+    let outputs: { name: string; file: string }[] | null = null;
+    if (this.destination === 'device' && rows <= MAX_ROWS_PER_FILE) {
+      // A small month stays a plain CSV on the device
+      const csv = path.join(this.dir, `${base(0)}.csv`);
+      const out = fs.createWriteStream(csv);
+      out.write(`﻿${header}`);
+      for await (const record of records()) if (!out.write(`\n${record}`)) await new Promise((r) => out.once('drain', r));
+      await new Promise<void>((resolve, reject) => out.end((err?: Error | null) => (err ? reject(err) : resolve())));
+      if ((await fs.promises.stat(csv)).size <= settingsService.get().zipOverMb * 1024 * 1024) outputs = [{ name: `${base(0)}.csv`, file: csv }];
     }
-    await (zip as ZipFileWriter | null)?.close();
-    return parts;
+    if (!outputs) {
+      const limit = this.destination === 'device' ? DEVICE_ZIP_LIMIT : settingsService.get().maxUploadMb * 1024 * 1024;
+      outputs = (rows <= MAX_ROWS_PER_FILE && (await zipRecords(records(), header, this.dir, base, limit, true))) || (await zipRecords(records(), header, this.dir, base, limit, false))!;
+    }
+
+    const names = outputs.map((o) => o.name);
+    const paths = names.map((n) => `${folder}/${n}`);
+    if (this.destination === 'device') {
+      for (const o of outputs) await heldService.put(this.runId, `${folder}/${o.name}`, o.file);
+    } else {
+      for (const o of outputs) await storageService.uploadFile(`${folder}/${o.name}`, o.file, 'application/zip');
+      // Drop what an earlier run left for this month and flow (more parts, or one file instead of parts)
+      const stale = (await storageService.list(folder).catch(() => [])).filter((n) => exportService.isMonthFile(n, this.countryCode, period, flow) && !names.includes(n));
+      if (stale.length) await storageService.removeFiles(stale.map((n) => `${folder}/${n}`)).catch(() => {});
+    }
+    for (const o of outputs) await fs.promises.rm(o.file, { force: true });
+    return { paths, rows };
   }
 
   async cleanup(): Promise<void> {
@@ -237,7 +267,7 @@ export class MonthFiles {
     await fs.promises.rmdir(path.dirname(this.dir)).catch(() => {});
   }
 
-  private file(period: Period): string {
-    return path.join(this.dir, `${period}.jsonl`);
+  private file(period: Period, flow: TradeFlow): string {
+    return path.join(this.dir, `${keyOf(period, flow)}.jsonl`);
   }
 }
