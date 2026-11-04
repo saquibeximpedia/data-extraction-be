@@ -20,9 +20,61 @@ const PAGE_ATTEMPTS = 6;
 /** Wait before reading a stalled page again, times the try: 10 s, 20 s, 30 s… */
 const PAGE_RETRY_MS = 10_000;
 
-/** Fields of each row: code, its name, partner, its name, unit (dimensions), then the flow's values (measures) */
-const DIMENSIONS = ['ISTPOZ', 'ISTPOZ_ADI', 'ULKE_KODU', 'ULKE_ADI', 'OLCU_ADI'];
-const MEASURE_FIELDS = ['DOLAR', 'MIKTAR_1', 'MIKTAR_2'];
+/**
+ * Fields of each row, codes only (names come from LOOKUPS, which keeps pages wide): code, partner,
+ * unit, then the declaration's province, customs office, transport mode, payment method, nature of
+ * transaction and invoice currency (dimensions), then the flow's values (measures). The last six
+ * split a code and partner into about 5× as many rows (Sep 2026 imports: 79,720 → 406,774).
+ * The app's other values aren't per code and partner: ILFAALIYET_* (exports by the exporter's
+ * province of activity) are province totals with no code or partner, MEVSIMSEL_* national totals.
+ */
+const DIMENSIONS = ['ISTPOZ', 'ULKE_KODU', 'OLCU_KODU', 'IL_KODU', 'GUMRUK', 'TASIMA_SEKLI', 'ODEME_SEKLI', 'SOZLESME_KODU', 'DOVIZ_KODU'];
+const MEASURE_FIELDS = ['DOLAR', 'EURO', 'TL', 'MIKTAR_1', 'MIKTAR_2'];
+
+/** Output column → field, for the fields that depend only on one dimension */
+interface Lookup {
+  key: string;
+  columns: Record<string, string>;
+}
+
+/** Read once per request, for the month and codes selected */
+const LOOKUPS: Lookup[] = [
+  {
+    key: 'ISTPOZ',
+    columns: {
+      description: 'ISTPOZ_ADI',
+      chapter: 'FASIL', chapter_name: 'FASIL_ADI',
+      hs4: 'TARIFE4', hs4_name: 'TARIFE4_ADI',
+      hs6: 'TARIFE6', hs6_name: 'TARIFE6_ADI',
+      hs8: 'TARIFE8', hs8_name: 'TARIFE8_ADI',
+      bec: 'BEC', bec_name: 'BEC_ADI',
+      bec_broad: 'BEC_1', bec_broad_name: 'BEC_1_ADI',
+      sitc_section: 'SITC4_1', sitc_section_name: 'SITC4_1_ADI',
+      sitc_division: 'SITC4_2', sitc_division_name: 'SITC4_2_ADI',
+      sitc_group: 'SITC4_3', sitc_group_name: 'SITC4_3_ADI',
+      sitc_subgroup: 'SITC4_4', sitc_subgroup_name: 'SITC4_4_ADI',
+      sitc_item: 'SITC4_5', sitc_item_name: 'SITC4_5_ADI',
+      isic_section: 'ISIC4_1', isic_section_name: 'ISIC4_1_ADI',
+      isic_division: 'ISIC4_2', isic_division_name: 'ISIC4_2_ADI',
+      isic_group: 'ISIC4_3', isic_group_name: 'ISIC4_3_ADI',
+      isic_class: 'ISIC4_4', isic_class_name: 'ISIC4_4_ADI',
+    },
+  },
+  // A country is in several economic groups (EU 27, OECD, G-8…): they're joined with "; "
+  { key: 'ULKE_KODU', columns: { partner_name: 'ULKE_ADI', partner_region_code: 'ULKE_COGRAFI_GRUBU', partner_region: 'ULKE_COGRAFI_ADI', partner_groups: 'ULKE_EKONOMIK_ADI' } },
+  { key: 'OLCU_KODU', columns: { unit: 'OLCU_ADI' } },
+  { key: 'IL_KODU', columns: { province: 'IL_ADI' } },
+  { key: 'GUMRUK', columns: { customs_office: 'GUMRUK_ADI' } },
+  { key: 'TASIMA_SEKLI', columns: { transport_mode: 'TASIMA_SEKLI_ADI' } },
+  { key: 'ODEME_SEKLI', columns: { payment_method: 'ODEME_SEKLI_ADI' } },
+  { key: 'SOZLESME_KODU', columns: { transaction_nature: 'SOZLESME_ADI' } },
+  { key: 'DOVIZ_KODU', columns: { invoice_currency: 'DOVIZ_ADI' } },
+  // The month's release date
+  { key: 'AY', columns: { published: 'YAYIN_TARIHI' } },
+];
+
+/** Key → column → value, for each lookup's key field */
+type Names = Map<string, Map<string, Record<string, string>>>;
 
 /** The code as TÜİK stores it: text, without the leading zero (010121000000 → "10121000000") */
 const tuikCode = (code: string) => code.replace(/^0+/, '');
@@ -32,7 +84,11 @@ const code12 = (text: string) => (/^\d+$/.test(text) ? text.padStart(12, '0') : 
 interface Cell {
   qText?: string;
   qNum?: number | string;
+  qIsNull?: boolean;
 }
+
+/** A dimension cell's text; empty when null */
+const text = (cell: Cell) => (cell.qIsNull ? '' : (cell.qText ?? ''));
 
 /**
  * One anonymous session on TÜİK's Qlik engine, the way the dashboard page opens one: a session
@@ -150,17 +206,18 @@ export class QlikSession {
     );
   }
 
-  /** Every row of a straight table, read in pages; returns the rows */
   /**
    * Builds a straight table and returns its handle and row count. Rows are sorted by the dimensions,
    * so another session's table has the same rows on the same page and reading can carry on there.
+   * Rows without the first dimension are left out; nulls in the others are kept (a row without,
+   * say, a currency still has its values).
    */
   async createTable(doc: number, dimensions: string[], measures: string[]): Promise<Table> {
     const obj = await this.call(doc, 'CreateSessionObject', [
       {
         qInfo: { qType: 'table' },
         qHyperCubeDef: {
-          qDimensions: dimensions.map((d) => ({ qDef: { qFieldDefs: [d], qSortCriterias: [{ qSortByNumeric: 1, qSortByAscii: 1 }] }, qNullSuppression: true })),
+          qDimensions: dimensions.map((d, i) => ({ qDef: { qFieldDefs: [d], qSortCriterias: [{ qSortByNumeric: 1, qSortByAscii: 1 }] }, qNullSuppression: i === 0 })),
           qMeasures: measures.map((m) => ({ qDef: { qDef: m } })),
           qInterColumnSortOrder: dimensions.map((_, i) => i),
           qMode: 'S',
@@ -208,7 +265,7 @@ interface Table {
  * - a month not published yet replaces the year (2026-10 left only AY = 10 selected: every year's October)
  * - codes without trade that month aren't selected; with none, the table was the whole month
  */
-async function openTable(query: FetchQuery, signal: AbortSignal): Promise<{ session: QlikSession; table: Table } | null> {
+async function openTable(query: FetchQuery, signal: AbortSignal): Promise<{ session: QlikSession; doc: number; table: Table } | null> {
   const { year, month } = splitPeriod(query.periods[0]);
   const { session, doc } = await QlikSession.open(signal);
   try {
@@ -223,11 +280,37 @@ async function openTable(query: FetchQuery, signal: AbortSignal): Promise<{ sess
     }
     const flag = FLOW_FLAG[query.tradeType];
     const table = await session.createTable(doc, DIMENSIONS, MEASURE_FIELDS.map((f) => `Sum({< IHRITH_FLAG = {${flag}} >} ${f})`));
-    return { session, table };
+    return { session, doc, table };
   } catch (err) {
     session.close();
     throw err;
   }
+}
+
+/**
+ * Each lookup's columns by key, for what's selected. A key with several values for a column (a
+ * country's economic groups) gets them joined with "; ".
+ */
+async function readNames(session: QlikSession, doc: number): Promise<Names> {
+  const names: Names = new Map();
+  for (const { key, columns } of LOOKUPS) {
+    const entries = Object.entries(columns);
+    const rows = await session.table(doc, [key, ...entries.map(([, field]) => field)], ['Count(1)']);
+    const values = new Map<string, Map<string, Set<string>>>();
+    for (const [keyCell, ...cells] of rows) {
+      const byColumn = values.get(text(keyCell)) ?? new Map(entries.map(([column]) => [column, new Set<string>()]));
+      values.set(text(keyCell), byColumn);
+      entries.forEach(([column], i) => text(cells[i]) && byColumn.get(column)!.add(text(cells[i])));
+    }
+    names.set(key, new Map([...values].map(([k, byColumn]) => [k, Object.fromEntries([...byColumn].map(([column, set]) => [column, [...set].join('; ')]))])));
+  }
+  return names;
+}
+
+/** A lookup's columns for a key, empty when it has none */
+function namesFor(names: Names, key: string, cell: Cell | string): Record<string, string> {
+  const columns = LOOKUPS.find((l) => l.key === key)!.columns;
+  return names.get(key)?.get(typeof cell === 'string' ? cell : text(cell)) ?? Object.fromEntries(Object.keys(columns).map((c) => [c, '']));
 }
 
 /** A measure cell's number, or its text when it has none */
@@ -255,8 +338,11 @@ export const turkey: Country = {
       '(session cookie, CSRF token, WebSocket), selects the year, month and HS codes, and reads a table in pages. ' +
       `One request per flow, month and batch of up to ${BATCH_SIZE} HS codes.`,
     output:
-      'One row per 12-digit GTİP code and partner country: flow, period, code, Turkish description, TÜİK partner code ' +
-      'and English name, value in USD, quantity 1 (kg), quantity 2 and the unit (e.g. KG/ADET). Rows without trade are left out.',
+      'One row per record in TÜİK’s data: 12-digit GTİP code, partner country, province, customs office, transport ' +
+      'mode, payment method, nature of transaction and invoice currency, each with its code and name; value in USD, ' +
+      'EUR and TRY, quantity 1 (kg), quantity 2 and the unit (e.g. KG/ADET); the Turkish description and the code’s ' +
+      'chapter, HS4/6/8, BEC, SITC Rev.4 and ISIC Rev.4 classes; the partner’s region and economic groups; and the ' +
+      'month’s release date. Rows without trade are left out.',
   },
   // September 2026 appeared in the app on 3 November 2026
   lagMonths: 2,
@@ -289,7 +375,9 @@ export const turkey: Country = {
     const pageCount = Math.ceil(total / pageRows);
     const rows: Cell[][] = [];
     let tries = 0;
+    let names: Names;
     try {
+      names = await readNames(open.session, open.doc);
       while (rows.length < total) {
         const page = rows.length / pageRows;
         try {
@@ -311,18 +399,40 @@ export const turkey: Country = {
       open?.session.close();
     }
 
-    const records: TradeRecord[] = rows.map(([code, name, partner, partnerName, unit, usd, quantity1, quantity2]) => ({
-      trade_flow: tradeType,
-      period,
-      hs_code: code12(code.qText ?? ''),
-      description: name.qText ?? '',
-      partner_code: partner.qText ?? '',
-      partner_name: partnerName.qText ?? '',
-      value_usd: value(usd),
-      quantity1_kg: value(quantity1),
-      quantity2: value(quantity2),
-      unit: unit.qText ?? '',
-    }));
+    const { month } = splitPeriod(period);
+    const { published } = namesFor(names, 'AY', String(month));
+    const records: TradeRecord[] = rows.map(([code, partner, unit, province, customs, transport, payment, transaction, currency, usd, eur, tl, quantity1, quantity2]) => {
+      const { description, ...classes } = namesFor(names, 'ISTPOZ', code);
+      return {
+        trade_flow: tradeType,
+        period,
+        hs_code: code12(text(code)),
+        description,
+        partner_code: text(partner),
+        ...namesFor(names, 'ULKE_KODU', partner),
+        province_code: text(province),
+        ...namesFor(names, 'IL_KODU', province),
+        customs_office_code: text(customs),
+        ...namesFor(names, 'GUMRUK', customs),
+        transport_mode_code: text(transport),
+        ...namesFor(names, 'TASIMA_SEKLI', transport),
+        payment_method_code: text(payment),
+        ...namesFor(names, 'ODEME_SEKLI', payment),
+        transaction_nature_code: text(transaction),
+        ...namesFor(names, 'SOZLESME_KODU', transaction),
+        invoice_currency_code: text(currency),
+        ...namesFor(names, 'DOVIZ_KODU', currency),
+        value_usd: value(usd),
+        value_eur: value(eur),
+        value_try: value(tl),
+        quantity1_kg: value(quantity1),
+        quantity2: value(quantity2),
+        unit_code: text(unit),
+        ...namesFor(names, 'OLCU_KODU', unit),
+        ...classes,
+        published,
+      };
+    });
     return new Map(records.length ? [[period, records]] : []);
   },
 };
