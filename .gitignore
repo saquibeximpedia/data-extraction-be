@@ -6,3 +6,4 @@ storage/exports/*
 *.log
 settings.json
 storage/held/
+storage/server-files/

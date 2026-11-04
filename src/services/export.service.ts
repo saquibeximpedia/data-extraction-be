@@ -6,6 +6,7 @@ import { Period, TradeFlow, TradeRecord } from '../types';
 import { escapeCell } from '../utils/csv';
 import { ZipFileWriter } from '../utils/zip';
 import { heldService } from './held.service';
+import { serverFilesService } from './server-files.service';
 import { settingsService } from './settings.service';
 import { storageService } from './storage.service';
 
@@ -38,17 +39,18 @@ export const MAX_ROWS_PER_FILE = 900_000;
 /** Rows turned into text and appended at a time by MonthFiles.add */
 const ADD_CHUNK_ROWS = 2_000;
 
-/** Largest zip held for the user's device (no upload limit there; zips without ZIP64 stop at 4 GB) */
-const DEVICE_ZIP_LIMIT = 3 * 1024 ** 3;
+/** Largest zip written (parts end at MAX_ROWS_PER_FILE long before this; zips without ZIP64 stop at 4 GB) */
+export const ZIP_LIMIT = 3 * 1024 ** 3;
 
 /**
  * Extracted files, one folder per country, year, month and flow:
  *   {CC}/{YYYY}/{MM}/{IMPORT|EXPORT}/{CC}_{YYYY-MM}_{FLOW}.zip
  * or {CC}_{YYYY-MM}_{FLOW}_part1.zip, _part2.zip… when the month has more than MAX_ROWS_PER_FILE
- * rows or one zip would pass MAX_UPLOAD_MB (Supabase rejects large uploads). Each zip holds one CSV
- * with the header row. Files in Storage are always zipped; files held for the user's device stay a
- * plain CSV up to ZIP_OVER_MB. Runs on the test HS codes write under _test/ instead, apart from
- * the real data. Replaced on each run.
+ * rows. Each zip holds one CSV with the header row. Files for Storage are always zipped; one that
+ * Storage can't take (over MAX_UPLOAD_MB, or the upload failed) is kept on the server instead, in
+ * the same place (see storeFile). Files held for the user's device stay a plain CSV up to
+ * ZIP_OVER_MB. Runs on the test HS codes write under _test/ instead, apart from the real data.
+ * Replaced on each run.
  */
 export const exportService = {
   folderFor: (countryCode: string, period: Period, flow: TradeFlow, test = false) =>
@@ -98,6 +100,35 @@ export async function zipRecords(
   }
   await zip.close();
   return parts;
+}
+
+/** Where a finished file went; `reason` says why one was kept on the server */
+export interface Stored {
+  path: string;
+  onServer: boolean;
+  reason?: string;
+}
+
+/**
+ * Uploads a finished file to Storage, or keeps it on the server when it is bigger than one upload
+ * takes (MAX_UPLOAD_MB) or the upload fails (e.g. storage full), so a file is never lost for
+ * want of room in the cloud.
+ */
+export async function storeFile(relativePath: string, localPath: string, contentType = 'application/zip'): Promise<Stored> {
+  const { maxUploadMb } = settingsService.get();
+  const { size } = await fs.promises.stat(localPath);
+  let reason: string;
+  if (size > maxUploadMb * 1024 * 1024) reason = `${(size / 1048576).toFixed(1)} MB is over the ${maxUploadMb} MB one upload takes`;
+  else {
+    try {
+      await storageService.uploadFile(relativePath, localPath, contentType);
+      return { path: relativePath, onServer: false };
+    } catch (err: any) {
+      reason = `the upload failed (${err.message})`;
+    }
+  }
+  await serverFilesService.put(relativePath, localPath);
+  return { path: relativePath, onServer: true, reason };
 }
 
 /** One month and flow of a run */
@@ -214,7 +245,7 @@ export class MonthFiles {
    * Writes the month and flow over its previous files and returns their paths and the row count:
    * zipped for Storage (built here, then uploaded), a CSV or zips for the device (see exportService).
    */
-  async save(period: Period, flow: TradeFlow): Promise<{ paths: string[]; rows: number }> {
+  async save(period: Period, flow: TradeFlow): Promise<{ paths: string[]; rows: number; stored: Stored[] }> {
     await this.writing;
     const source = this.file(period, flow);
     const columns = new Set<string>();
@@ -241,23 +272,28 @@ export class MonthFiles {
       await new Promise<void>((resolve, reject) => out.end((err?: Error | null) => (err ? reject(err) : resolve())));
       if ((await fs.promises.stat(csv)).size <= settingsService.get().zipOverMb * 1024 * 1024) outputs = [{ name: `${base(0)}.csv`, file: csv }];
     }
-    if (!outputs) {
-      const limit = this.destination === 'device' ? DEVICE_ZIP_LIMIT : settingsService.get().maxUploadMb * 1024 * 1024;
-      outputs = (rows <= MAX_ROWS_PER_FILE && (await zipRecords(records(), header, this.dir, base, limit, true))) || (await zipRecords(records(), header, this.dir, base, limit, false))!;
-    }
+    // Parts end at MAX_ROWS_PER_FILE rows only: a zip Storage can't take stays whole on the server
+    outputs ??= (rows <= MAX_ROWS_PER_FILE && (await zipRecords(records(), header, this.dir, base, ZIP_LIMIT, true))) || (await zipRecords(records(), header, this.dir, base, ZIP_LIMIT, false))!;
 
-    const names = outputs.map((o) => o.name);
-    const paths = names.map((n) => `${folder}/${n}`);
+    const stored: Stored[] = [];
     if (this.destination === 'device') {
-      for (const o of outputs) await heldService.put(this.runId, `${folder}/${o.name}`, o.file);
+      for (const o of outputs) {
+        await heldService.put(this.runId, `${folder}/${o.name}`, o.file);
+        stored.push({ path: `${folder}/${o.name}`, onServer: false });
+      }
     } else {
-      for (const o of outputs) await storageService.uploadFile(`${folder}/${o.name}`, o.file, 'application/zip');
-      // Drop what an earlier run left for this month and flow (more parts, or one file instead of parts)
-      const stale = (await storageService.list(folder).catch(() => [])).filter((n) => exportService.isMonthFile(n, this.countryCode, period, flow) && !names.includes(n));
-      if (stale.length) await storageService.removeFiles(stale.map((n) => `${folder}/${n}`)).catch(() => {});
+      for (const o of outputs) stored.push(await storeFile(`${folder}/${o.name}`, o.file));
+      // Drop what an earlier run left for this month and flow, in either place (more parts, one file
+      // instead of parts, or the same file now kept in the other place)
+      const isStale = (name: string, onServer: boolean) =>
+        exportService.isMonthFile(name, this.countryCode, period, flow) && !stored.some((s) => s.path === `${folder}/${name}` && s.onServer === onServer);
+      const cloud = (await storageService.list(folder).catch(() => [])).filter((n) => isStale(n, false));
+      if (cloud.length) await storageService.removeFiles(cloud.map((n) => `${folder}/${n}`)).catch(() => {});
+      const kept = (await serverFilesService.list(folder)).map((f) => f.path.split('/').pop()!).filter((n) => isStale(n, true));
+      if (kept.length) await serverFilesService.remove(kept.map((n) => `${folder}/${n}`));
     }
     for (const o of outputs) await fs.promises.rm(o.file, { force: true });
-    return { paths, rows };
+    return { paths: stored.map((s) => s.path), rows, stored };
   }
 
   async cleanup(): Promise<void> {

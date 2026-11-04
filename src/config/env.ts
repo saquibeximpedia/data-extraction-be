@@ -33,6 +33,8 @@ const envSchema = z.object({
   // and are removed after HELD_KEEP_DAYS whether saved or not
   HELD_DIR: z.string().default('storage/held'),
   HELD_KEEP_DAYS: positiveInt('14'),
+  // Files that could not go to Storage (over one upload, or the upload failed) are kept here until deleted from the web app
+  SERVER_FILES_DIR: z.string().default('storage/server-files'),
 
   // Comma-separated; empty or * allows all
   ALLOWED_IPS: z.string().default(''),
@@ -58,4 +60,6 @@ export const env = {
   tempDir: path.join(os.tmpdir(), 'trade-data-exports'),
   /** Finished files of runs saved to the user's device, by run: {heldDir}/{runId}/{CC}/{YYYY}/{file} */
   heldDir: path.resolve(parsed.data.HELD_DIR),
+  /** Finished files kept on the service instead of Storage, laid out as in Storage: {serverFilesDir}/{CC}/{YYYY}/{MM}/{FLOW}/{file} */
+  serverFilesDir: path.resolve(parsed.data.SERVER_FILES_DIR),
 };

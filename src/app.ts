@@ -10,11 +10,11 @@ app.disable('x-powered-by');
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 
-// Request log, with tokens and passwords stripped from query strings
+// Request log, with tokens, passwords and download-link signatures stripped from query strings
 app.use((req, res, next) => {
   const start = Date.now();
   res.on('finish', () => {
-    const url = req.originalUrl.replace(/([?&](?:token|password)=)[^&]*/gi, '$1***');
+    const url = req.originalUrl.replace(/([?&](?:token|password|sig)=)[^&]*/gi, '$1***');
     console.log(`[${new Date().toISOString()}] ${req.method} ${url} ${res.statusCode} (${Date.now() - start}ms)`);
   });
   next();

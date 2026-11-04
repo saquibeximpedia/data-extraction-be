@@ -328,6 +328,7 @@ class ExtractionService {
           const file = await files.save(period, flow);
           stats.files.push(...file.paths);
           this.log(run.id, 'success', `${options.destination === 'device' ? 'Ready for your folder' : 'Saved'} ${file.paths.length > 1 ? `${file.paths.length} parts: ${file.paths.join(', ')}` : file.paths[0]} (${file.rows} rows)`);
+          for (const s of file.stored.filter((s) => s.onServer)) this.log(run.id, 'warn', `${s.path} is kept on the server, not in the cloud: ${s.reason}. It is in Files (marked On server) until deleted there.`);
         } catch (err: any) {
           unsaved.push({ label: `${period} ${flow}`, reason: err.message });
           this.log(run.id, 'error', `${country.code} ${period} ${flow}: could not save the file: ${err.message}`);

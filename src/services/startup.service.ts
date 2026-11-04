@@ -36,6 +36,7 @@ async function saveLeftovers(): Promise<void> {
           run.stats.files.push(...file.paths.filter((p) => !run.stats.files.includes(p)));
           saved.push(`${files.country} ${period} ${flow} (${file.rows} rows)`);
           console.log(`♻️  Run ${runId.slice(0, 8)}: saved the ${file.rows} rows fetched for ${files.country} ${period} ${flow} before the service stopped`);
+          for (const s of file.stored.filter((s) => s.onServer)) console.warn(`♻️  ${s.path} is kept on the server: ${s.reason}`);
         } catch (err: any) {
           failed = true;
           console.error(`❌ Run ${runId.slice(0, 8)}: could not save ${files.country} ${period} ${flow}: ${err.message}`);

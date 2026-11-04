@@ -5,8 +5,8 @@ import { env } from '../config/env';
 import { csvRecords, escapeCell, parseRecord } from '../utils/csv';
 import { badRequest, conflict, notFound } from '../utils/errors';
 import { entryStream, zipEntries } from '../utils/unzip';
-import { MAX_ROWS_PER_FILE, zipRecords } from './export.service';
-import { settingsService } from './settings.service';
+import { MAX_ROWS_PER_FILE, Stored, storeFile, ZIP_LIMIT, zipRecords } from './export.service';
+import { serverFilesService } from './server-files.service';
 import { storageService } from './storage.service';
 
 /** Merged files go under merged/{name}/ */
@@ -41,6 +41,8 @@ export interface MergeJob {
   rowsWritten: number;
   /** The merged file, or its parts */
   outputs: string[];
+  /** Outputs kept on the server instead of the cloud (too big for one upload, or the upload failed), with why */
+  onServer: { path: string; reason: string }[];
   error?: string;
 }
 
@@ -68,7 +70,7 @@ async function csvsOf(local: string): Promise<(() => AsyncGenerator<string>)[]> 
 
 /**
  * Merges extracted files (picked as folders or files) into one dataset in Storage, under
- * merged/{name}/: a zip, or parts of at most MAX_ROWS_PER_FILE rows (and under one upload). Its
+ * merged/{name}/: a zip, or parts of at most MAX_ROWS_PER_FILE rows (one Storage can't take is kept on the server). Its
  * columns are every column of every file, in the order they first appear, after source_country,
  * trade_flow and period (from the file's folder when its rows don't have them), so files of
  * different countries keep all their data side by side; a file without a column leaves it empty.
@@ -94,7 +96,8 @@ class MergeService {
     if (this.list().some((j) => j.status === 'RUNNING')) throw conflict('A merge is already running. Wait for it to finish.');
     const name = requestedName?.trim() || `merge_${stamp()}`;
     if (!NAME.test(name)) throw badRequest('Name the merge with letters, digits, _ and - (up to 80), starting with a letter or digit.');
-    if ((await storageService.list(`${MERGED_FOLDER}/${name}`).catch(() => [])).length) throw conflict(`A merge named ${name} exists already. Choose another name, or delete it first.`);
+    const taken = (await storageService.list(`${MERGED_FOLDER}/${name}`).catch(() => [])).length || (await serverFilesService.list(`${MERGED_FOLDER}/${name}`)).length;
+    if (taken) throw conflict(`A merge named ${name} exists already. Choose another name, or delete it first.`);
 
     const sources = new Set<string>();
     const skipped = new Set<string>();
@@ -104,7 +107,8 @@ class MergeService {
         sources.add(p);
         continue;
       }
-      const under = p.startsWith(`${MERGED_FOLDER}/`) || p === MERGED_FOLDER ? [] : await storageService.listTree(p);
+      // Files in the cloud and files kept on the server sit under the same folders
+      const under = p.startsWith(`${MERGED_FOLDER}/`) || p === MERGED_FOLDER ? [] : [...(await storageService.listTree(p)), ...(await serverFilesService.list(p))];
       if (!under.length) skipped.add(p);
       for (const f of under) (EXTRACTED.test(f.path) ? sources : skipped).add(f.path);
     }
@@ -123,6 +127,7 @@ class MergeService {
       rowsTotal: 0,
       rowsWritten: 0,
       outputs: [],
+      onServer: [],
     };
     this.jobs.set(job.id, job);
     for (const old of this.list().filter((j) => j.status !== 'RUNNING').slice(KEPT)) this.jobs.delete(old.id);
@@ -132,7 +137,7 @@ class MergeService {
 
   private async run(job: MergeJob): Promise<void> {
     const dir = path.join(env.tempDir, `merge-${job.id}`);
-    const uploaded: string[] = [];
+    const stored: Stored[] = [];
     console.log(`🔗 Merge ${job.name}: ${job.sources.length} files, started by ${job.startedBy}`);
     try {
       await fs.promises.mkdir(dir, { recursive: true });
@@ -141,7 +146,8 @@ class MergeService {
       for (const [i, file] of job.sources.entries()) {
         job.step = `Downloading ${i + 1} of ${job.sources.length}`;
         const local = path.join(dir, `${i}${path.extname(file)}`);
-        await storageService.download(file, local);
+        if (await serverFilesService.has(file)) await serverFilesService.copyTo(file, local);
+        else await storageService.download(file, local);
         const [, country, year, month, flow] = file.match(EXTRACTED)!;
         for (const records of await csvsOf(local)) {
           // The header, then a count of the rows (read through once, before anything is written)
@@ -180,22 +186,22 @@ class MergeService {
       }
 
       job.step = `Writing ${job.rowsTotal.toLocaleString('en')} rows`;
-      const limit = settingsService.get().maxUploadMb * 1024 * 1024;
       const base = (part: number) => `${job.name}${part ? `_part${part}` : ''}`;
-      const parts = (job.rowsTotal <= MAX_ROWS_PER_FILE && (await zipRecords(merged(), header, dir, base, limit, true))) || (await zipRecords(merged(), header, dir, base, limit, false))!;
+      const parts = (job.rowsTotal <= MAX_ROWS_PER_FILE && (await zipRecords(merged(), header, dir, base, ZIP_LIMIT, true))) || (await zipRecords(merged(), header, dir, base, ZIP_LIMIT, false))!;
       if (job.rowsWritten !== job.rowsTotal) throw new Error(`${job.rowsWritten} rows were written of the ${job.rowsTotal} in the files; nothing was saved`);
 
       for (const [i, part] of parts.entries()) {
-        job.step = `Uploading ${i + 1} of ${parts.length}`;
-        const target = `${MERGED_FOLDER}/${job.name}/${part.name}`;
-        await storageService.uploadFile(target, part.file, 'application/zip');
-        uploaded.push(target);
+        job.step = `Saving ${i + 1} of ${parts.length}`;
+        stored.push(await storeFile(`${MERGED_FOLDER}/${job.name}/${part.name}`, part.file));
       }
-      Object.assign(job, { status: 'COMPLETED', step: 'Done', outputs: uploaded, finishedAt: new Date().toISOString() });
-      console.log(`✅ Merge ${job.name}: ${job.rowsWritten} rows from ${job.sources.length} files → ${uploaded.join(', ')}`);
+      const onServer = stored.filter((s) => s.onServer).map((s) => ({ path: s.path, reason: s.reason! }));
+      Object.assign(job, { status: 'COMPLETED', step: 'Done', outputs: stored.map((s) => s.path), onServer, finishedAt: new Date().toISOString() });
+      console.log(`✅ Merge ${job.name}: ${job.rowsWritten} rows from ${job.sources.length} files → ${job.outputs.join(', ')}${onServer.length ? ` (${onServer.length} kept on the server)` : ''}`);
     } catch (err: any) {
       // An incomplete merge is not left looking like a finished one
-      if (uploaded.length) await storageService.removeFiles(uploaded).catch(() => {});
+      const cloud = stored.filter((s) => !s.onServer).map((s) => s.path);
+      if (cloud.length) await storageService.removeFiles(cloud).catch(() => {});
+      await serverFilesService.remove(stored.filter((s) => s.onServer).map((s) => s.path)).catch(() => {});
       Object.assign(job, { status: 'FAILED', error: err.message, finishedAt: new Date().toISOString() });
       throw err;
     } finally {

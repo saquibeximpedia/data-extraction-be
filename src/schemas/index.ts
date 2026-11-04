@@ -32,5 +32,8 @@ export const mergeSchema = z.object({
   name: z.string().trim().max(80).optional(),
 });
 
+/** POST /api/server-files/links, DELETE /api/server-files: files kept on the server */
+export const serverFilePathsSchema = z.object({ paths: z.array(z.string().trim().min(1).max(500)).min(1).max(1000) });
+
 /** PUT /api/settings: any subset of the settings */
 export { appSettingsSchema } from '../services/settings.service';

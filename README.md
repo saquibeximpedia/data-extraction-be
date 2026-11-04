@@ -56,7 +56,11 @@ Errors are `{ "error": "...", ...details }`. Every route checks `ALLOWED_IPS`. E
 | `POST /api/runs/:id/stop` | Stop a run; requests in flight finish, and files are saved for the months that returned rows |
 | `POST /api/merges` | `{ paths, name? }`: stored folders or files to merge → `202` + the merge (it runs in the background; one at a time) |
 | `GET /api/merges` | Merges running or finished since the service started, newest first |
-| `GET /api/merges/:id` | One merge's progress: `step`, `rowsTotal`, `rowsWritten`, `outputs`, `error` |
+| `GET /api/merges/:id` | One merge's progress: `step`, `rowsTotal`, `rowsWritten`, `outputs`, `onServer`, `error` |
+| `GET /api/server-files` | Files kept on the server because Storage couldn't take them: `{ files: [{ path, size, modifiedAt }] }` |
+| `POST /api/server-files/links` | `{ paths }` → `{ links }`: a download link per file, valid for an hour |
+| `DELETE /api/server-files` | `{ paths }`: removes them from the server |
+| `GET /api/server-files/download` | **No sign-in needed**: the file a link names, streamed, once its signature and expiry check out (links are signed with a key made at start-up, so a restart ends them) |
 
 ---
 
@@ -72,7 +76,7 @@ Errors are `{ "error": "...", ...details }`. Every route checks `ALLOWED_IPS`. E
    - **Turkey**: one request per flow, month and batch of up to 500 HS codes (one session on TÜİK's dashboard engine each).
    - **Thailand** (the default): one request per HS code, month and flow.
 3. Requests run in parallel within the country's concurrency and rate limits, and temporary errors are retried with backoff. Each request ends with rows, with 0 records, or failed.
-4. The run's rows are collected in temporary local files, per month and flow. Imports and exports get files of their own, in one folder per country, year, month and flow: `{CC}/{YYYY}/{MM}/{IMPORT|EXPORT}/{CC}_{YYYY-MM}_{FLOW}.zip`, replacing the previous files. Files for Storage are always zipped on the service first (about 15 times smaller), then uploaded; each zip holds one CSV with the header row. No CSV holds more than 900,000 rows (9 lakh; Excel shows at most 1,048,576), so a bigger month is split into `_part1.zip`, `_part2.zip`…, as is one whose zip would pass `MAX_UPLOAD_MB`. A run saved to the user's device keeps a month as a plain CSV up to `ZIP_OVER_MB` (default 5 MB). Runs on the test HS codes write to `_test/{CC}/…` instead, so they never replace real data. Files are also written when a run is stopped part-way, and after a crash the rows fetched so far are saved at the next start. `scripts/delete-old-layout.ts` lists (and with `--delete` removes) extracted files left in the layout from before (`{CC}/{YYYY}/{CC}_{YYYY-MM}.csv`, both flows in one file); uploaded files are kept.
+4. The run's rows are collected in temporary local files, per month and flow. Imports and exports get files of their own, in one folder per country, year, month and flow: `{CC}/{YYYY}/{MM}/{IMPORT|EXPORT}/{CC}_{YYYY-MM}_{FLOW}.zip`, replacing the previous files. Files for Storage are always zipped on the service first (about 15 times smaller), then uploaded; each zip holds one CSV with the header row. No CSV holds more than 900,000 rows (9 lakh; Excel shows at most 1,048,576), so a bigger month is split into `_part1.zip`, `_part2.zip`…; files are split by rows only. A zip Storage can't take, bigger than `MAX_UPLOAD_MB` or whose upload fails (e.g. storage full), is **kept on the server** instead, in `SERVER_FILES_DIR` under the same path, and the run logs why; the web app lists it in Files as *On server*, downloads it from the service, and it stays until someone deletes it there (share links can't include it). A later run that uploads the month removes the server copy. A run saved to the user's device keeps a month as a plain CSV up to `ZIP_OVER_MB` (default 5 MB). Runs on the test HS codes write to `_test/{CC}/…` instead, so they never replace real data. Files are also written when a run is stopped part-way, and after a crash the rows fetched so far are saved at the next start. `scripts/delete-old-layout.ts` lists (and with `--delete` removes) extracted files left in the layout from before (`{CC}/{YYYY}/{CC}_{YYYY-MM}.csv`, both flows in one file); uploaded files are kept.
 
 **Merging.** `POST /api/merges` (Merge on the web app's Files page) combines extracted files picked as folders (a country, a year, a month, a flow) or single files into one dataset under `merged/{name}/`: one zip, or parts of at most 9 lakh rows. Its columns are `source_country`, `trade_flow` and `period` (from each file's folder when its rows lack them), then every column of every file in the order they first appear, so countries with different columns keep all their data; a file without a column leaves it empty. Rows are counted before writing and again as they are written: a difference, or a row with more or fewer cells than its header, fails the merge and nothing is saved. Uploaded and merged files in a selection are left out.
 
@@ -176,6 +180,7 @@ src/
 │   ├── db.service.ts           # Writes runs, "extracting" months and the extractor list
 │   ├── export.service.ts       # A run's rows → zipped CSVs per country, month and flow
 │   ├── merge.service.ts        # Merges stored files into merged/{name}/
+│   ├── server-files.service.ts # Files kept on the server when Storage can't take them
 │   ├── storage.service.ts      # Creates the bucket, uploads, lists and downloads files
 │   └── hs-codes.service.ts     # storage/hs_codes/{CC}.csv (server-side only)
 ├── utils/               # http, errors, period, concurrency, hs-codes, client-ip, xlsx, csv, zip, unzip
@@ -189,6 +194,7 @@ Key settings (see `.env.example` for all):
 | `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | — | Supabase project (required) |
 | `SUPABASE_BUCKET` | `trade-exports` | Private bucket for files (the web app must use the same one) |
 | `ALLOWED_IPS` | empty (all) | Comma-separated IPs allowed to call the service |
+| `SERVER_FILES_DIR` | `storage/server-files` | Files Storage couldn't take, kept until deleted from the web app (not cleared automatically: keep the disk in mind) |
 | `EMPTY_STREAK_FLAG_AT` | `300` | Requests in a row with 0 records before a run is flagged |
 | `MAX_CONCURRENT_EXTRACTIONS` / `MAX_CONCURRENT_PER_COUNTRY` | `4` / `2` | Requests at once, overall / per country (a country can set its own) |
 
