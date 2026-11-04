@@ -39,6 +39,9 @@ const RUN_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
  */
 export const MAX_ROWS_PER_FILE = 1_000_000;
 
+/** Rows turned into text and appended at a time by MonthFiles.add */
+const ADD_CHUNK_ROWS = 2_000;
+
 /**
  * Extracted files in Storage, one folder per country and year: {CC}/{YYYY}/{CC}_{YYYY-MM}.csv.
  * Runs on the test HS codes write under _test/{CC}/{YYYY}/ instead, apart from the real data.
@@ -115,12 +118,20 @@ export class MonthFiles {
     return [...this.counts.keys()].sort();
   }
 
+  /**
+   * Appends rows to the month's file, ADD_CHUNK_ROWS at a time: one string for a whole request
+   * ran the heap out (a Turkey batch of 61,330 rows × 59 columns took ~260 MB as one string)
+   */
   add(period: Period, rows: TradeRecord[]): Promise<void> {
     if (!rows.length) return this.writing;
     this.counts.set(period, (this.counts.get(period) ?? 0) + rows.length);
-    const text = rows.map((r) => JSON.stringify(r)).join('\n') + '\n';
     // Appends run one after another so concurrent requests never interleave lines
-    this.writing = this.writing.then(() => fs.promises.appendFile(this.file(period), text));
+    this.writing = this.writing.then(async () => {
+      for (let i = 0; i < rows.length; i += ADD_CHUNK_ROWS) {
+        const text = rows.slice(i, i + ADD_CHUNK_ROWS).map((r) => JSON.stringify(r)).join('\n') + '\n';
+        await fs.promises.appendFile(this.file(period), text);
+      }
+    });
     return this.writing;
   }
 
