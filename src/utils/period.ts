@@ -41,19 +41,3 @@ export function periodRange(start: Period, end: Period): Period[] {
   }
   return periods;
 }
-
-/**
- * Most recent month a source should have published by `today`.
- * A country with a 1-month lag that publishes on the 15th has September data
- * from October 15th onwards; before that the latest is August.
- */
-export function latestPublishedPeriod(lagMonths: number, updateDayOfMonth: number, today = new Date()): Period {
-  const released = today.getDate() >= updateDayOfMonth;
-  return addMonths(periodOfDate(today), -(lagMonths + (released ? 0 : 1)));
-}
-
-/** The `count` most recent months a source should have published by `today`, oldest first */
-export function recentPublishedPeriods(lagMonths: number, updateDayOfMonth: number, count: number, today = new Date()): Period[] {
-  const latest = latestPublishedPeriod(lagMonths, updateDayOfMonth, today);
-  return periodRange(addMonths(latest, -(count - 1)), latest);
-}
