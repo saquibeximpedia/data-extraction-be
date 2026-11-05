@@ -26,6 +26,13 @@ export const extractionSchema = z.object({
   dataset: z.string().trim().regex(/^[w-]{1,200}$/, "Use the dataset's ID: the last part of its link, e.g. import-2027").optional(),
 });
 
+/** GET /api/countries/:code/source-files: the months and flows whose file links the browser downloads */
+export const sourceFilesSchema = z.object({
+  start: month,
+  end: month.optional(),
+  tradeType: z.enum(['ALL', 'IMPORT', 'EXPORT']).default('ALL'),
+});
+
 /** POST /api/merges: stored folders or files ({CC}/{YYYY}…, a month's flow folder, single files) */
 export const mergeSchema = z.object({
   paths: z.array(z.string().trim().min(1).max(500)).min(1, 'Select something to merge').max(2000),

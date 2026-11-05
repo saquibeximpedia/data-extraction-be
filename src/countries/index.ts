@@ -1,5 +1,6 @@
 import { Country, ExtractableCountry } from './country.types';
 import { bahrain } from './bahrain';
+import { chile } from './chile';
 import { eu } from './eu';
 import { indonesia } from './indonesia';
 import { japan } from './japan';
@@ -9,10 +10,10 @@ import { southAfrica } from './south-africa';
 import { thailand } from './thailand';
 import { turkey } from './turkey';
 
-export type { BulkDownload, Country, CountrySource, DatasetRef, ExtractableCountry, FetchContext, FetchQuery, MonthRows, YearFile } from './country.types';
+export type { BulkDownload, Country, CountrySource, DatasetRef, ExtractableCountry, FetchContext, FetchQuery, MonthRows, SourceFile, SourceFiles, SourceLink, YearFile } from './country.types';
 
 /** Every supported country. To add one: create its file in this folder and list it here. */
-const ALL_COUNTRIES: Country[] = [bahrain, eu, indonesia, japan, philippines, qatar, thailand, southAfrica, turkey];
+const ALL_COUNTRIES: Country[] = [bahrain, chile, eu, indonesia, japan, philippines, qatar, thailand, southAfrica, turkey];
 
 const byCode = new Map(ALL_COUNTRIES.map((c) => [c.code, c]));
 
@@ -29,9 +30,14 @@ export function missingConfig(country: Country): string[] {
   return (country.requiredEnv ?? []).filter((key) => !process.env[key]);
 }
 
-/** False for download-only countries (bulk download links, nothing to extract) */
+/** Rows are extracted into CSVs and stored (not a source-files or download-only country) */
 export function isExtractable(country: Country): country is ExtractableCountry {
   return Boolean(country.normalizeHsCode && country.fetchRecords);
+}
+
+/** The service looks up each month's files; the user's browser downloads them straight from the source */
+export function hasSourceFiles(country: Country): country is Country & Required<Pick<Country, 'sourceFiles'>> {
+  return Boolean(country.sourceFiles);
 }
 
 export function isEnabled(country: Country): boolean {

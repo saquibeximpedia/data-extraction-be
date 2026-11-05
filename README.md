@@ -1,6 +1,6 @@
 # Trade Data Extraction Service (Node.js)
 
-A Node.js / Express / TypeScript service that **only extracts**: it pulls customs trade data from government sources on request and writes one CSV per country-month to Supabase Storage.
+A Node.js / Express / TypeScript service that **only extracts**: it pulls customs trade data from government sources on request and writes one CSV per country-month to Supabase Storage. For sources that serve each month as ready-made files (Chile), it only looks up the links; the user's browser downloads the files.
 
 Everything people see and manage lives in the web app (`../frontend`, Next.js): sign-in, accounts, countries and their months, extraction history, and files. The web app works while this service is down. Only extracting and watching live extractions need the service.
 
@@ -49,6 +49,7 @@ Errors are `{ "error": "...", ...details }`. Every route checks `ALLOWED_IPS`. E
 |---|---|
 | `GET /api/health` | **No sign-in needed.** `{ status, environment, isProd, running, countries, startedAt }`. The web app polls this to show the service as live or offline. |
 | `GET /api/countries` | What this service can extract now: per country `enabled`, `missingConfig`, source, lag, flows, `hsCodeCount`, `testHsCodeCount` |
+| `GET /api/countries/:code/source-files?start=YYYY-MM&end=YYYY-MM&tradeType=ALL|IMPORT|EXPORT` | Source-files countries: `{ months: [{ period, flow, files: [{ name, url }] }] }`, each month and flow's file links at the source (empty `files`: not published yet). Nothing is downloaded or recorded |
 | `POST /api/extractions` | `{ countryCode, startDate, endDate, tradeType, mode, hsCodes? }` → `202 { runId }`; marks the months extracting |
 | `GET /api/runs` | Extractions running on this service, with live stats |
 | `GET /api/runs/:id` | One run: live stats while running, otherwise as stored |
@@ -63,6 +64,17 @@ Errors are `{ "error": "...", ...details }`. Every route checks `ALLOWED_IPS`. E
 | `GET /api/server-files/download` | **No sign-in needed**: the file a link names, streamed, once its signature and expiry check out (links are signed with a key made at start-up, so a restart ends them) |
 
 ---
+
+## Two kinds of countries
+
+| | **API countries** (extracted) | **Source-files countries** (`sourceFiles`: Chile) |
+|---|---|---|
+| What happens | The service requests rows and writes CSVs: a run, with live logs, retries and Stop | The service only looks up each month's file links; the user's browser downloads them straight from the source |
+| Where files go | Supabase Storage (or kept on the server past `MAX_UPLOAD_MB`), or the user's device | The user's device only; nothing is saved on the server or in the database |
+| File format | `{CC}/{YYYY}/{MM}/{FLOW}/{CC}_{YYYY-MM}_{FLOW}.zip`, one CSV with a header; `_part1.zip`, `_part2.zip`… past 9 lakh rows | The source's own files, with their own names (e.g. `importaciones-septiembre-2026.rar`) |
+| Months marked extracting, run history | Yes | No |
+
+The 9 lakh-row split and the folder layout are for API countries only. Download-only countries (Philippines, EU's bulk files) also download in the browser, from links built from a pattern; a source-files country is for sources whose links have to be looked up (`GET /api/countries/:code/source-files`).
 
 ## How an extraction runs
 
@@ -114,6 +126,7 @@ Supabase limits the size of one stored file (50 MB on the free plan; raise it un
 | Code | Source | Default lag | HS codes accepted | Needs |
 |------|--------|-----|-------------------|-------|
 | `BHR` | Bahrain Open Data Portal (Opendatasoft API, iGA datasets) | 1 month | None needed (every 8-digit code); 2–8 digits keep only those | — |
+| `CHL` | Servicio Nacional de Aduanas on datos.gob.cl (source files: downloaded to the user's device, not extracted or stored) | 1 month, around day 30 | — (the files hold every 8-digit tariff code) | — |
 | `EU` | Eurostat Comext API (DS-045409) | 2 months | 8-digit CN codes only | — |
 | `IDN` | BPS DataExim API | 2 months | 8-digit tariff lines | `BPS_API_KEY` |
 | `JPN` | e-Stat API (Ministry of Finance trade statistics) | 2 months | 9-digit statistical codes (4–6 digits return every code under them) | `ESTAT_APP_ID` |
@@ -124,6 +137,18 @@ Supabase limits the size of one stored file (50 MB on the free plan; raise it un
 | `ZAF` | SARS Trade Statistics portal | 2 months | 8-digit tariff lines (4–6 digits return every line under them) | — |
 
 **South Africa** has no API. `south-africa.ts` fills in the portal's download form over plain HTTP (ASP.NET postbacks) and reads the workbook. The portal accepts many chapters in one query, so each download is one month of every needed chapter (about 40 s for all chapters), two at a time. Several months of heavy chapters in one query can stall the portal, so months are not combined.
+
+**Chile** is a source-files country: `chile.ts` has `sourceFiles`, not `fetchRecords`, so nothing is extracted or stored. On the extract page, **Get files** asks this service for the chosen months' links and the browser downloads each file straight from datos.gob.cl to the user's device, under its own name. The Servicio Nacional de Aduanas publishes one dataset per year and flow on datos.gob.cl, with one archive per month of every declaration line:
+
+- Imports (DIN): [Registro de importación 2026](https://datos.gob.cl/dataset/registro-de-importacion-2026)
+- Exports (DUS): [Registro de exportación 2026](https://datos.gob.cl/dataset/registro-de-exportacion-2026)
+- Every year, 2003 onwards: [Servicio Nacional de Aduanas on datos.gob.cl](https://datos.gob.cl/organization/servicio_nacional_de_aduanas)
+- Each year's dataset has a **Metadata** workbook naming the columns (`descripcion-y-estructura-de-datos-din.xlsx` / `…-dus.xlsx`)
+- Summary only, not used: [Aduanas imports by country and product](https://www.aduana.cl/importaciones-por-pais-y-producto/aduana/2020-05-15/100754.html) (CIF value by Aduanas' own product groups, not HS codes)
+
+Inside the files: imports are one `;`-separated text file of every declaration line, 178 columns, no header row, decimal comma (`ARANC_NAC` is the 8-digit tariff code, `PA_ORIG` the country of origin, `CIF_ITEM` the line's CIF in US$); exports are the DUS lines plus the Bultos and Documentos de Transporte files.
+
+Download links carry resource IDs, so each lookup reads the Aduanas dataset list once (`/api/3/action/package_search?fq=organization:servicio_nacional_de_aduanas`, cached 30 minutes), takes the year's dataset for the flow and keeps the resources named for the month. Dataset names vary by year (`registro-de-importacion-2026`, `registros-de-importacion-2019`, `registro-de-exportaciones-2024`…) and months are written in full or abbreviated (`Importaciones - septiembre 2026`, `2011 SEP EXPO`, `ene-2012-importaciones.part01.rar`); a year with two datasets (2007) reads the most recently updated one that has the month. A month has 1 import archive (in several years, e.g. 2012, 2021 and 2024, split into 4–6 `.partNN.rar` volumes: unpack the first with every part in one folder) and 3 export archives (the declarations, Bultos and Documentos de Transporte). September 2026: imports 26.1 MB (427,454 lines, 99,516 declarations, US$8.65 billion CIF), exports 5.7 MB. Country and unit codes are Aduanas' own, not ISO. September is published around 30 October.
 
 **EU** reads Eurostat Comext dataset DS-045409 over its SDMX 3.0 API. Eurostat refuses extractions estimated above 5 million rows, so codes go in batches of 150 per flow and month (a batch still too big is halved), and large requests are queued as jobs that `eu.ts` polls until ready (about a minute per batch). Codes Eurostat doesn't know are dropped from the batch. Only 8-digit CN codes are accepted: Eurostat's HS2/4/6 totals also hold trade it can't attribute to a CN code (confidential lines), so they don't match the CN8 rows. An HS subheading the CN doesn't split is its code plus `00` (293341 → 29334100). The saved lists were moved to CN8 in Oct 2026; the codes taken out (HS codes with no 2026 trade, mostly retired before 2022) are in `storage/hs_codes/archive/`.
 
@@ -160,6 +185,8 @@ To try a country without the engine, database or storage: `npx tsx scripts/month
 
 `getJson` throws a `RetryableError` for 429/5xx/network failures, which the engine retries.
 
+A **source-files country** (each month's files download from the source to the user's device; nothing is stored) leaves out `normalizeHsCode` and `fetchRecords` and sets `sourceFiles`: a `description` for the extract page and `list(period, flow, signal)`, which returns the month's file links (`{ name, url }`; none when the month isn't out). `GET /api/countries/:code/source-files` serves them to the web app (see `chile.ts`). It needs no HS code files. `source.links` adds pages to the Source panel, e.g. the imports and exports pages.
+
 A **download-only country** (links to the source's files, nothing extracted) leaves out `normalizeHsCode` and `fetchRecords` and sets `bulkDownload`: `urlTemplate` with `{YYYYMM}` for a file per month, or `per: 'year'` with `files` for a file per year (see `philippines.ts`). It needs no HS code files.
 
 ---
@@ -172,13 +199,14 @@ src/
 ├── server.ts            # Start-up: check tables, recover runs, publish extractors, create the bucket, listen
 ├── app.ts               # Express app: JSON, logging, /api routes, error handler
 ├── config/              # env.ts (validated environment), supabase.ts (service-role client)
-├── countries/           # One file per extracted source + index.ts (the list)
+├── countries/           # One file per source (API, source files or download-only) + index.ts (the list)
 ├── routes/ · controllers/ · middlewares/ · schemas/
 ├── services/
 │   ├── extraction.service.ts   # Plan runs; run requests with limits, retries and flags
 │   ├── registry.service.ts     # The extractor list: served at /api/countries, published to the database
 │   ├── db.service.ts           # Writes runs, "extracting" months and the extractor list
 │   ├── export.service.ts       # A run's rows → zipped CSVs per country, month and flow
+│   ├── source-files.service.ts # Source-files countries: the month's file links, for the browser to download
 │   ├── merge.service.ts        # Merges stored files into merged/{name}/
 │   ├── server-files.service.ts # Files kept on the server when Storage can't take them
 │   ├── storage.service.ts      # Creates the bucket, uploads, lists and downloads files

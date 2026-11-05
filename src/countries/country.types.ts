@@ -59,6 +59,12 @@ export interface BulkDownload {
   source: CountrySource;
 }
 
+/** A page about the source's data, e.g. where its imports are published */
+export interface SourceLink {
+  label: string;
+  url: string;
+}
+
 /** Where a country's data comes from, shown to users before they extract */
 export interface CountrySource {
   name: string;
@@ -69,13 +75,37 @@ export interface CountrySource {
   method: string;
   /** What the saved files contain */
   output: string;
+  /** More pages about the data, e.g. the imports and exports pages (shown beside the source) */
+  links?: SourceLink[];
+}
+
+/** One file of a month and flow, as the source publishes it */
+export interface SourceFile {
+  /** The file's own name, e.g. "importaciones-septiembre-2026.rar" */
+  name: string;
+  url: string;
+}
+
+/**
+ * A source that serves each month as ready-made files (archives, workbooks…) whose links can't be
+ * built from a pattern: the service only looks up the month's links, and the user's browser
+ * downloads the files straight from the source to their device. Nothing is extracted, stored on
+ * the service or saved to the database; that is for API countries only.
+ */
+export interface SourceFiles {
+  /** What the files hold, shown on the extract page */
+  description: string;
+  /** The month's files for one flow; none when the month isn't published yet */
+  list(period: Period, flow: TradeFlow, signal: AbortSignal): Promise<SourceFile[]>;
 }
 
 /**
  * One country's data source. To add one, create a file in this folder exporting one of these
  * and list it in countries/index.ts; retries, concurrency, logs and files are handled by the engine.
- * A country without normalizeHsCode and fetchRecords is download-only: it offers its bulkDownload
- * links and can't be extracted.
+ * A country is one of three kinds:
+ * - extracted: normalizeHsCode and fetchRecords; rows are written as CSVs (split at 9 lakh rows)
+ * - source files: sourceFiles; the service finds each month's file links, the browser downloads them to the user's device
+ * - download-only: neither; it offers its bulkDownload links and nothing runs
  */
 export interface Country {
   /** ISO 3166 alpha-3, e.g. "THA" */
@@ -102,6 +132,9 @@ export interface Country {
 
   /** Monthly files users can download straight from the source, besides extracting */
   bulkDownload?: BulkDownload;
+
+  /** Each month's file links, downloaded by the user's browser straight from the source (nothing runs or is stored) */
+  sourceFiles?: SourceFiles;
 
   /**
    * Each request returns every HS code the source has (whole months), so no list is needed: a run

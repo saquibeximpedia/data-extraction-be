@@ -1,4 +1,4 @@
-import { ExtractableCountry, FetchContext, FetchQuery, findCountry, isEnabled, isExtractable, missingConfig } from '../countries';
+import { ExtractableCountry, FetchContext, FetchQuery, findCountry, hasSourceFiles, isEnabled, isExtractable, missingConfig } from '../countries';
 import { env } from '../config/env';
 import { ExtractionRun, Period, RunFlag, RunLog, RunStats, RunTrigger, TradeFlow } from '../types';
 import { RateLimiter, Semaphore } from '../utils/concurrency';
@@ -145,6 +145,8 @@ class ExtractionService {
     const code = req.countryCode.toUpperCase();
     const country = findCountry(code);
     if (!country) throw notFound(`This extraction service has no extractor for ${code}. Download-only countries get their files uploaded in the web app.`);
+    // Its files go straight from the source to the user's device: nothing runs on the service
+    if (hasSourceFiles(country)) throw badRequest(`${country.name}'s files download straight from the source to your device: use Get files on the extract page.`);
     if (!isExtractable(country)) throw badRequest(`${country.name} is download-only: use its bulk file links.`);
     if (!isEnabled(country)) throw badRequest(`${country.code} is disabled: set ${missingConfig(country).join(', ')} in .env`);
     if (req.tradeType !== 'ALL' && !country.tradeTypes.includes(req.tradeType)) {

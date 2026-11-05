@@ -15,8 +15,14 @@ export interface ExtractorInfo {
   source: CountrySource;
   /** Files the web app links to directly (nothing is fetched by the service), or null */
   bulkDownload: BulkDownload | null;
-  /** False for download-only countries: bulkDownload links only, no extraction */
+  /** False when nothing runs: download-only countries (bulkDownload links) and source-files countries */
   extractable: boolean;
+  /**
+   * Set for source-files countries: the web app asks for each month's file links
+   * (GET /api/countries/:code/source-files) and downloads them straight from the source to the
+   * user's device; nothing is stored on the service or in the database. Null otherwise.
+   */
+  sourceFiles: { description: string } | null;
   lagMonths: number;
   publishDay: number;
   /** Earliest month with data, or null when the source has no limit */
@@ -44,6 +50,7 @@ function describe(country: Country): ExtractorInfo {
     source: country.source,
     bulkDownload: country.bulkDownload ?? null,
     extractable: isExtractable(country),
+    sourceFiles: country.sourceFiles ? { description: country.sourceFiles.description } : null,
     lagMonths: country.lagMonths,
     publishDay: country.publishDay ?? 1,
     startPeriod: country.startPeriod ?? null,
