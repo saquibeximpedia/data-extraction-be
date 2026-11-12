@@ -8,10 +8,12 @@ export interface GetJsonOptions {
   signal?: AbortSignal;
   /** Gives up on a request that takes longer than this (retried as a temporary error) */
   timeoutMs?: number;
+  /** Sent as a form POST instead of a GET */
+  form?: Record<string, string>;
 }
 
 /**
- * GET a JSON endpoint. Throws RetryableError for 429/5xx, timeouts and network failures,
+ * GET a JSON endpoint (or POST `form`). Throws RetryableError for 429/5xx, timeouts and network failures,
  * and a plain Error for other non-2xx responses (those won't be retried).
  */
 export async function getJson<T = any>(url: string, options: GetJsonOptions = {}): Promise<T> {
@@ -26,7 +28,8 @@ export async function getJson<T = any>(url: string, options: GetJsonOptions = {}
   };
   let response: Response;
   try {
-    response = await fetch(url, { headers: { Accept: 'application/json', ...options.headers }, signal });
+    const body = options.form ? new URLSearchParams(options.form) : undefined;
+    response = await fetch(url, { method: body ? 'POST' : 'GET', body, headers: { Accept: 'application/json', ...options.headers }, signal });
   } catch (err) {
     throw failed(err);
   }

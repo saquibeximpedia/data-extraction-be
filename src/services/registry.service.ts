@@ -1,4 +1,4 @@
-import { BulkDownload, Country, CountrySource, DatasetRef, isEnabled, isExtractable, listCountries, missingConfig } from '../countries';
+import { BulkDownload, Country, CountrySource, DatasetRef, isEnabled, isExtractable, listCountries, missingConfig, splitQueriesOf } from '../countries';
 import { TradeFlow } from '../types';
 import { db } from './db.service';
 import { hsCodesService } from './hs-codes.service';
@@ -39,6 +39,27 @@ export interface ExtractorInfo {
   concurrency: number | null;
   rateLimitPerMinute: number;
   retryDelayMs: number | null;
+  /**
+   * Requests one flow takes for one month and for a whole calendar year, with the saved codes of
+   * each data set (null: nothing is extracted). A year costing less than 12 months means the source
+   * returns several months per request, so whole years are the cheapest range to ask for.
+   */
+  requests: { complete: RequestCost; test: RequestCost } | null;
+}
+
+export interface RequestCost {
+  month: number;
+  year: number;
+}
+
+const SAMPLE_YEAR = Array.from({ length: 12 }, (_, i) => `2020-${String(i + 1).padStart(2, '0')}`);
+
+/** Requests for one month and for a year of `codes`, split as a run would split them */
+function requestCost(country: Country, codes: string[]): RequestCost {
+  const valid = [...new Set(codes.map((c) => country.normalizeHsCode?.(c)).filter((c): c is string => Boolean(c)))].sort();
+  const split = splitQueriesOf(country);
+  const flow = country.tradeTypes[0];
+  return { month: split(valid, SAMPLE_YEAR.slice(0, 1), flow).length, year: split(valid, SAMPLE_YEAR, flow).length };
 }
 
 function describe(country: Country): ExtractorInfo {
@@ -63,6 +84,12 @@ function describe(country: Country): ExtractorInfo {
     concurrency: country.concurrency ?? null,
     rateLimitPerMinute: country.rateLimitPerMinute ?? 60,
     retryDelayMs: country.retryDelayMs ?? null,
+    requests: isExtractable(country)
+      ? {
+          complete: requestCost(country, hsCodesService.getSaved(country.code, 'complete')),
+          test: requestCost(country, hsCodesService.hasTestFile(country.code) ? hsCodesService.getSaved(country.code, 'test') : []),
+        }
+      : null,
   };
 }
 

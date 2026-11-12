@@ -1,4 +1,4 @@
-import { ExtractableCountry, FetchContext, FetchQuery, findCountry, hasSourceFiles, isEnabled, isExtractable, missingConfig } from '../countries';
+import { ExtractableCountry, FetchContext, FetchQuery, findCountry, hasSourceFiles, isEnabled, isExtractable, missingConfig, splitQueriesOf } from '../countries';
 import { env } from '../config/env';
 import { ExtractionRun, Period, RunFlag, RunLog, RunStats, RunTrigger, TradeFlow } from '../types';
 import { RateLimiter, Semaphore } from '../utils/concurrency';
@@ -12,7 +12,8 @@ import { hsCodesService } from './hs-codes.service';
 import { settingsService } from './settings.service';
 
 const MAX_MANUAL_MONTHS = 60;
-const MAX_HS_CODES = 1000;
+/** Codes entered for one run: enough for a full 10-digit list (Korea has ~11,300), well within the 1 MB body limit */
+const MAX_HS_CODES = 20_000;
 const SAVE_STATS_MS = 5000;
 /** Log lines kept per run (a full Thailand run logs ~86,000); past this the oldest info lines go first, warnings and errors stay */
 const MAX_LOG_LINES = 5000;
@@ -62,10 +63,6 @@ interface LiveRun {
   /** Lines added since the logs were last saved */
   logsChanged: boolean;
 }
-
-/** Default split: one request per HS code and month */
-const perCodeAndMonth = (hsCodes: string[], periods: Period[], tradeType: TradeFlow): FetchQuery[] =>
-  hsCodes.flatMap((code) => periods.map((period) => ({ hsCodes: [code], periods: [period], tradeType })));
 
 const describeCodes = (codes: string[]) => (codes.length > 1 ? `${codes.length} HS codes` : codes.length ? `HS ${codes[0]}` : 'every HS code');
 
@@ -250,7 +247,7 @@ class ExtractionService {
 
     const stats = run.stats;
     const hsCodes = this.validCodes(country, plan.hsCodes, stats);
-    const split = country.splitQueries ?? perCodeAndMonth;
+    const split = splitQueriesOf(country);
     const queries = plan.tradeTypes.flatMap((flow) => split([...hsCodes].sort(), plan.periods, flow));
     stats.planned += queries.length;
     this.log(run.id, 'info', `${country.name} (${country.code}): ${queries.length} request(s) for ${describeCodes(hsCodes)}`);
