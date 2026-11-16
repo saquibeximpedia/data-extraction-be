@@ -1,4 +1,4 @@
-import { BulkDownload, Country, CountrySource, DatasetRef, isEnabled, isExtractable, listCountries, missingConfig, splitQueriesOf } from '../countries';
+import { BulkDownload, Country, CountrySource, DatasetRef, ExtractionMethod, isEnabled, isExtractable, listCountries, missingConfig, splitQueriesOf } from '../countries';
 import { TradeFlow } from '../types';
 import { db } from './db.service';
 import { hsCodesService } from './hs-codes.service';
@@ -35,6 +35,11 @@ export interface ExtractorInfo {
   allHsCodes: boolean;
   /** Datasets offered on the extract page to read instead of each year's own (none: the source has no datasets) */
   datasets: DatasetRef[];
+  /**
+   * Extraction methods offered on the extract page, the first being the default; the chosen id is
+   * sent as `method` with POST /api/extractions. Empty: the country has one way, no picker.
+   */
+  methods: ExtractionMethod[];
   /** The source's own limits (null: the service's setting applies) */
   concurrency: number | null;
   rateLimitPerMinute: number;
@@ -81,6 +86,7 @@ function describe(country: Country): ExtractorInfo {
     testHsCodeCount: hsCodesService.hasTestFile(country.code) ? hsCodesService.getSaved(country.code, 'test').length : 0,
     allHsCodes: Boolean(country.allHsCodes),
     datasets: country.datasets ?? [],
+    methods: country.methods ?? [],
     concurrency: country.concurrency ?? null,
     rateLimitPerMinute: country.rateLimitPerMinute ?? 60,
     retryDelayMs: country.retryDelayMs ?? null,

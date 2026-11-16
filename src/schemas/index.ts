@@ -24,6 +24,8 @@ export const extractionSchema = z.object({
     .optional(),
   // A dataset ID read instead of each year's dataset (sources with datasets; one flow only)
   dataset: z.string().trim().regex(/^[w-]{1,200}$/, "Use the dataset's ID: the last part of its link, e.g. import-2027").optional(),
+  // An extraction method's id, for countries offering several (the country's first when left out)
+  method: z.string().trim().regex(/^[a-z0-9-]{1,40}$/, 'Use one of the country’s method ids, e.g. banxico').optional(),
 });
 
 /** GET /api/countries/:code/source-files: the months and flows whose file links the browser downloads */

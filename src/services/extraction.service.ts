@@ -32,6 +32,8 @@ export interface CountryPlan {
   hsCodeSource: 'complete' | 'test' | 'custom' | 'all';
   /** A dataset ID chosen on the extract page, read instead of each year's dataset */
   dataset?: string;
+  /** The extraction method's id, for countries with several (always set for them) */
+  method?: string;
 }
 
 /** Per-run tuning from the web app's extract form; anything left out uses the settings or the country's own limits */
@@ -54,6 +56,8 @@ export interface ManualRequest {
   options?: RunOptions;
   /** A dataset ID to read instead of each year's dataset (sources with datasets; one flow only) */
   dataset?: string;
+  /** An extraction method's id (countries with several; their first when left out) */
+  method?: string;
 }
 
 interface LiveRun {
@@ -168,7 +172,20 @@ class ExtractionService {
     const dataset = req.dataset?.trim() || undefined;
     if (dataset && !country.datasets) throw badRequest(`${country.code} does not read datasets`);
     if (dataset && tradeTypes.length !== 1) throw badRequest(`A dataset holds one flow: pick Import or Export to read ${dataset}`);
-    const custom = dataset ? { dataset } : {};
+    // A country with several methods always records one, so a run says how it was extracted
+    const method = req.method?.trim() || country.methods?.[0]?.id;
+    if (method && !country.methods?.some((m) => m.id === method)) {
+      throw badRequest(
+        country.methods?.length
+          ? `${country.code} has no extraction method "${method}"; use ${country.methods.map((m) => m.id).join(' or ')}`
+          : `${country.code} has a single extraction method; leave method out`
+      );
+    }
+    const picked = country.methods?.find((m) => m.id === method);
+    if (picked?.startPeriod && periods[0] < picked.startPeriod) {
+      throw badRequest(`${picked.label} has data from ${picked.startPeriod} onwards; pick months from then, or another method.`);
+    }
+    const custom = { ...(dataset ? { dataset } : {}), ...(method ? { method } : {}) };
     if (requested.length) {
       if (requested.length > MAX_HS_CODES) throw badRequest(`Too many HS codes (${requested.length}); the limit is ${MAX_HS_CODES}.`);
       const invalid = requested.filter((c) => !country.normalizeHsCode(c));
@@ -251,8 +268,10 @@ class ExtractionService {
     const queries = plan.tradeTypes.flatMap((flow) => split([...hsCodes].sort(), plan.periods, flow));
     stats.planned += queries.length;
     this.log(run.id, 'info', `${country.name} (${country.code}): ${queries.length} request(s) for ${describeCodes(hsCodes)}`);
-    const context: FetchContext = { dataset: plan.dataset };
+    const context: FetchContext = { dataset: plan.dataset, method: plan.method };
     if (plan.dataset) this.log(run.id, 'info', `${country.code}: reading dataset ${plan.dataset} for every month (chosen on the extract page)`);
+    const method = country.methods?.find((m) => m.id === plan.method);
+    if (method) this.log(run.id, 'info', `${country.code}: extraction method ${method.label} (${method.id})`);
 
     // One run per country at a time, so the limits belong to this run
     const settings = settingsService.get();

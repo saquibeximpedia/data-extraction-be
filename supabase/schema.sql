@@ -43,7 +43,7 @@ create table if not exists month_status (
   status text not null check (status in ('extracting', 'completed')),
   marked_by text not null,
   marked_at timestamptz not null default now(),
-  primary key (country_code, period)
+  primary key (country_code, period)\
 );
 
 -- Links anyone can open to download chosen files (/s/<id> in the web app), optionally behind a password.

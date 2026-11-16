@@ -23,6 +23,8 @@ export interface DatasetRef {
 export interface FetchContext {
   /** A dataset ID chosen on the extract page for this run (one flow), read instead of each year's dataset */
   dataset?: string;
+  /** The extraction method's id (countries with `methods`; the first one unless another was chosen) */
+  method?: string;
   /** Adds a line to the run's log, e.g. a retry the country handles itself */
   log?(level: 'info' | 'warn', message: string): void;
 }
@@ -57,6 +59,18 @@ export interface BulkDownload {
   /** Where every published file is listed */
   listingUrl: string;
   source: CountrySource;
+}
+
+/** One way of extracting a country, offered on the extract page when a country has several */
+export interface ExtractionMethod {
+  /** Sent back as `method` when starting an extraction, e.g. "banxico" */
+  id: string;
+  /** Shown in the method picker, e.g. "Banxico only" */
+  label: string;
+  /** What it does and what it costs, shown beside the picker */
+  description: string;
+  /** Earliest month this method has data for, when later than the country's (e.g. a second source starting later) */
+  startPeriod?: Period;
 }
 
 /** A page about the source's data, e.g. where its imports are published */
@@ -147,6 +161,12 @@ export interface Country {
    * other ID can be entered there too); fetchRecords reads the choice from `context.dataset`
    */
   datasets?: DatasetRef[];
+
+  /**
+   * Ways of extracting this country, offered on the extract page; the first is the default.
+   * fetchRecords reads the choice from `context.method`.
+   */
+  methods?: ExtractionMethod[];
 
   /** The code as the source expects it, or null if the source can't use it */
   normalizeHsCode?(raw: string): string | null;

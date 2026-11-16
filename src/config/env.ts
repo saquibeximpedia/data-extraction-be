@@ -40,6 +40,16 @@ const envSchema = z.object({
   ALLOWED_IPS: z.string().default(''),
 
   BPS_API_KEY: z.string().optional(),
+
+  // Mexico fills Banxico's withheld cells from INEGI, which refuses some networks. Comma-separated
+  // proxy URLs (http://user:pass@host:port) to reach it through; empty: direct when that works,
+  // else free public proxies unless INEGI_FREE_PROXIES=false
+  INEGI_PROXY: z.string().default(''),
+  INEGI_FREE_PROXIES: z.enum(['true', 'false']).default('true').transform((v) => v === 'true'),
+
+  // Morocco's Office des Changes refuses some networks: the same, through OC_PROXY or free public proxies
+  OC_PROXY: z.string().default(''),
+  OC_FREE_PROXIES: z.enum(['true', 'false']).default('true').transform((v) => v === 'true'),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -56,6 +66,8 @@ const allowedIpList = parsed.data.ALLOWED_IPS
 export const env = {
   ...parsed.data,
   allowedIpList,
+  inegiProxies: parsed.data.INEGI_PROXY.split(',').map((p) => p.trim()).filter(Boolean),
+  ocProxies: parsed.data.OC_PROXY.split(',').map((p) => p.trim()).filter(Boolean),
   /** Run rows are collected here before each month is uploaded to Storage */
   tempDir: path.join(os.tmpdir(), 'trade-data-exports'),
   /** Finished files of runs saved to the user's device, by run: {heldDir}/{runId}/{CC}/{YYYY}/{file} */

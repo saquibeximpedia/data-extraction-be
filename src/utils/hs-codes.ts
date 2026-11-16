@@ -1,4 +1,11 @@
 /**
+ * An HS code token: 2–12 digits, or Mexico's statistical fracciones with a leading Q (Q290531010).
+ * Each country still checks the code with its own normalizeHsCode.
+ */
+const HS_TOKEN = /^Q?\d{2,12}$/;
+const token = (raw: string) => raw.replace(/["'=]/g, '').replace(/[.\s]/g, '').trim().toUpperCase();
+
+/**
  * Splits user input like "0101, 0202", one code per line, or pasted CSV tables with descriptions
  * into distinct non-empty HS code tokens, ignoring descriptions and header lines.
  */
@@ -19,9 +26,7 @@ export function splitHsInput(input: string | string[] | undefined): string[] {
       } else {
         const delimiter = /[,;\t]/.test(trimmed) ? /[,;\t]/ : /\s+/;
         const parts = trimmed.split(delimiter).map((p) => p.trim());
-        const digitParts = parts
-          .map((p) => p.replace(/["'=]/g, '').replace(/[.\s]/g, '').trim())
-          .filter((p) => /^\d{2,12}$/.test(p));
+        const digitParts = parts.map(token).filter((p) => HS_TOKEN.test(p));
         if (digitParts.length > 1) {
           for (const dp of digitParts) codes.add(dp);
           continue;
@@ -29,8 +34,8 @@ export function splitHsInput(input: string | string[] | undefined): string[] {
         first = parts[0] ?? '';
       }
 
-      const code = first.replace(/["'=]/g, '').replace(/[.\s]/g, '').trim();
-      if (/^\d{2,12}$/.test(code)) {
+      const code = token(first);
+      if (HS_TOKEN.test(code)) {
         codes.add(code);
       }
     }
@@ -58,8 +63,8 @@ export function parseHsCsv(csv: string): string[] {
       first = trimmed.split(/[,;\t]/)[0] ?? '';
     }
 
-    const code = first.replace(/["'=]/g, '').replace(/[.\s]/g, '').trim();
-    if (/^\d{2,12}$/.test(code)) {
+    const code = token(first);
+    if (HS_TOKEN.test(code)) {
       codes.add(code);
     }
   }
