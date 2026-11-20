@@ -6,6 +6,7 @@ import { chile } from './chile';
 import { eu } from './eu';
 import { indonesia } from './indonesia';
 import { japan } from './japan';
+import { kazakhstan } from './kazakhstan';
 import { korea } from './korea';
 import { mexico } from './mexico';
 import { morocco } from './morocco';
@@ -18,7 +19,7 @@ import { turkey } from './turkey';
 export type { BulkDownload, Country, CountrySource, DatasetRef, ExtractableCountry, ExtractionMethod, FetchContext, FetchQuery, MonthRows, SourceFile, SourceFiles, SourceLink, YearFile } from './country.types';
 
 /** Every supported country. To add one: create its file in this folder and list it here. */
-const ALL_COUNTRIES: Country[] = [bahrain, brazil, chile, eu, indonesia, japan, korea, mexico, morocco, philippines, qatar, thailand, southAfrica, turkey];
+const ALL_COUNTRIES: Country[] = [bahrain, brazil, chile, eu, indonesia, japan, kazakhstan, korea, mexico, morocco, philippines, qatar, thailand, southAfrica, turkey];
 
 const byCode = new Map(ALL_COUNTRIES.map((c) => [c.code, c]));
 
